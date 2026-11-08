@@ -1131,3 +1131,10 @@ h1 {
     outline: 2px solid var(--accent-color);
     outline-offset: 3px;
 }
+.earn-button,
+.spin-button,
+.tab-button.active,
+.btn-primary {
+    color: #fff !important;
+    -webkit-text-stroke: 0.4px #171717;
+}
