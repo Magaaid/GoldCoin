@@ -1,1 +1,33 @@
 
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GoldCoin</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <main class="app">
+        <h1>GOLDCOIN</h1>
+        <p class="subtitle">Твоя цифровая экономика</p>
+
+        <section class="balance-card">
+            <p>ТВОЙ БАЛАНС</p>
+            <div class="balance" id="balance">0,0000000000 коинов</div>
+        </section>
+
+        <button class="earn-button" id="earnButton">+0,0000000005</button>
+
+        <section class="upgrade-card">
+            <h2>Улучшение</h2>
+            <p>Увеличивает доход за нажатие в 2 раза</p>
+            <button id="upgradeButton">Улучшение — 0,000001024 коинов</button>
+        </section>
+    </main>
+
+    <script src="app.js"></script>
+</body>
+</html>
+
