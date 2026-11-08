@@ -1,4 +1,3 @@
-
 function response(data, status = 200) {
     return new Response(JSON.stringify(data), {
         status,
@@ -18,22 +17,23 @@ async function verifyTelegram(initData, botToken) {
     params.delete("hash");
 
     const authDate = Number(params.get("auth_date"));
-    const now = Date.now() / 1000;
+    const now = Math.floor(Date.now() / 1000);
 
     if (!authDate || now - authDate > 86400 || authDate > now + 60) {
         return null;
     }
 
     const dataCheckString = [...params.entries()]
-        .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
+        .sort(([a], [b]) => a < b ? -1 : a > b ? 1 : 0)
         .map(([key, value]) => `${key}=${value}`)
         .join("\n");
 
     const encoder = new TextEncoder();
 
+    // Создаём секретный ключ Telegram
     const key = await crypto.subtle.importKey(
         "raw",
-        encoder.encode(botToken),
+        encoder.encode("WebAppData"),
         { name: "HMAC", hash: "SHA-256" },
         false,
         ["sign"]
@@ -42,9 +42,10 @@ async function verifyTelegram(initData, botToken) {
     const secret = await crypto.subtle.sign(
         "HMAC",
         key,
-        encoder.encode("WebAppData")
+        encoder.encode(botToken)
     );
 
+    // Проверяем подпись initData
     const validationKey = await crypto.subtle.importKey(
         "raw",
         secret,
@@ -66,7 +67,10 @@ async function verifyTelegram(initData, botToken) {
     if (calculatedHash !== hash) return null;
 
     try {
-        return JSON.parse(params.get("user"));
+        const userData = params.get("user");
+        if (!userData) return null;
+
+        return JSON.parse(userData);
     } catch {
         return null;
     }
@@ -86,7 +90,7 @@ async function authenticate(request, env) {
     try {
         const user = await verifyTelegram(initData, env.BOT_TOKEN);
 
-        if (!user) {
+        if (!user || !user.id) {
             return { error: "initData validation failed" };
         }
 
@@ -122,8 +126,7 @@ export async function onRequestGet({ request, env }) {
             return response({ error: auth.error }, 401);
         }
 
-        const user = auth.user;
-        const data = await getUser(env, user.id);
+        const data = await getUser(env, auth.user.id);
 
         return response(data);
 
@@ -144,9 +147,8 @@ export async function onRequestPost({ request, env }) {
             return response({ error: auth.error }, 401);
         }
 
-        const user = auth.user;
         const body = await request.json();
-        const id = String(user.id);
+        const id = String(auth.user.id);
 
         await getUser(env, id);
 
