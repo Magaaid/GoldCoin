@@ -143,25 +143,37 @@ function isWin(choice, number) {
     }
 }
 
-// СЛОТЫ И БОНУСКА (15 спинов)
-const MULTIFIER_VALUES = [2, 3, 4, 5, 10, 15, 20, 25, 50, 100, 500];
+// --- РЕАЛИСТИЧНАЯ МАТЕМАТИКА GATES OF OLYMPUS ---
 
-function getRandomSymbol(forceScatter = false) {
-    const buf = new Uint32Array(1);
-    crypto.getRandomValues(buf);
-    const rand = buf[0] / 0x100000000;
+// Веса и номиналы иксов Зевса (как в оригинале)
+function getRandomZeusMultiplier(isBonus = false) {
+    const rand = Math.random();
+    // В бонусне шанс выпадения жирных иксов выше
+    const chanceMultiplier = isBonus ? 1.5 : 1;
 
-    if (forceScatter || rand < 0.04) return 10;
-    if (rand < 0.14) return 9;
-    if (rand < 0.27) return 8;
-    if (rand < 0.42) return 7;
-    if (rand < 0.58) return 6;
-    const lowSymbols = [1, 2, 3, 4, 5];
-    return lowSymbols[Math.floor(rand * lowSymbols.length) % lowSymbols.length];
+    if (rand < 0.70 / chanceMultiplier) return 0; // 70% спинов без сферы
+    if (rand < 0.85) return 2;   // x2
+    if (rand < 0.93) return 5;   // x5
+    if (rand < 0.97) return 10;  // x10
+    if (rand < 0.99) return 25;  // x25
+    if (rand < 0.997) return 50; // x50
+    if (rand < 0.9995) return 100;// x100
+    return 500;                  // ДЖЕКПОТ x500 (редчайший шанс)
 }
 
-// Симуляция одного спина сетки
-function calculateSingleSpin(forceZeus = false) {
+function getRandomSymbol() {
+    const rand = Math.random();
+    if (rand < 0.03) return 10; // Scatter (Зевс) - 3%
+    if (rand < 0.12) return 9;  // Корона (самый дорогой)
+    if (rand < 0.25) return 8;  // Часы
+    if (rand < 0.40) return 7;  // Кольцо
+    if (rand < 0.58) return 6;  // Чаша
+    const lowSymbols = [1, 2, 3, 4, 5]; // Камни
+    return lowSymbols[Math.floor(Math.random() * lowSymbols.length)];
+}
+
+// Симуляция одного спина сетки 6х5
+function calculateSingleSpin(isBonus = false) {
     const rows = 5;
     const cols = 6;
     let grid = [];
@@ -169,7 +181,7 @@ function calculateSingleSpin(forceZeus = false) {
     for (let r = 0; r < rows; r++) {
         let row = [];
         for (let c = 0; c < cols; c++) {
-            row.push(getRandomSymbol(false));
+            row.push(getRandomSymbol());
         }
         grid.push(row);
     }
@@ -182,29 +194,30 @@ function calculateSingleSpin(forceZeus = false) {
         }
     }
 
-    let winMultiplier = 0;
+    let baseWinMult = 0;
+    // Pay Anywhere: от 8 одинаковых символов
     for (const [sym, count] of Object.entries(counts)) {
         const s = Number(sym);
         if (s !== 10 && count >= 8) {
-            let baseMult = s >= 8 ? 8 : (s >= 6 ? 3 : 1);
-            winMultiplier += baseMult * (count / 8);
+            let mult = 0.5; // Базовый дешевый
+            if (s >= 9) mult = 12;      // Корона
+            else if (s >= 8) mult = 8;  // Часы
+            else if (s >= 7) mult = 5;  // Кольцо
+            else if (s >= 6) mult = 2;  // Чаша
+            else if (s >= 4) mult = 1;  // Камни
+
+            // Больше символов на поле = больше выплаты (как каскад)
+            baseWinMult += mult * (count / 8);
         }
     }
 
-    let zeusMultiplier = 0;
-    if (winMultiplier > 0 || forceZeus) {
-        const buf = new Uint32Array(1);
-        crypto.getRandomValues(buf);
-        if (forceZeus || buf[0] / 0x100000000 < 0.4) {
-            zeusMultiplier = MULTIFIER_VALUES[Math.floor(Math.random() * MULTIFIER_VALUES.length)];
-        }
-    }
-
-    const totalMult = winMultiplier > 0 
-        ? Number((winMultiplier * (zeusMultiplier > 0 ? zeusMultiplier : 1)).toFixed(2)) 
-        : 0;
-
-    return { grid, multiplier: totalMult, zeus: zeusMultiplier };
+    let zeusBall = getRandomZeusMultiplier(isBonus);
+    
+    return {
+        grid,
+        baseWin: baseWinMult,
+        zeus: zeusBall
+    };
 }
 
 export async function onRequestGet({ request, env }) {
@@ -279,45 +292,52 @@ export async function onRequestPost({ request, env }) {
                 return response({ error: "Минимальная ставка — 100 байтов" }, 400);
             }
 
-            // Если покупка бонуски, стоимость = ставка * 100
+            // Покупка бонуски = ставка * 100
             const totalCost = isBonus ? baseAmount * 100 : baseAmount;
 
             if (totalCost > currentUser.balance) {
                 return response({ error: "Недостаточно байтов для ставки/покупки бонуски" }, 400);
             }
 
-            let totalWinMultiplier = 0;
+            let finalMultiplier = 0;
             let lastGrid = [];
-            let bonusSpinsResults = [];
-            let totalAccumulatedZeus = 0;
+            let maxZeusHit = 0;
 
             if (isBonus) {
-                // ПОЛНОЦЕННАЯ БОНУСКА: 15 СПИНОВ С НАКОПИТЕЛЬНЫМ МНОЖИТЕЛЕМ ЗЕВСА
-                let globalBonusMultiplier = 0;
+                // БОНУСКА (15 вращений с накоплением глобального множителя)
+                let globalMultiplierAccumulator = 0;
+                
                 for (let i = 0; i < 15; i++) {
-                    const spinRes = calculateSingleSpin(true);
-                    lastGrid = spinRes.grid;
-                    if (spinRes.zeus > 0) {
-                        globalBonusMultiplier += spinRes.zeus;
-                        totalAccumulatedZeus = globalBonusMultiplier;
+                    const spin = calculateSingleSpin(true);
+                    lastGrid = spin.grid;
+
+                    if (spin.zeus > 0) {
+                        globalMultiplierAccumulator += spin.zeus;
+                        if (spin.zeus > maxZeusHit) maxZeusHit = spin.zeus;
                     }
-                    if (spinRes.multiplier > 0) {
-                        // В бонуске выигрыши умножаются на накопленный глобальный множитель
-                        const multiplierWithGlobal = spinRes.multiplier * Math.max(1, globalBonusMultiplier);
-                        totalWinMultiplier += multiplierWithGlobal;
-                        bonusSpinsResults.push({ spin: i + 1, mult: multiplierWithGlobal });
+
+                    if (spin.baseWin > 0) {
+                        // Если выпал множитель Зевса, умножаем выигрыш спина на общую сумму накопившихся иксов
+                        const currentMult = spin.baseWin * Math.max(1, globalMultiplierAccumulator);
+                        finalMultiplier += currentMult;
                     }
                 }
-                if (totalWinMultiplier === 0) totalWinMultiplier = 5.0; // Гарантированный бонус
+                // Если бонуска совсем пустая, даем утешительный х2-х3
+                if (finalMultiplier === 0) finalMultiplier = 2.5;
+
             } else {
                 // ОБЫЧНЫЙ СПИН
-                const spinRes = calculateSingleSpin(false);
-                lastGrid = spinRes.grid;
-                totalWinMultiplier = spinRes.multiplier;
-                totalAccumulatedZeus = spinRes.zeus;
+                const spin = calculateSingleSpin(false);
+                lastGrid = spin.grid;
+                maxZeusHit = spin.zeus;
+
+                if (spin.baseWin > 0) {
+                    finalMultiplier = spin.baseWin * Math.max(1, spin.zeus);
+                }
             }
 
-            const winAmount = Math.floor(baseAmount * totalWinMultiplier);
+            const cleanMult = Number(finalMultiplier.toFixed(2));
+            const winAmount = Math.floor(baseAmount * cleanMult);
             const delta = winAmount - totalCost;
 
             await env.DB.prepare(`UPDATE users SET balance = balance + ? WHERE telegram_id = ?`).bind(delta, id).run();
@@ -325,10 +345,10 @@ export async function onRequestPost({ request, env }) {
 
             return response({
                 ...updated,
-                win: totalWinMultiplier > 0,
+                win: cleanMult > 0,
                 grid: lastGrid,
-                slotMultiplier: Number(totalWinMultiplier.toFixed(2)),
-                zeus: totalAccumulatedZeus || 1,
+                slotMultiplier: cleanMult,
+                zeus: maxZeusHit,
                 isBonus: isBonus
             });
 
