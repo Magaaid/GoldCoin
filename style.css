@@ -1265,3 +1265,121 @@ h1 {
     text-overflow: ellipsis !important;
     box-sizing: border-box !important;
 }
+/* Бильярдный стол для Блэкджека */
+.billiard-table {
+    position: relative;
+    background: radial-gradient(circle at center, #15803d 0%, #14532d 75%, #052e16 100%);
+    border: 12px solid #5c3a21; /* Деревянный борт */
+    border-radius: 22px;
+    padding: 22px 14px;
+    margin: 16px 0;
+    box-shadow: 
+        inset 0 0 25px rgba(0, 0, 0, 0.75), /* Тень от бортов на сукно */
+        0 10px 25px rgba(0, 0, 0, 0.6),     /* Внешняя тень стола */
+        0 0 0 2px #3b2313;                  /* Темная окантовка дерева */
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-height: 280px;
+    overflow: hidden;
+}
+
+/* Лузы */
+.pocket {
+    position: absolute;
+    width: 24px;
+    height: 24px;
+    background: #090a0f;
+    border-radius: 50%;
+    border: 2px solid #2b1a0e;
+    box-shadow: inset 0 3px 6px rgba(0, 0, 0, 0.9);
+    z-index: 2;
+}
+
+.pocket.top-left     { top: -6px; left: -6px; }
+.pocket.top-right    { top: -6px; right: -6px; }
+.pocket.bottom-left  { bottom: -6px; left: -6px; }
+.pocket.bottom-right { bottom: -6px; right: -6px; }
+.pocket.mid-left     { top: 50%; left: -10px; transform: translateY(-50%); }
+.pocket.mid-right    { top: 50%; right: -10px; transform: translateY(-50%); }
+
+/* Зоны дилера и игрока */
+.bj-zone {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    z-index: 1;
+}
+
+.bj-label {
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 1px;
+    color: rgba(255, 255, 255, 0.85);
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+}
+
+.bj-score {
+    background: rgba(0, 0, 0, 0.55);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #fde047;
+    padding: 2px 8px;
+    border-radius: 10px;
+    margin-left: 6px;
+    font-size: 12px;
+}
+
+.bj-status {
+    background: rgba(0, 0, 0, 0.45);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 12px;
+    padding: 6px 14px;
+    font-size: 13px;
+    font-weight: bold;
+    color: #fff;
+    align-self: center;
+    margin: 10px 0;
+    z-index: 1;
+}
+
+/* Карты на сукне */
+.cards-row {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    min-height: 68px;
+}
+
+.bj-card {
+    width: 48px;
+    height: 68px;
+    background: #ffffff;
+    color: #111827;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    font-weight: 900;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+    border: 1px solid #cbd5e1;
+}
+
+.bj-card.red {
+    color: #dc2626;
+}
+
+.bj-card.hidden-card {
+    background: repeating-linear-gradient(
+        45deg,
+        #1e293b,
+        #1e293b 6px,
+        #334155 6px,
+        #334155 12px
+    );
+    color: #94a3b8;
+    border: 2px solid #cbd5e1;
+}
+
