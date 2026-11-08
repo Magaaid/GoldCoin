@@ -618,3 +618,41 @@ tabButtons.forEach(button => {
         });
     });
 });
+// ОБРАБОТКА ПРОМОКОДОВ
+const promoInput = document.getElementById("promoInput");
+const promoButton = document.getElementById("promoButton");
+const promoStatus = document.getElementById("promoStatus");
+
+async function redeemPromo() {
+    const code = promoInput.value.trim();
+    if (!code) {
+        promoStatus.textContent = "Введите промокод!";
+        promoStatus.style.color = "#ff525b";
+        return;
+    }
+
+    promoButton.disabled = true;
+    promoStatus.textContent = "Проверка...";
+    promoStatus.style.color = "#aab1c0";
+
+    try {
+        await flushQueue();
+        const result = await api("redeem_promo", { code });
+
+        state = { balance: result.balance, income: result.income, upgrade_cost: result.upgrade_cost };
+        updateUI();
+
+        promoStatus.textContent = `🎉 Промокод активирован! Награда зачислена.`;
+        promoStatus.style.color = "#39d98a";
+        promoInput.value = "";
+    } catch (error) {
+        promoStatus.textContent = error.message;
+        promoStatus.style.color = "#ff525b";
+    } finally {
+        promoButton.disabled = false;
+    }
+}
+
+if (promoButton) {
+    promoButton.addEventListener("click", redeemPromo);
+}
