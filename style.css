@@ -1178,3 +1178,29 @@ h1 {
     0% { box-shadow: 0 0 6px rgba(253, 224, 71, 0.4); }
     100% { box-shadow: 0 0 22px rgba(253, 224, 71, 0.9); }
 }
+/* Жёсткая фиксация сетки и ячеек, чтобы ничего не дергалось */
+.slot-grid {
+    display: grid !important;
+    grid-template-columns: repeat(6, 1fr) !important;
+    grid-template-rows: repeat(5, 1fr) !important; /* Укажи количество рядов, если их 5 */
+    gap: 6px !important;
+    box-sizing: border-box !important;
+}
+
+.slot-cell {
+    width: 100% !important;
+    height: 100% !important;
+    aspect-ratio: 1 / 1 !important;
+    box-sizing: border-box !important;
+    transform: none !important; /* Убирает любые случайные рывки от scale */
+    transition: background 0.2s ease, box-shadow 0.2s ease !important; /* Анимируем только цвет, но не размер */
+}
+
+/* Отключаем увеличение при наведении/появлении, из-за которого дергается сетка */
+.slot-cell:hover {
+    transform: none !important;
+}
+
+.slot-cell.animate-drop {
+    animation: none !important; /* Если анимация падения ломает верстку, отключаем её */
+}
