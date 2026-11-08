@@ -1385,5 +1385,106 @@ input {
     color: #000000 !important;
     box-shadow: 0 4px 15px rgba(250, 204, 21, 0.4) !important;
 }
+/* --- 3D РЕАЛИСТИЧНЫЙ СЛОТ GATES OF OLYMPUS --- */
+
+/* 1. Глобальный 3D контейнер слота */
+.olympus-theme {
+    background: radial-gradient(circle at center, #1e1b4b 0%, #09090b 100%) !important;
+    border: 2px solid #fbbf24;
+    box-shadow: inset 0 0 35px rgba(251, 191, 36, 0.25), 0 20px 40px rgba(0, 0, 0, 0.85);
+    border-radius: 20px;
+    perspective: 1200px; /* Включаем 3D-пространство */
+    transform-style: preserve-3d;
+}
+
+/* 2. Объемная мраморно-золотая рамка с наклоном */
+.olympus-frame {
+    background: linear-gradient(135deg, rgba(15, 15, 25, 0.95), rgba(5, 5, 10, 0.98));
+    border: 4px solid #f59e0b;
+    box-shadow: 
+        0 12px 35px rgba(0, 0, 0, 0.8), 
+        inset 0 0 20px rgba(245, 158, 11, 0.45),
+        0 0 15px rgba(251, 191, 36, 0.3);
+    border-radius: 16px;
+    padding: 14px;
+    transform: rotateX(5deg); /* Легкий 3D-наклон игрового поля вперед */
+    transform-style: preserve-3d;
+    transition: transform 0.3s ease;
+}
+
+/* 3. Сетка с сохранением 3D глубины */
+.olympus-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 8px;
+    transform-style: preserve-3d;
+}
+
+/* 4. Реалистичные 3D фишки-символы с глянцем */
+.slot-cell {
+    background: linear-gradient(145deg, rgba(255, 255, 255, 0.1), rgba(0, 0, 0, 0.5));
+    border: 1px solid rgba(251, 191, 36, 0.35);
+    border-radius: 14px;
+    height: 58px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    box-shadow: 
+        inset 0 3px 6px rgba(255, 255, 255, 0.2), 
+        inset 0 -3px 6px rgba(0, 0, 0, 0.6),
+        0 6px 12px rgba(0, 0, 0, 0.5);
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    transform: translateZ(0);
+}
+
+/* 5. 3D Анимация падения и кувырка при спине */
+.slot-cell.animate-drop {
+    animation: drop3D 0.55s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+
+@keyframes drop3D {
+    0% {
+        transform: translateY(-90px) rotateX(95deg) scale(0.4);
+        opacity: 0;
+    }
+    60% {
+        transform: translateY(12px) rotateX(-18deg) scale(1.06);
+        opacity: 1;
+    }
+    100% {
+        transform: translateY(0) rotateX(0deg) scale(1);
+        opacity: 1;
+    }
+}
+
+/* 6. Редкие элементы (Скаттеры и Премиум) */
+.scatter-cell {
+    background: radial-gradient(circle, rgba(239, 68, 68, 0.45) 0%, rgba(127, 29, 29, 0.85) 100%) !important;
+    border-color: #ef4444 !important;
+    box-shadow: 0 0 20px rgba(239, 68, 68, 0.8), inset 0 0 12px rgba(255, 255, 255, 0.4) !important;
+    animation: pulseScatter 1.4s infinite alternate;
+}
+
+@keyframes pulseScatter {
+    0% { transform: scale(1) translateZ(6px); }
+    100% { transform: scale(1.1) translateZ(18px); }
+}
+
+.high-cell {
+    border-color: #fbbf24 !important;
+    box-shadow: 0 0 12px rgba(251, 191, 36, 0.6), inset 0 0 10px rgba(251, 191, 36, 0.5) !important;
+}
+
+/* 7. Эпическая молния/вспышка Зевса с 3D подсветкой */
+.zeus-flash {
+    animation: zeusLighting 0.65s ease;
+}
+
+@keyframes zeusLighting {
+    0% { filter: brightness(1); box-shadow: 0 12px 35px rgba(0,0,0,0.8); }
+    50% { filter: brightness(1.9) drop-shadow(0 0 30px #fbbf24); box-shadow: 0 0 50px #fbbf24, inset 0 0 30px #fbbf24; }
+    100% { filter: brightness(1); box-shadow: 0 12px 35px rgba(0,0,0,0.8); }
+}
 
 
