@@ -136,7 +136,9 @@ async function upgrade() {
     }
 }
 
+// ==========================
 // РУЛЕТКА
+// ==========================
 
 const numbers = [
     0, 32, 15, 19, 4, 21, 2, 25, 17,
@@ -161,33 +163,40 @@ let spinning = false;
 let wheelRotation = 0;
 let history = [];
 
+const segment = 360 / numbers.length;
+
 function getColor(number) {
     if (number === 0) return "green";
     return redNumbers.includes(number) ? "red" : "black";
 }
 
+function getColorHex(number) {
+    const color = getColor(number);
+
+    return color === "red" ? "#b92c35" :
+        color === "green" ? "#16834b" : "#171923";
+}
+
 function createWheel() {
-    const segment = 360 / numbers.length;
-
     const gradient = numbers.map((number, index) => {
-        const color = getColor(number);
-        const colors = {
-            red: "#b92c35",
-            black: "#171923",
-            green: "#16834b"
-        };
+        const start = index * segment;
+        const end = (index + 1) * segment;
 
-        return `${colors[color]} ${index * segment}deg ${(index + 1) * segment}deg`;
+        return `${getColorHex(number)} ${start}deg ${end}deg`;
     });
 
     wheel.style.background =
         `conic-gradient(${gradient.join(",")})`;
 
+    wheel.querySelectorAll(".wheel-number").forEach(el => el.remove());
+
     numbers.forEach((number, index) => {
         const label = document.createElement("div");
-        const angle = index * segment + segment / 2;
+        const angle = (index + 0.5) * segment;
 
+        label.className = "wheel-number";
         label.textContent = number;
+
         label.style.position = "absolute";
         label.style.left = "50%";
         label.style.top = "50%";
@@ -197,6 +206,7 @@ function createWheel() {
         label.style.fontSize = "11px";
         label.style.fontWeight = "bold";
         label.style.color = "white";
+        label.style.pointerEvents = "none";
         label.style.transform =
             `rotate(${angle}deg) translateY(-108px) rotate(-${angle}deg)`;
         label.style.zIndex = "2";
@@ -205,8 +215,23 @@ function createWheel() {
     });
 }
 
-function animateBall(finalAngle) {
-    const duration = 5200;
+// Угол центра сектора в неподвижной системе колеса
+function getSectorAngle(index) {
+    return (index + 0.5) * segment;
+}
+
+// Поворот колеса: выбранный сектор должен оказаться наверху
+function getWheelTarget(index) {
+    const sectorAngle = getSectorAngle(index);
+    const current = ((wheelRotation % 360) + 360) % 360;
+
+    const needed =
+        ((360 - sectorAngle - current) % 360 + 360) % 360;
+
+    return wheelRotation + 360 * 7 + needed;
+}
+
+function animateBall(finalAngle, duration) {
     const start = performance.now();
 
     const startAngle = -90;
@@ -235,18 +260,58 @@ function animateBall(finalAngle) {
         if (progress < 1) {
             requestAnimationFrame(frame);
         } else {
-            const radFinal = finalAngle * Math.PI / 180;
+            // Финальный угол шарика задаётся относительно колеса.
+            const finalRad = finalAngle * Math.PI / 180;
             const finalRadius = 97;
 
             ball.style.left =
-                `calc(50% + ${Math.cos(radFinal) * finalRadius}px)`;
+                `calc(50% + ${Math.cos(finalRad) * finalRadius}px)`;
 
             ball.style.top =
-                `calc(50% + ${Math.sin(radFinal) * finalRadius}px)`;
+                `calc(50% + ${Math.sin(finalRad) * finalRadius}px)`;
         }
     }
 
     requestAnimationFrame(frame);
+}
+
+function renderHistory() {
+    historyElement.innerHTML = "";
+
+    history.forEach(item => {
+        const chip = document.createElement("span");
+
+        chip.textContent = item.number;
+        chip.style.display = "inline-grid";
+        chip.style.placeItems = "center";
+        chip.style.width = "32px";
+        chip.style.height = "32px";
+        chip.style.borderRadius = "50%";
+        chip.style.background = getColorHex(item.number);
+        chip.style.color = "white";
+        chip.style.fontWeight = "bold";
+
+        historyElement.appendChild(chip);
+    });
+}
+
+function showResult(number) {
+    resultElement.textContent = number;
+
+    const color = getColor(number);
+
+    resultElement.style.color =
+        color === "red" ? "#ff525b" :
+        color === "green" ? "#39d98a" : "white";
+
+    messageElement.textContent =
+        color === "green" ? "Зелёный" :
+        color === "red" ? "Красное" : "Чёрное";
+
+    history.unshift({ number });
+    history = history.slice(0, 12);
+
+    renderHistory();
 }
 
 function spin() {
@@ -261,70 +326,36 @@ function spin() {
     const index = Math.floor(Math.random() * numbers.length);
     const number = numbers[index];
 
-    const segment = 360 / numbers.length;
-    const targetAngle = index * segment + segment / 2;
+    const duration = 6000;
 
-    const extraRotation = 360 * 6;
-    const rotation = extraRotation - targetAngle;
+    const targetRotation = getWheelTarget(index);
+    wheelRotation = targetRotation;
 
-    wheelRotation += rotation;
+    // Угол выбранного сектора после поворота колеса.
+    const finalBallAngle = -90;
 
     wheel.style.transition =
-        "transform 5.2s cubic-bezier(0.12, 0.65, 0.12, 1)";
+        `transform ${duration}ms cubic-bezier(0.12, 0.65, 0.12, 1)`;
 
     wheel.style.transform =
-        `rotate(${wheelRotation}deg)`;
+        `rotate(${targetRotation}deg)`;
 
-    animateBall(-90);
+    // Шарик вращается независимо от колеса.
+    animateBall(finalBallAngle, duration);
 
     setTimeout(() => {
-        resultElement.textContent = number;
-        resultElement.style.color =
-            getColor(number) === "red" ? "#ff525b" :
-            getColor(number) === "green" ? "#39d98a" :
-            "white";
-
-        messageElement.textContent =
-            getColor(number) === "green"
-                ? "Зелёный"
-                : getColor(number) === "red"
-                    ? "Красное"
-                    : "Чёрное";
-
-        history.unshift({
-            number,
-            color: getColor(number)
-        });
-
-        history = history.slice(0, 12);
-
-        historyElement.innerHTML = "";
-
-        history.forEach(item => {
-            const chip = document.createElement("span");
-
-            chip.textContent = item.number;
-            chip.style.display = "inline-grid";
-            chip.style.placeItems = "center";
-            chip.style.width = "32px";
-            chip.style.height = "32px";
-            chip.style.borderRadius = "50%";
-            chip.style.background =
-                item.color === "red" ? "#b92c35" :
-                item.color === "green" ? "#16834b" :
-                "#171923";
-
-            historyElement.appendChild(chip);
-        });
+        showResult(number);
 
         spinning = false;
         spinButton.disabled = false;
-    }, 5300);
+    }, duration + 100);
 }
 
 createWheel();
 
-spinButton.addEventListener("click", spin);
+if (spinButton) {
+    spinButton.addEventListener("click", spin);
+}
 
 async function loadGame() {
     try {
