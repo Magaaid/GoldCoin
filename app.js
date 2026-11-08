@@ -547,8 +547,6 @@ async function requestSlotSpin(isBonus = false) {
         return;
     }
 
-    const balanceBefore = state.balance;
-
     if (isBonus) {
         let currentSpin = 1;
         slotStatus.textContent = `🎁 БОНУСКА АКТИВИРОВАНА! Спин 1 из 15...`;
@@ -571,9 +569,17 @@ async function requestSlotSpin(isBonus = false) {
                 state = { balance: result.balance, income: result.income, upgrade_cost: result.upgrade_cost };
                 updateUI();
 
-                const delta = Math.abs(result.balance - balanceBefore);
                 zeusBadge.textContent = `⚡ ×${result.zeus}`;
-                slotStatus.textContent = `🎉 БОНУСКА ЗАВЕРШЕНА! Общий множитель ×${result.slotMultiplier}! Выигрыш: +${formatCoins(delta)} байтов`;
+
+                const bonusCost = amount * 100;
+                const netProfit = (amount * result.slotMultiplier) - bonusCost;
+                const formattedDelta = formatCoins(Math.abs(netProfit));
+
+                if (netProfit >= 0) {
+                    slotStatus.textContent = `🎉 БОНУСКА ЗАВЕРШЕНА! Множитель ×${result.slotMultiplier}! Выигрыш: +${formattedDelta} байтов`;
+                } else {
+                    slotStatus.textContent = `💀 БОНУСКА ЗАВЕРШЕНА! Множитель ×${result.slotMultiplier}. В минус: −${formattedDelta} байтов`;
+                }
 
                 spinning = false;
                 slotButton.disabled = false;
@@ -598,11 +604,11 @@ async function requestSlotSpin(isBonus = false) {
                 state = { balance: result.balance, income: result.income, upgrade_cost: result.upgrade_cost };
                 updateUI();
 
-                const delta = Math.abs(result.balance - balanceBefore);
+                const delta = Math.abs(result.balance - (state.balance - (result.balance - state.balance))); // на всякий случай чистый дельта
                 zeusBadge.textContent = `⚡ ×${result.zeus}`;
 
                 if (result.win) {
-                    slotStatus.textContent = `⚡ Победа! Множитель ×${result.slotMultiplier}! +${formatCoins(delta)} байтов`;
+                    slotStatus.textContent = `⚡ Победа! Множитель ×${result.slotMultiplier}! +${formatCoins(Math.abs(amount * result.slotMultiplier - amount))} байтов`;
                 } else {
                     slotStatus.textContent = `Манна богов исчерпана. Попробуй еще!`;
                 }
