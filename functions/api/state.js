@@ -112,7 +112,7 @@ async function getUser(env, id) {
     `).bind(String(id)).first();
 }
 
-// ---------- РУЛЕТКА (всё считается на сервере) ----------
+// ---------- ИГРЫ (всё считается на сервере) ----------
 
 const RED_NUMBERS = [
     1, 3, 5, 7, 9, 12, 14, 16, 18,
@@ -127,6 +127,8 @@ const MULTIPLIERS = {
     zero: 36
 };
 
+const COIN_MULTIPLIER = 1.9;
+
 // Честное случайное число 0..36 без перекоса
 function randomRouletteNumber() {
     const buf = new Uint32Array(1);
@@ -139,6 +141,13 @@ function randomRouletteNumber() {
     return buf[0] % 37;
 }
 
+function randomCoinSide() {
+    const buf = new Uint8Array(1);
+    crypto.getRandomValues(buf);
+
+    return (buf[0] & 1) === 0 ? "heads" : "tails";
+}
+
 function isWin(choice, number) {
     switch (choice) {
         case "zero": return number === 0;
@@ -148,6 +157,45 @@ function isWin(choice, number) {
         case "odd": return number % 2 === 1;
         default: return false;
     }
+}
+
+// Общая логика ставки для любой игры:
+// проверяет сумму, разыгрывает, списывает или умножает.
+async function settleBet(env, id, body, multiplier, play) {
+    const current = await getUser(env, id);
+
+    // «Всё» берём с сервера, остальное — сумма от игрока
+    const amount = body.all === true
+        ? current.balance
+        : Number(body.amount);
+
+    if (!Number.isFinite(amount) || amount < 1) {
+        return response({ error: "Слишком маленькая ставка" }, 400);
+    }
+
+    if (amount > current.balance) {
+        return response({ error: "Недостаточно коинов" }, 400);
+    }
+
+    const outcome = play(); // { win, ...данные игры }
+
+    // Выигрыш: + ставка × (множитель − 1), проигрыш: − ставка
+    const delta = outcome.win ? amount * (multiplier - 1) : -amount;
+
+    const result = await env.DB.prepare(`
+        UPDATE users
+        SET balance = balance + ?
+        WHERE telegram_id = ?
+        AND balance >= ?
+    `).bind(delta, id, amount).run();
+
+    if (result.meta.changes === 0) {
+        return response({ error: "Недостаточно коинов" }, 400);
+    }
+
+    const user = await getUser(env, id);
+
+    return response({ ...user, ...outcome });
 }
 
 export async function onRequestGet({ request, env }) {
@@ -227,42 +275,24 @@ export async function onRequestPost({ request, env }) {
                 return response({ error: "Неизвестный прогноз" }, 400);
             }
 
-            const current = await getUser(env, id);
+            return await settleBet(env, id, body, MULTIPLIERS[choice], () => {
+                const number = randomRouletteNumber();
 
-            // «Всё» берём с сервера, остальное — сумма от игрока
-            const amount = body.all === true
-                ? current.balance
-                : Number(body.amount);
+                return { number, win: isWin(choice, number) };
+            });
 
-            if (!Number.isFinite(amount) || amount < 1) {
-                return response({ error: "Слишком маленькая ставка" }, 400);
+        } else if (body.action === "coin") {
+            const choice = String(body.choice);
+
+            if (choice !== "heads" && choice !== "tails") {
+                return response({ error: "Неизвестная сторона" }, 400);
             }
 
-            if (amount > current.balance) {
-                return response({ error: "Недостаточно коинов" }, 400);
-            }
+            return await settleBet(env, id, body, COIN_MULTIPLIER, () => {
+                const side = randomCoinSide();
 
-            const multiplier = MULTIPLIERS[choice];
-            const number = randomRouletteNumber();
-            const win = isWin(choice, number);
-
-            // Выигрыш: + ставка × (множитель − 1), проигрыш: − ставка
-            const delta = win ? amount * (multiplier - 1) : -amount;
-
-            const result = await env.DB.prepare(`
-                UPDATE users
-                SET balance = balance + ?
-                WHERE telegram_id = ?
-                AND balance >= ?
-            `).bind(delta, id, amount).run();
-
-            if (result.meta.changes === 0) {
-                return response({ error: "Недостаточно коинов" }, 400);
-            }
-
-            const user = await getUser(env, id);
-
-            return response({ ...user, number, win });
+                return { side, win: side === choice };
+            });
 
         } else {
             return response({ error: "Unknown action" }, 400);
