@@ -1138,14 +1138,10 @@ h1 {
     color: #fff !important;
     -webkit-text-stroke: 0.4px #171717;
 }
-/* Цвет процентов и шансов */
 .prediction-option,
-.prediction-option b,
-.chance,
-.chance-value,
-.probability,
-.probability-value,
-.percent,
-.percentage {
-    color: var(--accent-color) !important;
+.bet-quick button,
+.quick-bets button {
+    background: var(--accent-color) !important;
+    color: #fff !important;
+    border-color: var(--accent-color) !important;
 }
