@@ -251,3 +251,51 @@
     </script>
 </body>
 </html>
+    <script src="app.js"></script>
+
+    <!-- УЛЬТИМАТИВНАЯ ПЛАВАЮЩАЯ КНОПКА НАСТРОЕК -->
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            // Создаем кнопку, которая прилипнет к правому нижнему углу экрана
+            const floatBtn = document.createElement("button");
+            floatBtn.textContent = "⚙️ Темы";
+            floatBtn.style.cssText = `
+                position: fixed;
+                bottom: 20px;
+                right: 20px;
+                z-index: 99999;
+                background: #8b5cf6;
+                color: white;
+                border: none;
+                border-radius: 50px;
+                padding: 12px 18px;
+                font-weight: bold;
+                font-size: 14px;
+                box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+                cursor: pointer;
+            `;
+
+            document.body.appendChild(floatBtn);
+
+            // По клику открываем настройки
+            floatBtn.addEventListener("click", () => {
+                document.querySelectorAll(".tab-button").forEach(item => {
+                    item.classList.remove("active");
+                    if (item.dataset.game === "settings") {
+                        item.classList.add("active");
+                    }
+                });
+
+                document.querySelectorAll(".game-view").forEach(view => {
+                    if (view.id === "game-settings") {
+                        view.classList.remove("hidden");
+                    } else {
+                        view.classList.add("hidden");
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
+
