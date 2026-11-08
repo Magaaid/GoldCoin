@@ -1138,3 +1138,25 @@ colorButtons.forEach(button => {
 
 const savedTheme = localStorage.getItem("gcoin_theme_color") || "#8b5cf6";
 setThemeColor(savedTheme);
+// Переход в настройки из вкладки промокодов
+const goToSettingsBtn = document.getElementById("goToSettingsBtn");
+if (goToSettingsBtn) {
+    goToSettingsBtn.addEventListener("click", () => {
+        // Убираем класс active у всех кнопок вкладок и ставим на настройки
+        document.querySelectorAll(".tab-button").forEach(item => {
+            item.classList.remove("active");
+            if (item.dataset.game === "settings") {
+                item.classList.add("active");
+            }
+        });
+
+        // Скрываем все экраны игр и показываем настройки
+        document.querySelectorAll(".game-view").forEach(view => {
+            if (view.id === "game-settings") {
+                view.classList.remove("hidden");
+            } else {
+                view.classList.add("hidden");
+            }
+        });
+    });
+}
