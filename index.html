@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>GCoin</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css?v=999">
 </head>
 <body>
     <div class="app">
@@ -209,6 +209,21 @@
         </div>
     </div>
 
-    <script src="app.js"></script>
+    <script src="app.js?v=999"></script>
+
+    <!-- СТРАХОВОЙ СКРИПТ: ЕСЛИ КНОПКА ПО КАКОЙ-ТО ПРИЧИНЕ НЕ ОТОБРАЗИЛАСЬ, ОНА СОЗДАСТСЯ АВТОМАТИЧЕСКИ -->
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const promoView = document.getElementById("game-promo");
+            if (promoView && !document.getElementById("goToSettingsBtn")) {
+                const btn = document.createElement("button");
+                btn.id = "goToSettingsBtn";
+                btn.className = "btn btn-secondary full-width";
+                btn.style.marginTop = "15px";
+                btn.textContent = "⚙️ Открыть настройки темы";
+                promoView.appendChild(btn);
+            }
+        });
+    </script>
 </body>
 </html>
