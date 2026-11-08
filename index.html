@@ -5,21 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>GCoin</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <script>
-window.addEventListener("error", function(e) {
-    const errorBox = document.createElement("pre");
-    errorBox.style.cssText =
-        "background:#900;color:white;padding:15px;font-size:14px;white-space:pre-wrap;";
-    errorBox.textContent = "JS ERROR: " + e.message;
-    document.body.prepend(errorBox);
-});
-    </script>
-    <link rel="stylesheet" href="style.css?v=1000">
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div style="background:red;color:white;padding:20px;font-size:20px;">
-    HTML TEST — ЕСЛИ ВИДНО, HTML ЗАГРУЖАЕТСЯ
-    </div>
+    <div class="app">
         <!-- Баланс и кликер -->
         <header class="card header-card">
             <div class="balance-label">Твой баланс</div>
@@ -39,30 +28,7 @@ window.addEventListener("error", function(e) {
             <button class="tab-button" data-game="blackjack">🃏 Блекджек</button>
             <button class="tab-button" data-game="transfer">💸 Перевод</button>
             <button class="tab-button" data-game="promo">🎁 Промо</button>
-            <button class="tab-button" data-game="settings">⚙️ Настройки</button>
-                </nav>
-
-        <!-- ОТДЕЛЬНАЯ КНОПКА НАСТРОЕК -->
-        <button
-            id="settingsQuickButton"
-            onclick="openSettingsPanel()"
-            style="
-                display: block;
-                width: 100%;
-                padding: 14px;
-                background: #8b5cf6;
-                color: white;
-                border: none;
-                border-radius: 12px;
-                font-size: 15px;
-                font-weight: 800;
-                cursor: pointer;
-            "
-        >
-            ⚙️ ОТКРЫТЬ НАСТРОЙКИ
-        </button>
-
-        <!-- Общая панель ставки -->
+        </nav>
 
         <!-- Общая панель ставки -->
         <section class="card bet-card">
@@ -213,73 +179,9 @@ window.addEventListener("error", function(e) {
             <input type="text" id="promoInput" class="bet-input" placeholder="Введите промокод">
             <button id="promoButton" class="btn btn-primary full-width">Активировать</button>
             <div id="promoStatus" class="status-text"></div>
-
-            <!-- КНОПКА ПЕРЕХОДА В НАСТРОЙКИ -->
-            <button id="goToSettingsBtn" class="btn btn-secondary full-width" style="margin-top: 15px;">
-                ⚙️ Открыть настройки темы
-            </button>
-        </div>
-
-        <!-- 7. НАСТРОЙКИ ТЕМЫ -->
-        <div id="game-settings" class="game-view card hidden">
-            <h3>🎨 Настройки темы</h3>
-            <p>Выбери любимый цвет интерфейса для своего казино:</p>
-            
-            <div class="color-picker-grid">
-                <button class="color-btn" data-color="#3b82f6" style="background: #3b82f6;" title="Синий неон"></button>
-                <button class="color-btn" data-color="#8b5cf6" style="background: #8b5cf6;" title="Фиолетовый космос"></button>
-                <button class="color-btn" data-color="#10b981" style="background: #10b981;" title="Изумрудный зелёный"></button>
-                <button class="color-btn" data-color="#f59e0b" style="background: #f59e0b;" title="Золотое солнце"></button>
-                <button class="color-btn" data-color="#ef4444" style="background: #ef4444;" title="Киберпанк красный"></button>
-                <button class="color-btn" data-color="#ec4899" style="background: #ec4899;" title="Неоновый розовый"></button>
-                <button class="color-btn" data-color="#06b6d4" style="background: #06b6d4;" title="Бирюзовый океан"></button>
-                <button class="color-btn" data-color="#84cc16" style="background: #84cc16;" title="Лаймовый свежий"></button>
-                <button class="color-btn" data-color="#6366f1" style="background: #6366f1;" title="Индиго глубокий"></button>
-                <button class="color-btn" data-color="#a855f7" style="background: #a855f7;" title="Пурпурный маг"></button>
-            </div>
-            
-            <div id="settingsStatus" class="status-text" style="margin-top: 15px;">Текущая тема применена</div>
         </div>
     </div>
 
-    <script src="app.js?v=1000"></script>
-
-<script>
-    function openSettingsPanel() {
-        document.querySelectorAll(".tab-button").forEach(button => {
-            button.classList.toggle(
-                "active",
-                button.dataset.game === "settings"
-            );
-        });
-
-        document.querySelectorAll(".game-view").forEach(view => {
-            view.classList.toggle(
-                "hidden",
-                view.id !== "game-settings"
-            );
-        });
-
-        window.scrollTo({
-            top: 0,
-            behavior: "smooth"
-        });
-    }
-
-    document.addEventListener("DOMContentLoaded", function () {
-        const settingsButton = document.getElementById("settingsQuickButton");
-
-        if (settingsButton) {
-            settingsButton.style.display = "block";
-            settingsButton.addEventListener("click", openSettingsPanel);
-        }
-
-        const promoButton = document.getElementById("goToSettingsBtn");
-
-        if (promoButton) {
-            promoButton.addEventListener("click", openSettingsPanel);
-        }
-    });
-</script>
+    <script src="app.js"></script>
 </body>
 </html>
