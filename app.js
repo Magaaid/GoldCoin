@@ -1,684 +1,706 @@
-const tg = window.Telegram.WebApp;
+Const tg = window.Telegram.WebApp;
 
 tg.ready();
 tg.expand();
 
-const balanceElement = document.getElementById("balance");
-const earnButton = document.getElementById("earnButton");
-const upgradeButton = document.getElementById("upgradeButton");
+Const balanceElement = document.getElementById("balance");
+Const earnButton = document.getElementById("earnButton");
+Const upgradeButton = document.getElementById("upgradeButton");
 
-let state = null;
-let pendingClicks = 0;
-let flushTimer = null;
-let flushPromise = null;
-let upgrading = false;
+Let state = null;
+Let pendingClicks = 0;
+Let flushTimer = null;
+Let flushPromise = null;
+Let upgrading = false;
 
-function formatCoins(value) {
-    return (value / 1000000000).toFixed(10).replace(".", ",");
+Function formatCoins(value) {
+    Return (value / 1000000000).toFixed(10).replace(".", ",");
 }
 
-function updateUI() {
-    if (!state) return;
+Function updateUI() {
+    If (!state) return;
 
-    balanceElement.textContent =
-        formatCoins(state.balance + pendingClicks * state.income) +
+    BalanceElement.textContent =
+        FormatCoins(state.balance + pendingClicks * state.income) +
         " байтов";
 
-    earnButton.textContent = "+" + formatCoins(state.income);
-    upgradeButton.textContent =
+    EarnButton.textContent = "+" + formatCoins(state.income);
+    UpgradeButton.textContent =
         "Улучшение — " + formatCoins(state.upgrade_cost) + " байтов";
     
-    updateBonusButtonCost();
+    UpdateBonusButtonCost();
 }
 
-async function api(action = null, extra = {}) {
-    const options = {
-        method: action ? "POST" : "GET",
-        headers: { "X-Telegram-Init-Data": tg.initData }
+Async function api(action = null, extra = {}) {
+    Const options = {
+        Method: action ? "POST" : "GET",
+        Headers: { "X-Telegram-Init-Data": tg.initData }
     };
 
-    if (action) {
-        options.headers["Content-Type"] = "application/json";
-        options.body = JSON.stringify({ action, ...extra });
+    If (action) {
+        Options.headers["Content-Type"] = "application/json";
+        Options.body = JSON.stringify({ action, ...extra });
     }
 
-    const response = await fetch("/api/state", options);
-    const data = await response.json();
+    Const response = await fetch("/api/state", options);
+    Const data = await response.json();
 
-    if (!response.ok) {
-        throw new Error(data.error || "Ошибка сервера");
+    If (!response.ok) {
+        Throw new Error(data.error || "Ошибка сервера");
     }
 
-    return data;
+    Return data;
 }
 
-function scheduleFlush() {
-    if (flushTimer) clearTimeout(flushTimer);
-    flushTimer = setTimeout(() => {
-        flushQueue().catch(error => {
-            tg.showAlert("Ошибка сохранения: " + error.message);
+Function scheduleFlush() {
+    If (flushTimer) clearTimeout(flushTimer);
+    FlushTimer = setTimeout(() => {
+        FlushQueue().catch(error => {
+            Tg.showAlert("Ошибка сохранения: " + error.message);
         });
     }, 120);
 }
 
-async function flushQueue() {
-    if (flushTimer) {
-        clearTimeout(flushTimer);
-        flushTimer = null;
+Async function flushQueue() {
+    If (flushTimer) {
+        ClearTimeout(flushTimer);
+        FlushTimer = null;
     }
 
-    if (flushPromise) {
-        await flushPromise;
-        if (pendingClicks > 0) return flushQueue();
-        return;
+    If (flushPromise) {
+        Await flushPromise;
+        If (pendingClicks > 0) return flushQueue();
+        Return;
     }
 
-    flushPromise = (async () => {
-        while (pendingClicks > 0) {
-            const count = Math.min(pendingClicks, 1000);
-            const result = await api("earn_batch", { count });
-            pendingClicks -= count;
-            state = result;
-            updateUI();
+    FlushPromise = (async () => {
+        While (pendingClicks > 0) {
+            Const count = Math.min(pendingClicks, 1000);
+            Const result = await api("earn_batch", { count });
+            PendingClicks -= count;
+            State = result;
+            UpdateUI();
         }
     })();
 
-    try {
-        await flushPromise;
+    Try {
+        Await flushPromise;
     } finally {
-        flushPromise = null;
+        FlushPromise = null;
     }
 }
 
-function earn() {
-    if (!state || upgrading || spinning) return;
-    pendingClicks++;
-    updateUI();
-    scheduleFlush();
+Function earn() {
+    If (!state || upgrading || spinning) return;
+    PendingClicks++;
+    UpdateUI();
+    ScheduleFlush();
 }
 
-async function upgrade() {
-    if (!state || upgrading || spinning) return;
-    upgrading = true;
-    upgradeButton.disabled = true;
+Async function upgrade() {
+    If (!state || upgrading || spinning) return;
+    Upgrading = true;
+    UpgradeButton.disabled = true;
 
-    try {
-        await flushQueue();
-        state = await api("upgrade");
-        updateUI();
+    Try {
+        Await flushQueue();
+        State = await api("upgrade");
+        UpdateUI();
     } catch (error) {
-        tg.showAlert(error.message);
+        Tg.showAlert(error.message);
     } finally {
-        upgrading = false;
-        upgradeButton.disabled = false;
+        Upgrading = false;
+        UpgradeButton.disabled = false;
     }
 }
 
 // РУЛЕТКА
-const numbers = [
+Const numbers = [
     0, 32, 15, 19, 4, 21, 2, 25, 17,
     34, 6, 27, 13, 36, 11, 30, 8, 23,
     10, 5, 24, 16, 33, 1, 20, 14, 31,
     9, 22, 18, 29, 7, 28, 12, 35, 3, 26
 ];
-const redNumbers = [1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36];
+Const redNumbers = [1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36];
 
-const wheel = document.getElementById("wheel");
-const ball = document.getElementById("ball");
-const spinButton = document.getElementById("spinButton");
-const resultElement = document.getElementById("rouletteResult");
-const messageElement = document.getElementById("rouletteMessage");
-const historyElement = document.getElementById("rouletteHistory");
+Const wheel = document.getElementById("wheel");
+Const ball = document.getElementById("ball");
+Const spinButton = document.getElementById("spinButton");
+Const resultElement = document.getElementById("rouletteResult");
+Const messageElement = document.getElementById("rouletteMessage");
+Const historyElement = document.getElementById("rouletteHistory");
 
-const SEGMENT = 360 / numbers.length;
-let spinning = false;
-let wheelRotation = 0;
-let history = [];
-let labels = [];
+Const SEGMENT = 360 / numbers.length;
+Let spinning = false;
+Let wheelRotation = 0;
+Let history = [];
+Let labels = [];
 
-function normalizeAngle(angle) {
-    return ((angle % 360) + 360) % 360;
+Function normalizeAngle(angle) {
+    Return ((angle % 360) + 360) % 360;
 }
 
-function getColor(number) {
-    if (number === 0) return "green";
-    return redNumbers.includes(number) ? "red" : "black";
+Function getColor(number) {
+    If (number === 0) return "green";
+    Return redNumbers.includes(number) ? "red" : "black";
 }
 
-function getColorHex(number) {
-    const color = getColor(number);
-    if (color === "red") return "#b92c35";
-    if (color === "green") return "#16834b";
-    return "#171923";
+Function getColorHex(number) {
+    Const color = getColor(number);
+    If (color === "red") return "#b92c35";
+    If (color === "green") return "#16834b";
+    Return "#171923";
 }
 
-function updateLabels(rotation) {
-    labels.forEach(label => {
-        const angle = Number(label.dataset.angle);
-        label.style.transform = `rotate(${angle}deg) translateY(-108px) rotate(${-angle - rotation}deg)`;
+Function updateLabels(rotation) {
+    Labels.forEach(label => {
+        Const angle = Number(label.dataset.angle);
+        Label.style.transform = `rotate(${angle}deg) translateY(-108px) rotate(${-angle - rotation}deg)`;
     });
 }
 
-function createWheel() {
-    const gradient = numbers.map((number, index) => {
-        const start = index * SEGMENT;
-        const end = (index + 1) * SEGMENT;
-        return `${getColorHex(number)} ${start}deg ${end}deg`;
+Function createWheel() {
+    Const gradient = numbers.map((number, index) => {
+        Const start = index * SEGMENT;
+        Const end = (index + 1) * SEGMENT;
+        Return `${getColorHex(number)} ${start}deg ${end}deg`;
     });
 
-    wheel.style.background = `conic-gradient(${gradient.join(",")})`;
-    wheel.querySelectorAll(".wheel-number").forEach(el => el.remove());
-    labels = [];
+    Wheel.style.background = `conic-gradient(${gradient.join(",")})`;
+    Wheel.querySelectorAll(".wheel-number").forEach(el => el.remove());
+    Labels = [];
 
-    numbers.forEach((number, index) => {
-        const label = document.createElement("div");
-        const angle = (index + 0.5) * SEGMENT;
+    Numbers.forEach((number, index) => {
+        Const label = document.createElement("div");
+        Const angle = (index + 0.5) * SEGMENT;
 
-        label.className = "wheel-number";
-        label.textContent = number;
-        label.dataset.angle = angle;
+        Label.className = "wheel-number";
+        Label.textContent = number;
+        Label.dataset.angle = angle;
 
-        label.style.position = "absolute";
-        label.style.left = "50%";
-        label.style.top = "50%";
-        label.style.width = "24px";
-        label.style.height = "18px";
-        label.style.lineHeight = "18px";
-        label.style.marginLeft = "-12px";
-        label.style.marginTop = "-9px";
-        label.style.textAlign = "center";
-        label.style.fontSize = "11px";
-        label.style.fontWeight = "bold";
-        label.style.color = "white";
-        label.style.pointerEvents = "none";
-        label.style.zIndex = "2";
+        Label.style.position = "absolute";
+        Label.style.left = "50%";
+        Label.style.top = "50%";
+        Label.style.width = "24px";
+        Label.style.height = "18px";
+        Label.style.lineHeight = "18px";
+        Label.style.marginLeft = "-12px";
+        Label.style.marginTop = "-9px";
+        Label.style.textAlign = "center";
+        Label.style.fontSize = "11px";
+        Label.style.fontWeight = "bold";
+        Label.style.color = "white";
+        Label.style.pointerEvents = "none";
+        Label.style.zIndex = "2";
 
-        wheel.appendChild(label);
-        labels.push(label);
+        Wheel.appendChild(label);
+        Labels.push(label);
     });
 
-    updateLabels(0);
+    UpdateLabels(0);
 }
 
-const wheelFrame = wheel.parentElement;
-if (ball && wheelFrame) {
-    wheelFrame.appendChild(ball);
-    ball.style.transform = "translate(-50%, -50%)";
+Const wheelFrame = wheel.parentElement;
+If (ball && wheelFrame) {
+    WheelFrame.appendChild(ball);
+    Ball.style.transform = "translate(-50%, -50%)";
 }
 
-function setBallPosition(angle, radius) {
-    const rad = angle * Math.PI / 180;
-    const x = Math.sin(rad) * radius;
-    const y = -Math.cos(rad) * radius;
-    ball.style.left = `calc(50% + ${x}px)`;
-    ball.style.top = `calc(50% + ${y}px)`;
+Function setBallPosition(angle, radius) {
+    Const rad = angle * Math.PI / 180;
+    Const x = Math.sin(rad) * radius;
+    Const y = -Math.cos(rad) * radius;
+    Ball.style.left = `calc(50% + ${x}px)`;
+    Ball.style.top = `calc(50% + ${y}px)`;
 }
 
-function getTargetRotation(index) {
-    const sectorCenter = (index + 0.5) * SEGMENT;
-    const desired = normalizeAngle(-sectorCenter);
-    const current = normalizeAngle(wheelRotation);
-    const extra = normalizeAngle(desired - current);
-    return wheelRotation + 360 * 7 + extra;
+Function getTargetRotation(index) {
+    Const sectorCenter = (index + 0.5) * SEGMENT;
+    Const desired = normalizeAngle(-sectorCenter);
+    Const current = normalizeAngle(wheelRotation);
+    Const extra = normalizeAngle(desired - current);
+    Return wheelRotation + 360 * 7 + extra;
 }
 
-function renderHistory() {
-    historyElement.innerHTML = "";
-    history.forEach(item => {
-        const chip = document.createElement("span");
-        chip.textContent = item.number;
-        chip.style.display = "inline-grid";
-        chip.style.placeItems = "center";
-        chip.style.width = "32px";
-        chip.style.height = "32px";
-        chip.style.borderRadius = "50%";
-        chip.style.background = getColorHex(item.number);
-        chip.style.color = "white";
-        chip.style.fontWeight = "bold";
-        historyElement.appendChild(chip);
+Function renderHistory() {
+    HistoryElement.innerHTML = "";
+    History.forEach(item => {
+        Const chip = document.createElement("span");
+        Chip.textContent = item.number;
+        Chip.style.display = "inline-grid";
+        Chip.style.placeItems = "center";
+        Chip.style.width = "32px";
+        Chip.style.height = "32px";
+        Chip.style.borderRadius = "50%";
+        Chip.style.background = getColorHex(item.number);
+        Chip.style.color = "white";
+        Chip.style.fontWeight = "bold";
+        HistoryElement.appendChild(chip);
     });
 }
 
-function showResult(number) {
-    const color = getColor(number);
-    resultElement.textContent = number;
-    resultElement.style.color = color === "red" ? "#ff525b" : color === "green" ? "#39d98a" : "white";
-    messageElement.textContent = color === "green" ? "Зелёное" : color === "red" ? "Красное" : "Чёрное";
+Function showResult(number) {
+    Const color = getColor(number);
+    ResultElement.textContent = number;
+    ResultElement.style.color = color === "red" ? "#ff525b" : color === "green" ? "#39d98a" : "white";
+    MessageElement.textContent = color === "green" ? "Зелёное" : color === "red" ? "Красное" : "Чёрное";
 
-    history.unshift({ number });
-    history = history.slice(0, 12);
-    renderHistory();
+    History.unshift({ number });
+    History = history.slice(0, 12);
+    RenderHistory();
 }
 
-function animateSpin(number, onDone) {
-    const index = numbers.indexOf(number);
-    const duration = 6500;
-    const startTime = performance.now();
-    const startRotation = wheelRotation;
-    const targetRotation = getTargetRotation(index);
-    const ballTurns = 7;
+Function animateSpin(number, onDone) {
+    Const index = numbers.indexOf(number);
+    Const duration = 6500;
+    Const startTime = performance.now();
+    Const startRotation = wheelRotation;
+    Const targetRotation = getTargetRotation(index);
+    Const ballTurns = 7;
 
-    function frame(now) {
-        const progress = Math.min((now - startTime) / duration, 1);
-        const eased = 1 - Math.pow(1 - progress, 3);
-        const currentRotation = startRotation + (targetRotation - startRotation) * eased;
+    Function frame(now) {
+        Const progress = Math.min((now - startTime) / duration, 1);
+        Const eased = 1 - Math.pow(1 - progress, 3);
+        Const currentRotation = startRotation + (targetRotation - startRotation) * eased;
 
-        wheel.style.transform = `rotate(${currentRotation}deg)`;
-        updateLabels(currentRotation);
+        Wheel.style.transform = `rotate(${currentRotation}deg)`;
+        UpdateLabels(currentRotation);
 
-        const ballAngle = -360 * ballTurns * eased;
-        const drop = Math.max(0, (progress - 0.82) / 0.18);
-        const radius = 119 - 22 * drop;
+        Const ballAngle = -360 * ballTurns * eased;
+        Const drop = Math.max(0, (progress - 0.82) / 0.18);
+        Const radius = 119 - 22 * drop;
 
-        setBallPosition(ballAngle, radius);
+        SetBallPosition(ballAngle, radius);
 
-        if (progress < 1) {
-            requestAnimationFrame(frame);
+        If (progress < 1) {
+            RequestAnimationFrame(frame);
         } else {
-            wheelRotation = targetRotation;
-            wheel.style.transform = `rotate(${wheelRotation}deg)`;
-            updateLabels(wheelRotation);
-            setBallPosition(0, 97);
-            onDone();
+            WheelRotation = targetRotation;
+            Wheel.style.transform = `rotate(${wheelRotation}deg)`;
+            UpdateLabels(wheelRotation);
+            SetBallPosition(0, 97);
+            OnDone();
         }
     }
-    requestAnimationFrame(frame);
+    RequestAnimationFrame(frame);
 }
 
-async function spin() {
-    if (spinning || upgrading || !wheel || !ball || !state) return;
-    if (!selectedPrediction) {
-        tg.showAlert("Сначала выбери прогноз");
-        return;
+Async function spin() {
+    If (spinning || upgrading || !wheel || !ball || !state) return;
+    If (!selectedPrediction) {
+        Tg.showAlert("Сначала выбери прогноз");
+        Return;
     }
 
-    const amount = parseBet();
-    if (!betAll && !amount) {
-        tg.showAlert("Введи сумму ставки (мин. 100 байтов)");
-        return;
+    Const amount = parseBet();
+    If (!betAll && !amount) {
+        Tg.showAlert("Введи сумму ставки (мин. 100 байтов)");
+        Return;
     }
 
-    spinning = true;
-    spinButton.disabled = true;
-    resultElement.textContent = "?";
-    messageElement.textContent = "Колесо вращается...";
+    Spinning = true;
+    SpinButton.disabled = true;
+    ResultElement.textContent = "?";
+    MessageElement.textContent = "Колесо вращается...";
 
-    let result;
-    try {
-        await flushQueue();
-        result = await api("spin", { choice: selectedPrediction, amount: amount, all: betAll });
+    Let result;
+    Try {
+        Await flushQueue();
+        Result = await api("spin", { choice: selectedPrediction, amount: amount, all: betAll });
     } catch (error) {
-        tg.showAlert(error.message);
-        messageElement.textContent = "Нажми, чтобы запустить колесо";
-        spinning = false;
-        spinButton.disabled = false;
-        return;
+        Tg.showAlert(error.message);
+        MessageElement.textContent = "Нажми, чтобы запустить колесо";
+        Spinning = false;
+        SpinButton.disabled = false;
+        Return;
     }
 
-    const balanceBefore = state.balance;
-    const choiceName = predictionNames[selectedPrediction];
+    Const balanceBefore = state.balance;
+    Const choiceName = predictionNames[selectedPrediction];
 
-    animateSpin(result.number, () => {
-        state = { balance: result.balance, income: result.income, upgrade_cost: result.upgrade_cost };
-        updateUI();
-        showResult(result.number);
+    AnimateSpin(result.number, () => {
+        State = { balance: result.balance, income: result.income, upgrade_cost: result.upgrade_cost };
+        UpdateUI();
+        ShowResult(result.number);
 
-        const delta = Math.abs(result.balance - balanceBefore);
-        predictionStatus.textContent = result.win
+        Const delta = Math.abs(result.balance - balanceBefore);
+        PredictionStatus.textContent = result.win
             ? `Победа! ${choiceName}. Выпало ${result.number}. +${formatCoins(delta)} байтов`
             : `Проигрыш. ${choiceName}. Выпало ${result.number}. −${formatCoins(delta)} байтов`;
 
-        selectedPrediction = null;
-        predictionButtons.forEach(item => item.classList.remove("selected"));
-        spinning = false;
-        spinButton.disabled = false;
+        SelectedPrediction = null;
+        PredictionButtons.forEach(item => item.classList.remove("selected"));
+        Spinning = false;
+        SpinButton.disabled = false;
     });
 }
 
-createWheel();
-if (spinButton) spinButton.addEventListener("click", spin);
+CreateWheel();
+If (spinButton) spinButton.addEventListener("click", spin);
 
-async function loadGame() {
-    try {
-        if (!tg.initData) throw new Error("Открой игру через Telegram");
-        state = await api();
-        updateUI();
+Async function loadGame() {
+    Try {
+        If (!tg.initData) throw new Error("Открой игру через Telegram");
+        State = await api();
+        UpdateUI();
     } catch (error) {
-        tg.showAlert("Не удалось загрузить игру: " + error.message);
+        Tg.showAlert("Не удалось загрузить игру: " + error.message);
     }
 }
 
-earnButton.addEventListener("click", earn);
-upgradeButton.addEventListener("click", upgrade);
-loadGame();
+EarnButton.addEventListener("click", earn);
+UpgradeButton.addEventListener("click", upgrade);
+LoadGame();
 
 // СТАВКА И БОНУСКА
-let betAll = false;
-const betInput = document.getElementById("betInput");
-const quickButtons = document.querySelectorAll(".prediction-option[data-fraction]");
-const buyBonusButton = document.getElementById("buyBonusButton");
+Let betAll = false;
+Const betInput = document.getElementById("betInput");
+Const quickButtons = document.querySelectorAll(".prediction-option[data-fraction]");
+Const buyBonusButton = document.getElementById("buyBonusButton");
 
-function parseBet() {
-    const raw = betInput.value.trim().replace(",", ".");
-    const coins = Number(raw);
-    if (!raw || !Number.isFinite(coins) || coins < 1) return null;
-    return Math.round(coins * 1000000000);
+Function parseBet() {
+    Const raw = betInput.value.trim().replace(",", ".");
+    Const coins = Number(raw);
+    If (!raw || !Number.isFinite(coins) || coins < 1) return null;
+    Return Math.round(coins * 1000000000);
 }
 
-function updateBonusButtonCost() {
-    if (!buyBonusButton) return;
-    let amount = parseBet();
-    if (betAll && state) {
-        amount = state.balance;
+Function updateBonusButtonCost() {
+    If (!buyBonusButton) return;
+    Let amount = parseBet();
+    If (betAll && state) {
+        Amount = state.balance;
     }
     
-    if (amount && amount > 0) {
-        const bonusCost = amount * 100;
-        buyBonusButton.textContent = `🎁 КУПИТЬ БОНУСКУ — ${formatCoins(bonusCost)}`;
+    If (amount && amount > 0) {
+        Const bonusCost = amount * 100;
+        BuyBonusButton.textContent = `🎁 КУПИТЬ БОНУСКУ — ${formatCoins(bonusCost)}`;
     } else {
-        buyBonusButton.textContent = `🎁 КУПИТЬ БОНУСКУ (×100)`;
+        BuyBonusButton.textContent = `🎁 КУПИТЬ БОНУСКУ (×100)`;
     }
 }
 
-betInput.addEventListener("input", () => {
-    betAll = false;
-    quickButtons.forEach(item => item.classList.remove("selected"));
-    updateBonusButtonCost();
+BetInput.addEventListener("input", () => {
+    BetAll = false;
+    QuickButtons.forEach(item => item.classList.remove("selected"));
+    UpdateBonusButtonCost();
 });
 
-quickButtons.forEach(button => {
-    button.addEventListener("click", () => {
-        if (spinning || !state) return;
-        const fraction = Number(button.dataset.fraction);
-        quickButtons.forEach(item => item.classList.remove("selected"));
-        button.classList.add("selected");
-        betAll = fraction === 1;
-        betInput.value = formatCoins(Math.floor(state.balance * fraction));
-        updateBonusButtonCost();
+QuickButtons.forEach(button => {
+    Button.addEventListener("click", () => {
+        If (spinning || !state) return;
+        Const fraction = Number(button.dataset.fraction);
+        QuickButtons.forEach(item => item.classList.remove("selected"));
+        Button.classList.add("selected");
+        BetAll = fraction === 1;
+        BetInput.value = formatCoins(Math.floor(state.balance * fraction));
+        UpdateBonusButtonCost();
     });
 });
 
 // ПРОГНОЗЫ РУЛЕТКИ
-let selectedPrediction = null;
-const predictionStatus = document.getElementById("predictionStatus");
-const predictionButtons = document.querySelectorAll(".prediction-option[data-choice]");
-const predictionMultipliers = { red: 1.9, black: 1.9, even: 1.9, odd: 1.9, zero: 36 };
-const predictionNames = { red: "Красное", black: "Чёрное", even: "Чётное", odd: "Нечётное", zero: "Ноль" };
+Let selectedPrediction = null;
+Const predictionStatus = document.getElementById("predictionStatus");
+Const predictionButtons = document.querySelectorAll(".prediction-option[data-choice]");
+Const predictionMultipliers = { red: 1.9, black: 1.9, even: 1.9, odd: 1.9, zero: 36 };
+Const predictionNames = { red: "Красное", black: "Чёрное", even: "Чётное", odd: "Нечётное", zero: "Ноль" };
 
-predictionButtons.forEach(button => {
-    button.addEventListener("click", () => {
-        if (spinning) return;
-        predictionButtons.forEach(item => item.classList.remove("selected"));
-        button.classList.add("selected");
-        selectedPrediction = button.dataset.choice;
-        predictionStatus.textContent = "Прогноз: " + predictionNames[selectedPrediction] + " ×" + predictionMultipliers[selectedPrediction];
+PredictionButtons.forEach(button => {
+    Button.addEventListener("click", () => {
+        If (spinning) return;
+        PredictionButtons.forEach(item => item.classList.remove("selected"));
+        Button.classList.add("selected");
+        SelectedPrediction = button.dataset.choice;
+        PredictionStatus.textContent = "Прогноз: " + predictionNames[selectedPrediction] + " ×" + predictionMultipliers[selectedPrediction];
     });
 });
 
 // МОНЕТКА
-let selectedCoin = null;
-let coinRotation = 0;
-const coinElement = document.getElementById("coin");
-const coinButton = document.getElementById("coinButton");
-const coinStatus = document.getElementById("coinStatus");
-const coinChoiceButtons = document.querySelectorAll(".prediction-option[data-coin]");
-const coinNames = { heads: "Орёл", tails: "Решка" };
+Let selectedCoin = null;
+Let coinRotation = 0;
+Const coinElement = document.getElementById("coin");
+Const coinButton = document.getElementById("coinButton");
+Const coinStatus = document.getElementById("coinStatus");
+Const coinChoiceButtons = document.querySelectorAll(".prediction-option[data-coin]");
+Const coinNames = { heads: "Орёл", tails: "Решка" };
 
-coinChoiceButtons.forEach(button => {
-    button.addEventListener("click", () => {
-        if (spinning) return;
-        coinChoiceButtons.forEach(item => item.classList.remove("selected"));
-        button.classList.add("selected");
-        selectedCoin = button.dataset.coin;
-        coinStatus.textContent = "Выбрано: " + coinNames[selectedCoin] + " ×1.9";
+CoinChoiceButtons.forEach(button => {
+    Button.addEventListener("click", () => {
+        If (spinning) return;
+        CoinChoiceButtons.forEach(item => item.classList.remove("selected"));
+        Button.classList.add("selected");
+        SelectedCoin = button.dataset.coin;
+        CoinStatus.textContent = "Выбрано: " + coinNames[selectedCoin] + " ×1.9";
     });
 });
 
-function animateCoin(side, onDone) {
-    const needed = side === "heads" ? 0 : 180;
-    const current = normalizeAngle(coinRotation);
-    const extra = normalizeAngle(needed - current);
-    coinRotation = coinRotation + 360 * 5 + extra;
-    coinElement.style.transform = `rotateY(${coinRotation}deg)`;
-    setTimeout(onDone, 2100);
+Function animateCoin(side, onDone) {
+    Const needed = side === "heads" ? 0 : 180;
+    Const current = normalizeAngle(coinRotation);
+    Const extra = normalizeAngle(needed - current);
+    CoinRotation = coinRotation + 360 * 5 + extra;
+    CoinElement.style.transform = `rotateY(${coinRotation}deg)`;
+    SetTimeout(onDone, 2100);
 }
 
-async function flipCoin() {
-    if (spinning || upgrading || !state) return;
-    if (!selectedCoin) {
-        tg.showAlert("Сначала выбери орла или решку");
-        return;
+Async function flipCoin() {
+    If (spinning || upgrading || !state) return;
+    If (!selectedCoin) {
+        Tg.showAlert("Сначала выбери орла или решку");
+        Return;
     }
 
-    const amount = parseBet();
-    if (!betAll && !amount) {
-        tg.showAlert("Введи сумму ставки (мин. 100 байтов)");
-        return;
+    Const amount = parseBet();
+    If (!betAll && !amount) {
+        Tg.showAlert("Введи сумму ставки (мин. 100 байтов)");
+        Return;
     }
 
-    spinning = true;
-    coinButton.disabled = true;
-    coinStatus.textContent = "Монета в воздухе...";
+    Spinning = true;
+    CoinButton.disabled = true;
+    CoinStatus.textContent = "Монета в воздухе...";
 
-    let result;
-    try {
-        await flushQueue();
-        result = await api("coin", { choice: selectedCoin, amount: amount, all: betAll });
+    Let result;
+    Try {
+        Await flushQueue();
+        Result = await api("coin", { choice: selectedCoin, amount: amount, all: betAll });
     } catch (error) {
-        tg.showAlert(error.message);
-        coinStatus.textContent = "Выбери сторону и сумму ставки";
-        spinning = false;
-        coinButton.disabled = false;
-        return;
+        Tg.showAlert(error.message);
+        CoinStatus.textContent = "Выбери сторону и сумму ставки";
+        Spinning = false;
+        CoinButton.disabled = false;
+        Return;
     }
 
-    const balanceBefore = state.balance;
-    const choiceName = coinNames[selectedCoin];
+    Const balanceBefore = state.balance;
+    Const choiceName = coinNames[selectedCoin];
 
-    animateCoin(result.side, () => {
-        state = { balance: result.balance, income: result.income, upgrade_cost: result.upgrade_cost };
-        updateUI();
+    AnimateCoin(result.side, () => {
+        State = { balance: result.balance, income: result.income, upgrade_cost: result.upgrade_cost };
+        UpdateUI();
 
-        const delta = Math.abs(result.balance - balanceBefore);
-        const sideName = coinNames[result.side];
+        Const delta = Math.abs(result.balance - balanceBefore);
+        Const sideName = coinNames[result.side];
 
-        coinStatus.textContent = result.win
+        CoinStatus.textContent = result.win
             ? `Победа! Выпал ${sideName}. +${formatCoins(delta)} байтов`
             : `Проигрыш. Выпал ${sideName} (ты ставил на ${choiceName.toLowerCase()}). −${formatCoins(delta)} байтов`;
 
-        selectedCoin = null;
-        coinChoiceButtons.forEach(item => item.classList.remove("selected"));
-        spinning = false;
-        coinButton.disabled = false;
+        SelectedCoin = null;
+        CoinChoiceButtons.forEach(item => item.classList.remove("selected"));
+        Spinning = false;
+        CoinButton.disabled = false;
     });
 }
-if (coinButton) coinButton.addEventListener("click", flipCoin);
+If (coinButton) coinButton.addEventListener("click", flipCoin);
 
-// СЛОТЫ И БОНУСКА (С ПЛАВНОЙ АНИМАЦИЕЙ И 15 ФРИСПИНАМИ)
-const slotGridElement = document.getElementById("slotGrid");
-const slotButton = document.getElementById("slotButton");
-const slotStatus = document.getElementById("slotStatus");
-const zeusBadge = document.getElementById("zeusMultiplierBadge");
+// СЛОТЫ И БОНУСКА (С КАСКАДНЫМ ПАДЕНИЕМ И ВСПЫШКОЙ ЗЕВСА)
+Const slotGridElement = document.getElementById("slotGrid");
+Const slotButton = document.getElementById("slotButton");
+Const slotStatus = document.getElementById("slotStatus");
+Const zeusBadge = document.getElementById("zeusMultiplierBadge");
 
-const symbolData = {
+Const symbolData = {
     1: { icon: "💎" }, 2: { icon: "🟢" }, 3: { icon: "🟡" },
     4: { icon: "🟠" }, 5: { icon: "🟣" }, 6: { icon: "🏆" },
     7: { icon: "💍" }, 8: { icon: "⏳" }, 9: { icon: "👑" },
     10: { icon: "⚡" }
 };
 
-function renderSlotGrid(grid) {
-    if (!slotGridElement) return;
-    slotGridElement.innerHTML = "";
+Function renderSlotGrid(grid, animate = true) {
+    If (!slotGridElement) return;
+    SlotGridElement.innerHTML = "";
     
-    grid.forEach(row => {
-        row.forEach(sym => {
-            const cell = document.createElement("div");
-            cell.className = "slot-cell";
-            if (sym === 10) cell.classList.add("scatter-cell");
-            if (sym >= 8) cell.classList.add("high-cell");
-            cell.textContent = symbolData[sym]?.icon || "💎";
-            slotGridElement.appendChild(cell);
+    Grid.forEach((row, rIndex) => {
+        Row.forEach((sym, cIndex) => {
+            Const cell = document.createElement("div");
+            Cell.className = "slot-cell";
+            If (animate) {
+                Cell.classList.add("animate-drop");
+                Cell.style.animationDelay = `${(cIndex * 35) + (rIndex * 15)}ms`;
+            }
+            If (sym === 10) cell.classList.add("scatter-cell");
+            If (sym >= 8) cell.classList.add("high-cell");
+            Cell.textContent = symbolData[sym]?.icon || "💎";
+            SlotGridElement.appendChild(cell);
         });
     });
 }
 
-async function requestSlotSpin(isBonus = false) {
-    if (spinning || upgrading || !state) return;
+Async function requestSlotSpin(isBonus = false) {
+    If (spinning || upgrading || !state) return;
 
-    let amount = parseBet();
-    if (betAll) amount = state.balance;
-    if (!amount) amount = 1000000000;
+    Let amount = parseBet();
+    If (betAll) amount = state.balance;
+    If (!amount) amount = 1000000000;
 
-    spinning = true;
-    slotButton.disabled = true;
-    buyBonusButton.disabled = true;
+    Spinning = true;
+    SlotButton.disabled = true;
+    BuyBonusButton.disabled = true;
 
-    let result;
-    try {
-        await flushQueue();
-        result = await api("slot", { amount: amount, all: betAll, isBonus: isBonus });
+    Let result;
+    Try {
+        Await flushQueue();
+        Result = await api("slot", { amount: amount, all: betAll, isBonus: isBonus });
     } catch (error) {
-        tg.showAlert(error.message);
-        slotStatus.textContent = error.message;
-        spinning = false;
-        slotButton.disabled = false;
-        buyBonusButton.disabled = false;
-        return;
+        Tg.showAlert(error.message);
+        SlotStatus.textContent = error.message;
+        Spinning = false;
+        SlotButton.disabled = false;
+        BuyBonusButton.disabled = false;
+        Return;
     }
 
-    if (isBonus) {
-        let currentSpin = 1;
-        slotStatus.textContent = `🎁 БОНУСКА АКТИВИРОВАНА! Спин 1 из 15...`;
-        zeusBadge.textContent = `⚡ ×1`;
+    If (isBonus) {
+        Let currentSpin = 1;
+        SlotStatus.textContent = `🎁 БОНУСКА АКТИВИРОВАНА! Спин 1 из 15...`;
+        ZeusBadge.textContent = `⚡ ×1`;
 
-        const bonusInterval = setInterval(() => {
-            renderSlotGrid(
+        Const bonusInterval = setInterval(() => {
+            RenderSlotGrid(
                 Array.from({ length: 5 }, () =>
                     Array.from({ length: 6 }, () => Math.floor(Math.random() * 9) + 1)
-                )
+                ),
+                True
             );
 
-            currentSpin++;
-            if (currentSpin <= 15) {
-                slotStatus.textContent = `🎁 Бесплатное вращение ${currentSpin} из 15...`;
+            CurrentSpin++;
+            If (currentSpin <= 15) {
+                SlotStatus.textContent = `🎁 Бесплатное вращение ${currentSpin} из 15...`;
             } else {
-                clearInterval(bonusInterval);
-                renderSlotGrid(result.grid);
+                ClearInterval(bonusInterval);
+                RenderSlotGrid(result.grid, true);
 
-                state = { balance: result.balance, income: result.income, upgrade_cost: result.upgrade_cost };
-                updateUI();
+                State = { balance: result.balance, income: result.income, upgrade_cost: result.upgrade_cost };
+                UpdateUI();
 
-                zeusBadge.textContent = `⚡ ×${result.zeus}`;
-
-                const bonusCost = amount * 100;
-                const netProfit = (amount * result.slotMultiplier) - bonusCost;
-                const formattedDelta = formatCoins(Math.abs(netProfit));
-
-                if (netProfit >= 0) {
-                    slotStatus.textContent = `🎉 БОНУСКА ЗАВЕРШЕНА! Множитель ×${result.slotMultiplier}! Выигрыш: +${formattedDelta} байтов`;
-                } else {
-                    slotStatus.textContent = `💀 БОНУСКА ЗАВЕРШЕНА! Множитель ×${result.slotMultiplier}. В минус: −${formattedDelta} байтов`;
+                ZeusBadge.textContent = `⚡ ×${result.zeus}`;
+                If (result.zeus > 0) {
+                    Const frame = document.querySelector(".olympus-frame");
+                    If (frame) {
+                        Frame.classList.remove("zeus-flash");
+                        Void frame.offsetWidth;
+                        Frame.classList.add("zeus-flash");
+                    }
                 }
 
-                spinning = false;
-                slotButton.disabled = false;
-                buyBonusButton.disabled = false;
+                Const bonusCost = amount * 100;
+                Const netProfit = (amount * result.slotMultiplier) - bonusCost;
+                Const formattedDelta = formatCoins(Math.abs(netProfit));
+
+                If (netProfit >= 0) {
+                    SlotStatus.textContent = `🎉 БОНУСКА ЗАВЕРШЕНА! Множитель ×${result.slotMultiplier}! Выигрыш: +${formattedDelta} байтов`;
+                } else {
+                    SlotStatus.textContent = `💀 БОНУСКА ЗАВЕРШЕНА! Множитель ×${result.slotMultiplier}. В минус: −${formattedDelta} байтов`;
+                }
+
+                Spinning = false;
+                SlotButton.disabled = false;
+                BuyBonusButton.disabled = false;
             }
         }, 300);
 
     } else {
-        slotStatus.textContent = `⚡ Барабаны крутятся...`;
-        let counter = 0;
-        const interval = setInterval(() => {
-            renderSlotGrid(
+        SlotStatus.textContent = `⚡ Барабаны крутятся...`;
+        Let counter = 0;
+        Const interval = setInterval(() => {
+            RenderSlotGrid(
                 Array.from({ length: 5 }, () =>
                     Array.from({ length: 6 }, () => Math.floor(Math.random() * 9) + 1)
-                )
+                ),
+                True
             );
-            counter++;
-            if (counter > 14) {
-                clearInterval(interval);
-                renderSlotGrid(result.grid);
+            Counter++;
+            If (counter > 14) {
+                ClearInterval(interval);
+                RenderSlotGrid(result.grid, true);
 
-                state = { balance: result.balance, income: result.income, upgrade_cost: result.upgrade_cost };
-                updateUI();
+                State = { balance: result.balance, income: result.income, upgrade_cost: result.upgrade_cost };
+                UpdateUI();
 
-                const delta = Math.abs(result.balance - (state.balance - (result.balance - state.balance))); // на всякий случай чистый дельта
-                zeusBadge.textContent = `⚡ ×${result.zeus}`;
-
-                if (result.win) {
-                    slotStatus.textContent = `⚡ Победа! Множитель ×${result.slotMultiplier}! +${formatCoins(Math.abs(amount * result.slotMultiplier - amount))} байтов`;
-                } else {
-                    slotStatus.textContent = `Манна богов исчерпана. Попробуй еще!`;
+                ZeusBadge.textContent = `⚡ ×${result.zeus}`;
+                If (result.zeus > 0) {
+                    Const frame = document.querySelector(".olympus-frame");
+                    If (frame) {
+                        Frame.classList.remove("zeus-flash");
+                        Void frame.offsetWidth;
+                        Frame.classList.add("zeus-flash");
+                    }
                 }
 
-                spinning = false;
-                slotButton.disabled = false;
-                buyBonusButton.disabled = false;
+                If (result.win) {
+                    SlotStatus.textContent = `⚡ Победа! Множитель ×${result.slotMultiplier}! +${formatCoins(Math.abs(amount * result.slotMultiplier - amount))} байтов`;
+                } else {
+                    SlotStatus.textContent = `Манна богов исчерпана. Попробуй еще!`;
+                }
+
+                Spinning = false;
+                SlotButton.disabled = false;
+                BuyBonusButton.disabled = false;
             }
         }, 100);
     }
 }
 
-if (slotButton) slotButton.addEventListener("click", () => requestSlotSpin(false));
-if (buyBonusButton) buyBonusButton.addEventListener("click", () => requestSlotSpin(true));
+If (slotButton) slotButton.addEventListener("click", () => requestSlotSpin(false));
+If (buyBonusButton) buyBonusButton.addEventListener("click", () => requestSlotSpin(true));
 
-renderSlotGrid(
+RenderSlotGrid(
     Array.from({ length: 5 }, () =>
         Array.from({ length: 6 }, () => Math.floor(Math.random() * 9) + 1)
-    )
+    ),
+    False
 );
 
 // ПРОМОКОДЫ
-const promoInput = document.getElementById("promoInput");
-const promoButton = document.getElementById("promoButton");
-const promoStatus = document.getElementById("promoStatus");
+Const promoInput = document.getElementById("promoInput");
+Const promoButton = document.getElementById("promoButton");
+Const promoStatus = document.getElementById("promoStatus");
 
-async function redeemPromo() {
-    const code = promoInput.value.trim();
-    if (!code) {
-        promoStatus.textContent = "Введите промокод!";
-        promoStatus.style.color = "#ff525b";
-        return;
+Async function redeemPromo() {
+    Const code = promoInput.value.trim();
+    If (!code) {
+        PromoStatus.textContent = "Введите промокод!";
+        PromoStatus.style.color = "#ff525b";
+        Return;
     }
 
-    promoButton.disabled = true;
-    promoStatus.textContent = "Проверка...";
-    promoStatus.style.color = "#aab1c0";
+    PromoButton.disabled = true;
+    PromoStatus.textContent = "Проверка...";
+    PromoStatus.style.color = "#aab1c0";
 
-    try {
-        await flushQueue();
-        const result = await api("redeem_promo", { code });
+    Try {
+        Await flushQueue();
+        Const result = await api("redeem_promo", { code });
 
-        state = { balance: result.balance, income: result.income, upgrade_cost: result.upgrade_cost };
-        updateUI();
+        State = { balance: result.balance, income: result.income, upgrade_cost: result.upgrade_cost };
+        UpdateUI();
 
-        promoStatus.textContent = `🎉 Промокод активирован! Награда зачислена.`;
-        promoStatus.style.color = "#39d98a";
-        promoInput.value = "";
+        PromoStatus.textContent = `🎉 Промокод активирован! Награда зачислена.`;
+        PromoStatus.style.color = "#39d98a";
+        PromoInput.value = "";
     } catch (error) {
-        promoStatus.textContent = error.message;
-        promoStatus.style.color = "#ff525b";
+        PromoStatus.textContent = error.message;
+        PromoStatus.style.color = "#ff525b";
     } finally {
-        promoButton.disabled = false;
+        PromoButton.disabled = false;
     }
 }
 
-if (promoButton) promoButton.addEventListener("click", redeemPromo);
+If (promoButton) promoButton.addEventListener("click", redeemPromo);
 
 // ВКЛАДКИ
-const tabButtons = document.querySelectorAll(".tab-button");
-const gameViews = document.querySelectorAll(".game-view");
+Const tabButtons = document.querySelectorAll(".tab-button");
+Const gameViews = document.querySelectorAll(".game-view");
 
-tabButtons.forEach(button => {
-    button.addEventListener("click", () => {
-        if (spinning) return;
-        tabButtons.forEach(item => item.classList.remove("active"));
-        button.classList.add("active");
+TabButtons.forEach(button => {
+    Button.addEventListener("click", () => {
+        If (spinning) return;
+        TabButtons.forEach(item => item.classList.remove("active"));
+        Button.classList.add("active");
 
-        gameViews.forEach(view => {
-            view.classList.toggle("hidden", view.id !== "game-" + button.dataset.game);
+        GameViews.forEach(view => {
+            View.classList.toggle("hidden", view.id !== "game-" + button.dataset.game);
         });
     });
 });
