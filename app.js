@@ -494,7 +494,7 @@ async function flipCoin() {
 }
 if (coinButton) coinButton.addEventListener("click", flipCoin);
 
-// СЛОТЫ И БОНУСКА (С КАСКАДНЫМ ПАДЕНИЕМ И ВСПЫШКОЙ ЗЕВСА)
+// СЛОТЫ И БОНУСКА (С КАСКАДНЫМ ПАДЕНИЕМ СЛОВАМИ ПО КОЛОНКАМ И ВСПЫШКОЙ ЗЕВСА)
 const slotGridElement = document.getElementById("slotGrid");
 const slotButton = document.getElementById("slotButton");
 const slotStatus = document.getElementById("slotStatus");
@@ -517,7 +517,8 @@ function renderSlotGrid(grid, animate = true) {
             cell.className = "slot-cell";
             if (animate) {
                 cell.classList.add("animate-drop");
-                cell.style.animationDelay = `${(cIndex * 35) + (rIndex * 15)}ms`;
+                // Падение строго по колонкам слева направо (1-я, 2-я, 3-я...)
+                cell.style.animationDelay = `${cIndex * 55}ms`;
             }
             if (sym === 10) cell.classList.add("scatter-cell");
             if (sym >= 8) cell.classList.add("high-cell");
