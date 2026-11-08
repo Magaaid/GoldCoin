@@ -1,3 +1,4 @@
+
 function response(data, status = 200) {
     return new Response(JSON.stringify(data), {
         status,
@@ -30,7 +31,6 @@ async function verifyTelegram(initData, botToken) {
 
     const encoder = new TextEncoder();
 
-    // Создаём секретный ключ Telegram
     const key = await crypto.subtle.importKey(
         "raw",
         encoder.encode("WebAppData"),
@@ -45,7 +45,6 @@ async function verifyTelegram(initData, botToken) {
         encoder.encode(botToken)
     );
 
-    // Проверяем подпись initData
     const validationKey = await crypto.subtle.importKey(
         "raw",
         secret,
@@ -126,9 +125,7 @@ export async function onRequestGet({ request, env }) {
             return response({ error: auth.error }, 401);
         }
 
-        const data = await getUser(env, auth.user.id);
-
-        return response(data);
+        return response(await getUser(env, auth.user.id));
 
     } catch (error) {
         return response({ error: error.message }, 500);
@@ -152,7 +149,20 @@ export async function onRequestPost({ request, env }) {
 
         await getUser(env, id);
 
-        if (body.action === "earn") {
+        if (body.action === "earn_batch") {
+            const count = Number(body.count);
+
+            if (!Number.isSafeInteger(count) || count < 1 || count > 1000) {
+                return response({ error: "Invalid click count" }, 400);
+            }
+
+            await env.DB.prepare(`
+                UPDATE users
+                SET balance = balance + income * ?
+                WHERE telegram_id = ?
+            `).bind(count, id).run();
+
+        } else if (body.action === "earn") {
             await env.DB.prepare(`
                 UPDATE users
                 SET balance = balance + income
