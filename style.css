@@ -1,245 +1,494 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GCoin</title>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <link rel="stylesheet" href="style.css">
-</head>
-<body>
-    <div class="app">
-        <!-- Баланс и кликер -->
-        <header class="card header-card">
-            <div class="balance-label">Твой баланс</div>
-            <div id="balance" class="balance-value">0,0000000000 байтов</div>
-            <div class="clicker-actions">
-                <button id="earnButton" class="btn btn-primary">+0,0000000005</button>
-                <button id="upgradeButton" class="btn btn-secondary">Улучшение — 0,0000010240 байтов</button>
-            </div>
-        </header>
+:root {
+    --accent-color: #8b5cf6;
+}
 
-        <!-- Переключение игр -->
-        <nav class="tabs">
-            <button class="tab-button active" data-game="slot">⚡ Слоты</button>
-            <button class="tab-button" data-game="roulette">🎡 Рулетка</button>
-            <button class="tab-button" data-game="coin">🪙 Монетка</button>
-            <button class="tab-button" data-game="aviamaster">✈️ Aviamasters</button>
-            <button class="tab-button" data-game="blackjack">🃏 Блекджек</button>
-            <button class="tab-button" data-game="transfer">💸 Перевод</button>
-            <button class="tab-button" data-game="promo">🎁 Промо</button>
-            <button class="tab-button" data-game="settings">⚙️ Настройки</button>
-        </nav>
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+}
 
-        <!-- Общая панель ставки -->
-        <section class="card bet-card">
-            <div class="bet-header">Сумма ставки (байты)</div>
-            <input type="text" id="betInput" class="bet-input" placeholder="Введите ставку (мин. 1)" inputmode="decimal">
-            <div class="quick-bets">
-                <button class="prediction-option" data-fraction="0.25">25%</button>
-                <button class="prediction-option" data-fraction="0.5">50%</button>
-                <button class="prediction-option" data-fraction="1">Всё</button>
-            </div>
-        </section>
+body {
+    background-color: #0f1015;
+    color: #ffffff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    overflow-x: hidden;
+}
 
-        <!-- 1. СЛОТЫ (Gates of Olympus) -->
-        <div id="game-slot" class="game-view olympus-theme">
-            <div class="olympus-header">
-                <div class="olympus-logo">
-                    <span class="logo-small">GATES OF</span>
-                    <span class="logo-main">OLYMPUS</span>
-                </div>
-                <div id="zeusMultiplierBadge" class="zeus-badge">⚡ ×1</div>
-            </div>
+.app {
+    width: 100%;
+    max-width: 480px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
 
-            <div class="olympus-frame">
-                <div id="slotGrid" class="olympus-grid"></div>
-            </div>
+.card {
+    background: #181b22;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 16px;
+    padding: 16px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
 
-            <div id="slotStatus" class="olympus-status">Удачи!</div>
+.header-card {
+    text-align: center;
+    background: linear-gradient(135deg, #181b22 0%, #1f2430 100%);
+    border-bottom: 2px solid var(--accent-color);
+}
 
-            <div class="olympus-controls">
-                <button id="buyBonusButton" class="olympus-bonus-btn">
-                    🎁 КУПИТЬ БОНУСКУ (×100)
-                </button>
-                <div class="olympus-bottom-row" style="justify-content: center;">
-                    <button id="slotButton" class="olympus-spin-btn">
-                        <span class="spin-icon">↻</span>
-                        <span class="spin-text">SPIN</span>
-                    </button>
-                </div>
-            </div>
-        </div>
+.balance-label {
+    font-size: 13px;
+    color: #8a99ad;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 4px;
+}
 
-        <!-- 2. РУЛЕТКА -->
-        <div id="game-roulette" class="game-view card hidden">
-            <div class="wheel-frame">
-                <div id="wheel" class="wheel"></div>
-                <div id="ball" class="ball"></div>
-            </div>
+.balance-value {
+    font-size: 24px;
+    font-weight: 800;
+    color: #ffffff;
+    margin-bottom: 12px;
+}
 
-            <div class="roulette-info">
-                <div id="rouletteResult" class="roulette-result">?</div>
-                <div id="rouletteMessage" class="roulette-message">Нажми, чтобы запустить колесо</div>
-            </div>
+.clicker-actions {
+    display: flex;
+    gap: 8px;
+}
 
-            <div id="predictionStatus" class="status-text">Выбери прогноз</div>
-            <div class="predictions-grid">
-                <button class="prediction-option" data-choice="red">Красное ×1.9</button>
-                <button class="prediction-option" data-choice="black">Чёрное ×1.9</button>
-                <button class="prediction-option" data-choice="even">Чётное ×1.9</button>
-                <button class="prediction-option" data-choice="odd">Нечётное ×1.9</button>
-                <button class="prediction-option" data-choice="zero">Ноль ×36</button>
-            </div>
-
-            <button id="spinButton" class="btn btn-primary full-width">Крутить колесо</button>
-            <div id="rouletteHistory" class="roulette-history"></div>
-        </div>
-
-        <!-- 3. МОНЕТКА -->
-        <div id="game-coin" class="game-view card hidden">
-            <div class="coin-stage">
-                <div id="coin" class="coin">
-                    <div class="coin-face coin-heads">ОРЁЛ</div>
-                    <div class="coin-face coin-tails">РЕШКА</div>
-                </div>
-            </div>
-
-            <div id="coinStatus" class="status-text">Выбери сторону и сумму ставки</div>
-            <div class="predictions-grid">
-                <button class="prediction-option" data-coin="heads">Орёл ×1.9</button>
-                <button class="prediction-option" data-coin="tails">Решка ×1.9</button>
-            </div>
-
-            <button id="coinButton" class="btn btn-primary full-width">Подбросить монетку</button>
-        </div>
-
-        <!-- 4. AVIAMASTERS -->
-        <div id="game-aviamaster" class="game-view card hidden aviamaster-theme">
-            <div class="aviamaster-stage">
-                <div id="aviaMultiplier" class="avia-multiplier">×1.00</div>
-                <div id="planeContainer" class="plane-container">
-                    <span class="plane-icon">✈️</span>
-                </div>
-            </div>
-            <div id="aviaStatus" class="status-text">Сделай ставку и взлетай!</div>
-            <button id="aviaButton" class="btn btn-primary">Запустить полет</button>
-        </div>
-
-        <!-- 5. БЛЕКДЖЕК -->
-        <div id="game-blackjack" class="game-view card hidden blackjack-theme">
-            <h2>Блекджек</h2>
-            <p>Обыграй дилера, набрав 21 очко (или ближе к ним)</p>
-
-            <div class="bj-table">
-                <div class="bj-section">
-                    <div class="bj-label">Дилер (<span id="dealerScore">0</span>)</div>
-                    <div id="dealerCards" class="bj-cards">🂠 🂠</div>
-                </div>
-
-                <div id="bjStatus" class="status-text">Сделай ставку и начни игру</div>
-
-                <div class="bj-section">
-                    <div class="bj-label">Игрок (<span id="playerScore">0</span>)</div>
-                    <div id="playerCards" class="bj-cards">🂠 🂠</div>
-                </div>
-            </div>
-
-            <div class="bj-controls">
-                <button id="bjDealButton" class="btn btn-primary full-width">Раздать карты</button>
-                <div id="bjActionButtons" class="bj-action-grid hidden">
-                    <button id="bjHitButton" class="btn btn-secondary">Ещё</button>
-                    <button id="bjDoubleButton" class="btn btn-secondary">Удвоить</button>
-                    <button id="bjStandButton" class="btn btn-primary">Хватит</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- ПЕРЕВОДЫ -->
-        <div id="game-transfer" class="game-view card hidden">
-            <h3>Перевод байтов игроку</h3>
-            <p>Отправь средства любому пользователю по его Telegram Username</p>
-            
-            <div class="bj-section" style="margin-top: 15px;">
-                <div class="bj-label">Telegram Username получателя</div>
-                <input type="text" id="transferTargetInput" class="bet-input" placeholder="Введите @username" inputmode="text">
-            </div>
-
-            <div class="bj-section">
-                <div class="bj-label">Сумма перевода (байты)</div>
-                <input type="text" id="transferAmountInput" class="bet-input" placeholder="Сумма (мин. 1)" inputmode="decimal">
-            </div>
-
-            <button id="transferButton" class="btn btn-primary full-width" style="margin-top: 10px;">Перевести средства</button>
-            <div id="transferStatus" class="status-text" style="margin-top: 10px;"></div>
-        </div>
-
-        <!-- 6. ПРОМОКОДЫ -->
-        <div id="game-promo" class="game-view card hidden">
-            <h3>Активация промокода</h3>
-            <input type="text" id="promoInput" class="bet-input" placeholder="Введите промокод">
-            <button id="promoButton" class="btn btn-primary full-width">Активировать</button>
-            <div id="promoStatus" class="status-text"></div>
-        </div>
-
-        <!-- 7. НАСТРОЙКИ ТЕМЫ -->
-        <div id="game-settings" class="game-view card hidden">
-            <h3>🎨 Настройки темы</h3>
-            <p>Выбери любимый цвет интерфейса для своего казино:</p>
-            
-            <div class="color-picker-grid">
-                <button class="color-btn" data-color="#3b82f6" style="background: #3b82f6;" title="Синий неон"></button>
-                <button class="color-btn" data-color="#8b5cf6" style="background: #8b5cf6;" title="Фиолетовый космос"></button>
-                <button class="color-btn" data-color="#10b981" style="background: #10b981;" title="Изумрудный зелёный"></button>
-                <button class="color-btn" data-color="#f59e0b" style="background: #f59e0b;" title="Золотое солнце"></button>
-                <button class="color-btn" data-color="#ef4444" style="background: #ef4444;" title="Киберпанк красный"></button>
-                <button class="color-btn" data-color="#ec4899" style="background: #ec4899;" title="Неоновый розовый"></button>
-                <button class="color-btn" data-color="#06b6d4" style="background: #06b6d4;" title="Бирюзовый океан"></button>
-                <button class="color-btn" data-color="#84cc16" style="background: #84cc16;" title="Лаймовый свежий"></button>
-                <button class="color-btn" data-color="#6366f1" style="background: #6366f1;" title="Индиго глубокий"></button>
-                <button class="color-btn" data-color="#a855f7" style="background: #a855f7;" title="Пурпурный маг"></button>
-            </div>
-            
-            <div id="settingsStatus" class="status-text" style="margin-top: 15px;">Текущая тема применена</div>
-        </div>
-    </div>
-
-    <script src="app.js"></script>
-</body>
-</html>
-/* --- СТИЛИ ДЛЯ КНОПКИ И ПАНЕЛИ НАСТРОЕК --- */
-.color-picker-grid {
-    display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    gap: 12px;
-    margin-top: 15px;
-    padding: 10px;
-    background: rgba(0, 0, 0, 0.3);
+.btn {
+    flex: 1;
+    padding: 12px;
     border-radius: 12px;
+    border: none;
+    font-weight: 700;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-primary {
+    background: var(--accent-color);
+    color: white;
+    box-shadow: 0 4px 15px rgba(139, 92, 246, 0.4);
+}
+
+.btn-primary:active {
+    transform: scale(0.96);
+}
+
+.btn-secondary {
+    background: #252a36;
+    color: #cfd6e4;
     border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.color-btn {
+.btn-secondary:active {
+    transform: scale(0.96);
+}
+
+.full-width {
     width: 100%;
-    height: 44px;
+}
+
+.tabs {
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+    scrollbar-width: none;
+}
+
+.tabs::-webkit-scrollbar {
+    display: none;
+}
+
+.tab-button {
+    background: #181b22;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: #8a99ad;
+    padding: 8px 14px;
     border-radius: 10px;
-    border: 2px solid rgba(255, 255, 255, 0.3);
+    font-size: 13px;
+    font-weight: 600;
+    white-space: nowrap;
     cursor: pointer;
-    transition: all 0.2s ease;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+    transition: all 0.2s;
 }
 
-.color-btn:hover {
-    transform: scale(1.1);
-    border-color: #ffffff;
-    box-shadow: 0 0 15px currentColor;
+.tab-button.active {
+    background: var(--accent-color);
+    color: white;
+    border-color: transparent;
+    box-shadow: 0 0 12px var(--accent-color);
 }
 
-.color-btn.active-color {
-    border-color: #ffffff;
-    transform: scale(1.05);
-    box-shadow: 0 0 20px currentColor, inset 0 0 8px rgba(255, 255, 255, 0.8);
+.bet-card {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
 }
+
+.bet-header {
+    font-size: 13px;
+    color: #8a99ad;
+    font-weight: 600;
+}
+
+.bet-input {
+    width: 100%;
+    background: #0f1015;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    padding: 12px;
+    color: white;
+    font-size: 16px;
+    font-weight: 700;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.bet-input:focus {
+    border-color: var(--accent-color);
+}
+
+.quick-bets {
+    display: flex;
+    gap: 8px;
+}
+
+.prediction-option {
+    flex: 1;
+    background: #252a36;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 8px;
+    padding: 8px;
+    color: #cfd6e4;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.2s;
+}
+
+.prediction-option.selected {
+    background: var(--accent-color);
+    color: white;
+    border-color: transparent;
+}
+
+.game-view {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.game-view.hidden {
+    display: none !important;
+}
+
+.status-text {
+    text-align: center;
+    font-size: 14px;
+    font-weight: 600;
+    color: #8a99ad;
+    min-height: 20px;
+}
+
+/* ОЛИМПУС СЛОТЫ */
+.olympus-theme {
+    background: linear-gradient(180deg, #1f1430 0%, #120b1c 100%);
+    border: 2px solid rgba(245, 158, 11, 0.3);
+    border-radius: 16px;
+    padding: 16px;
+}
+
+.olympus-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.olympus-logo {
+    display: flex;
+    flex-direction: column;
+}
+
+.logo-small {
+    font-size: 10px;
+    color: #f59e0b;
+    font-weight: 700;
+    letter-spacing: 2px;
+}
+
+.logo-main {
+    font-size: 16px;
+    color: #ffffff;
+    font-weight: 900;
+    letter-spacing: 1px;
+}
+
+.zeus-badge {
+    background: rgba(245, 158, 11, 0.2);
+    border: 1px solid #f59e0b;
+    color: #f59e0b;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 800;
+}
+
+.olympus-frame {
+    background: rgba(0, 0, 0, 0.5);
+    border-radius: 12px;
+    padding: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.olympus-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 6px;
+}
+
+.slot-cell {
+    aspect-ratio: 1;
+    background: #252136;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.olympus-status {
+    text-align: center;
+    font-size: 13px;
+    font-weight: 700;
+    color: #f59e0b;
+}
+
+.olympus-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.olympus-bonus-btn {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    color: white;
+    border: none;
+    padding: 12px;
+    border-radius: 12px;
+    font-weight: 800;
+    font-size: 13px;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(245, 158, 11, 0.4);
+}
+
+.olympus-spin-btn {
+    width: 100%;
+    background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);
+    color: white;
+    border: none;
+    padding: 16px;
+    border-radius: 12px;
+    font-weight: 900;
+    font-size: 18px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    box-shadow: 0 4px 20px rgba(239, 68, 68, 0.5);
+}
+
+/* РУЛЕТКА */
+.wheel-frame {
+    position: relative;
+    width: 240px;
+    height: 240px;
+    margin: 0 auto;
+    border-radius: 50%;
+    overflow: hidden;
+    box-shadow: 0 0 25px rgba(0, 0, 0, 0.8), 0 0 10px var(--accent-color);
+    border: 4px solid #252a36;
+}
+
+.wheel {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    transition: transform 6.5s cubic-bezier(0.15, 0.85, 0.15, 1);
+}
+
+.ball {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    background: #ffffff;
+    border-radius: 50%;
+    box-shadow: 0 0 8px #ffffff;
+    z-index: 10;
+    pointer-events: none;
+}
+
+.roulette-info {
+    text-align: center;
+}
+
+.roulette-result {
+    font-size: 32px;
+    font-weight: 900;
+}
+
+.roulette-message {
+    font-size: 13px;
+    color: #8a99ad;
+}
+
+.predictions-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+}
+
+.roulette-history {
+    display: flex;
+    gap: 6px;
+    justify-content: center;
+    overflow-x: auto;
+    padding: 4px 0;
+}
+
+/* МОНЕТКА */
+.coin-stage {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 140px;
+    perspective: 1000px;
+}
+
+.coin {
+    width: 90px;
+    height: 90px;
+    position: relative;
+    transform-style: preserve-3d;
+    transition: transform 2.1s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.coin-face {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 900;
+    font-size: 14px;
+    backface-visibility: hidden;
+    border: 4px solid #f59e0b;
+    background: #181b22;
+    color: #f59e0b;
+    box-shadow: inset 0 0 15px rgba(245, 158, 11, 0.4);
+}
+
+.coin-tails {
+    transform: rotateY(180deg);
+}
+
+/* AVIAMASTERS */
+.aviamaster-theme {
+    background: linear-gradient(180deg, #0c1b2a 0%, #070d14 100%);
+    border: 2px solid rgba(56, 189, 248, 0.3);
+}
+
+.aviamaster-stage {
+    height: 160px;
+    background: rgba(0, 0, 0, 0.4);
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.avia-multiplier {
+    font-size: 38px;
+    font-weight: 900;
+    color: #38bdf8;
+    text-shadow: 0 0 20px rgba(56, 189, 248, 0.6);
+}
+
+.plane-container {
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
+    transition: transform 0.3s ease;
+}
+
+.plane-icon {
+    font-size: 28px;
+}
+
+/* БЛЕКДЖЕК */
+.blackjack-theme {
+    background: linear-gradient(180deg, #112218 0%, #0a140f 100%);
+    border: 2px solid rgba(16, 185, 129, 0.3);
+}
+
+.bj-table {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.bj-section {
+    background: rgba(0, 0, 0, 0.3);
+    padding: 12px;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.bj-label {
+    font-size: 12px;
+    color: #8a99ad;
+    margin-bottom: 6px;
+    font-weight: 600;
+}
+
+.bj-cards {
+    font-size: 20px;
+    font-weight: 800;
+    letter-spacing: 4px;
+}
+
+.bj-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.bj-action-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+}
+
 /* --- СТИЛИ ДЛЯ НАСТРОЕК ТЕМЫ --- */
 .color-picker-grid {
     display: grid;
@@ -273,4 +522,3 @@
     transform: scale(1.05);
     box-shadow: 0 0 20px currentColor, inset 0 0 8px rgba(255, 255, 255, 0.8);
 }
-
