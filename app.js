@@ -142,7 +142,6 @@ const historyElement = document.getElementById("rouletteHistory");
 
 const SEGMENT = 360 / numbers.length;
 
-// true, пока идёт любая игра (рулетка или монетка)
 let spinning = false;
 let wheelRotation = 0;
 let history = [];
@@ -159,17 +158,14 @@ function getColor(number) {
 
 function getColorHex(number) {
     const color = getColor(number);
-
     if (color === "red") return "#b92c35";
     if (color === "green") return "#16834b";
     return "#171923";
 }
 
-// Позиция текста и его ориентация компенсируют поворот колеса.
 function updateLabels(rotation) {
     labels.forEach(label => {
         const angle = Number(label.dataset.angle);
-
         label.style.transform =
             `rotate(${angle}deg) translateY(-108px) ` +
             `rotate(${-angle - rotation}deg)`;
@@ -180,15 +176,11 @@ function createWheel() {
     const gradient = numbers.map((number, index) => {
         const start = index * SEGMENT;
         const end = (index + 1) * SEGMENT;
-
         return `${getColorHex(number)} ${start}deg ${end}deg`;
     });
 
-    wheel.style.background =
-        `conic-gradient(${gradient.join(",")})`;
-
+    wheel.style.background = `conic-gradient(${gradient.join(",")})`;
     wheel.querySelectorAll(".wheel-number").forEach(el => el.remove());
-
     labels = [];
 
     numbers.forEach((number, index) => {
@@ -221,10 +213,7 @@ function createWheel() {
     updateLabels(0);
 }
 
-// Перемещаем шарик из вращающегося колеса
-// в неподвижную рамку, чтобы он вращался независимо.
 const wheelFrame = wheel.parentElement;
-
 if (ball && wheelFrame) {
     wheelFrame.appendChild(ball);
     ball.style.transform = "translate(-50%, -50%)";
@@ -232,31 +221,24 @@ if (ball && wheelFrame) {
 
 function setBallPosition(angle, radius) {
     const rad = angle * Math.PI / 180;
-
     const x = Math.sin(rad) * radius;
     const y = -Math.cos(rad) * radius;
-
     ball.style.left = `calc(50% + ${x}px)`;
     ball.style.top = `calc(50% + ${y}px)`;
 }
 
 function getTargetRotation(index) {
     const sectorCenter = (index + 0.5) * SEGMENT;
-
-    // В CSS conic-gradient 0 градусов — это верх колеса.
     const desired = normalizeAngle(-sectorCenter);
     const current = normalizeAngle(wheelRotation);
     const extra = normalizeAngle(desired - current);
-
     return wheelRotation + 360 * 7 + extra;
 }
 
 function renderHistory() {
     historyElement.innerHTML = "";
-
     history.forEach(item => {
         const chip = document.createElement("span");
-
         chip.textContent = item.number;
         chip.style.display = "inline-grid";
         chip.style.placeItems = "center";
@@ -266,16 +248,13 @@ function renderHistory() {
         chip.style.background = getColorHex(item.number);
         chip.style.color = "white";
         chip.style.fontWeight = "bold";
-
         historyElement.appendChild(chip);
     });
 }
 
 function showResult(number) {
     const color = getColor(number);
-
     resultElement.textContent = number;
-
     resultElement.style.color =
         color === "red" ? "#ff525b" :
         color === "green" ? "#39d98a" : "white";
@@ -286,42 +265,26 @@ function showResult(number) {
 
     history.unshift({ number });
     history = history.slice(0, 12);
-
     renderHistory();
 }
 
 function animateSpin(number, onDone) {
     const index = numbers.indexOf(number);
-
     const duration = 6500;
     const startTime = performance.now();
-
     const startRotation = wheelRotation;
     const targetRotation = getTargetRotation(index);
-
     const ballTurns = 7;
 
     function frame(now) {
-        const progress = Math.min(
-            (now - startTime) / duration,
-            1
-        );
-
+        const progress = Math.min((now - startTime) / duration, 1);
         const eased = 1 - Math.pow(1 - progress, 3);
+        const currentRotation = startRotation + (targetRotation - startRotation) * eased;
 
-        const currentRotation =
-            startRotation +
-            (targetRotation - startRotation) * eased;
-
-        wheel.style.transform =
-            `rotate(${currentRotation}deg)`;
-
+        wheel.style.transform = `rotate(${currentRotation}deg)`;
         updateLabels(currentRotation);
 
-        // Шарик движется в противоположную сторону.
         const ballAngle = -360 * ballTurns * eased;
-
-        // В конце шарик опускается к выбранному сектору.
         const drop = Math.max(0, (progress - 0.82) / 0.18);
         const radius = 119 - 22 * drop;
 
@@ -331,15 +294,9 @@ function animateSpin(number, onDone) {
             requestAnimationFrame(frame);
         } else {
             wheelRotation = targetRotation;
-
-            wheel.style.transform =
-                `rotate(${wheelRotation}deg)`;
-
+            wheel.style.transform = `rotate(${wheelRotation}deg)`;
             updateLabels(wheelRotation);
-
-            // Верхний указатель и выбранный сектор совпадают.
             setBallPosition(0, 97);
-
             onDone();
         }
     }
@@ -356,7 +313,6 @@ async function spin() {
     }
 
     const amount = parseBet();
-
     if (!betAll && !amount) {
         tg.showAlert("Введи сумму ставки");
         return;
@@ -364,16 +320,12 @@ async function spin() {
 
     spinning = true;
     spinButton.disabled = true;
-
     resultElement.textContent = "?";
     messageElement.textContent = "Колесо вращается...";
 
     let result;
-
     try {
-        // Сначала сохраняем накликанное, потом крутим на сервере
         await flushQueue();
-
         result = await api("spin", {
             choice: selectedPrediction,
             amount: amount,
@@ -391,42 +343,34 @@ async function spin() {
     const choiceName = predictionNames[selectedPrediction];
 
     animateSpin(result.number, () => {
-        // Баланс обновляем только после анимации
         state = {
             balance: result.balance,
             income: result.income,
             upgrade_cost: result.upgrade_cost
         };
         updateUI();
-
         showResult(result.number);
 
         const delta = Math.abs(result.balance - balanceBefore);
-
         predictionStatus.textContent = result.win
             ? `Победа! ${choiceName}. Выпало ${result.number}. +${formatCoins(delta)} коинов`
             : `Проигрыш. ${choiceName}. Выпало ${result.number}. −${formatCoins(delta)} коинов`;
 
         selectedPrediction = null;
         predictionButtons.forEach(item => item.classList.remove("selected"));
-
         spinning = false;
         spinButton.disabled = false;
     });
 }
 
 createWheel();
-
-if (spinButton) {
-    spinButton.addEventListener("click", spin);
-}
+if (spinButton) spinButton.addEventListener("click", spin);
 
 async function loadGame() {
     try {
         if (!tg.initData) {
             throw new Error("Открой игру через Telegram");
         }
-
         state = await api();
         updateUI();
     } catch (error) {
@@ -436,29 +380,21 @@ async function loadGame() {
 
 earnButton.addEventListener("click", earn);
 upgradeButton.addEventListener("click", upgrade);
-
 loadGame();
 
-// ОБЩАЯ СТАВКА
+// СТАВКА
 
 let betAll = false;
-
 const betInput = document.getElementById("betInput");
+const quickButtons = document.querySelectorAll(".prediction-option[data-fraction]");
 
-const quickButtons =
-    document.querySelectorAll(".prediction-option[data-fraction]");
-
-// Введённые коины -> внутренние единицы баланса
 function parseBet() {
     const raw = betInput.value.trim().replace(",", ".");
     const coins = Number(raw);
-
     if (!raw || !Number.isFinite(coins) || coins <= 0) return null;
-
     return Math.round(coins * 1000000000);
 }
 
-// Ручной ввод сбрасывает режим «Всё»
 betInput.addEventListener("input", () => {
     betAll = false;
     quickButtons.forEach(item => item.classList.remove("selected"));
@@ -467,26 +403,19 @@ betInput.addEventListener("input", () => {
 quickButtons.forEach(button => {
     button.addEventListener("click", () => {
         if (spinning || !state) return;
-
         const fraction = Number(button.dataset.fraction);
-
         quickButtons.forEach(item => item.classList.remove("selected"));
         button.classList.add("selected");
-
         betAll = fraction === 1;
         betInput.value = formatCoins(Math.floor(state.balance * fraction));
     });
 });
 
-// СИСТЕМА ПРОГНОЗОВ (РУЛЕТКА)
+// ПРОГНОЗЫ РУЛЕТКИ
 
 let selectedPrediction = null;
-
-const predictionStatus =
-    document.getElementById("predictionStatus");
-
-const predictionButtons =
-    document.querySelectorAll(".prediction-option[data-choice]");
+const predictionStatus = document.getElementById("predictionStatus");
+const predictionButtons = document.querySelectorAll(".prediction-option[data-choice]");
 
 const predictionMultipliers = {
     red: 1.9,
@@ -504,29 +433,13 @@ const predictionNames = {
     zero: "Ноль"
 };
 
-function updateSelectionStatus() {
-    if (!selectedPrediction) {
-        predictionStatus.textContent = "Прогноз не выбран";
-        return;
-    }
-
-    predictionStatus.textContent =
-        "Прогноз: " + predictionNames[selectedPrediction] +
-        " ×" + predictionMultipliers[selectedPrediction];
-}
-
 predictionButtons.forEach(button => {
     button.addEventListener("click", () => {
         if (spinning) return;
-
-        predictionButtons.forEach(item => {
-            item.classList.remove("selected");
-        });
-
+        predictionButtons.forEach(item => item.classList.remove("selected"));
         button.classList.add("selected");
         selectedPrediction = button.dataset.choice;
-
-        updateSelectionStatus();
+        predictionStatus.textContent = "Прогноз: " + predictionNames[selectedPrediction] + " ×" + predictionMultipliers[selectedPrediction];
     });
 });
 
@@ -534,56 +447,39 @@ predictionButtons.forEach(button => {
 
 let selectedCoin = null;
 let coinRotation = 0;
-
 const coinElement = document.getElementById("coin");
 const coinButton = document.getElementById("coinButton");
 const coinStatus = document.getElementById("coinStatus");
-
-const coinChoiceButtons =
-    document.querySelectorAll(".prediction-option[data-coin]");
-
-const coinNames = {
-    heads: "Орёл",
-    tails: "Решка"
-};
+const coinChoiceButtons = document.querySelectorAll(".prediction-option[data-coin]");
+const coinNames = { heads: "Орёл", tails: "Решка" };
 
 coinChoiceButtons.forEach(button => {
     button.addEventListener("click", () => {
         if (spinning) return;
-
         coinChoiceButtons.forEach(item => item.classList.remove("selected"));
-
         button.classList.add("selected");
         selectedCoin = button.dataset.coin;
-
-        coinStatus.textContent =
-            "Выбрано: " + coinNames[selectedCoin] + " ×1.9";
+        coinStatus.textContent = "Выбрано: " + coinNames[selectedCoin] + " ×1.9";
     });
 });
 
 function animateCoin(side, onDone) {
-    // Орёл — 0°, решка — 180° (по модулю 360)
     const needed = side === "heads" ? 0 : 180;
     const current = normalizeAngle(coinRotation);
     const extra = normalizeAngle(needed - current);
-
     coinRotation = coinRotation + 360 * 5 + extra;
-
     coinElement.style.transform = `rotateY(${coinRotation}deg)`;
-
     setTimeout(onDone, 2100);
 }
 
 async function flipCoin() {
     if (spinning || upgrading || !state) return;
-
     if (!selectedCoin) {
         tg.showAlert("Сначала выбери орла или решку");
         return;
     }
 
     const amount = parseBet();
-
     if (!betAll && !amount) {
         tg.showAlert("Введи сумму ставки");
         return;
@@ -594,10 +490,8 @@ async function flipCoin() {
     coinStatus.textContent = "Монета в воздухе...";
 
     let result;
-
     try {
         await flushQueue();
-
         result = await api("coin", {
             choice: selectedCoin,
             amount: amount,
@@ -631,13 +525,111 @@ async function flipCoin() {
 
         selectedCoin = null;
         coinChoiceButtons.forEach(item => item.classList.remove("selected"));
-
         spinning = false;
         coinButton.disabled = false;
     });
 }
 
-coinButton.addEventListener("click", flipCoin);
+if (coinButton) coinButton.addEventListener("click", flipCoin);
+
+// СЛОТЫ (GATES OF OLYMPUS)
+
+const slotGridElement = document.getElementById("slotGrid");
+const slotButton = document.getElementById("slotButton");
+const slotStatus = document.getElementById("slotStatus");
+
+const symbolEmojis = {
+    1: "🟦", 2: "🟩", 3: "🟨", 4: "🟧", 5: "🟪",
+    6: "🏆", 7: "💍", 8: "⏳", 9: "👑", 10: "⚡"
+};
+
+function renderSlotGrid(grid) {
+    if (!slotGridElement) return;
+    slotGridElement.innerHTML = "";
+    
+    grid.forEach(row => {
+        row.forEach(sym => {
+            const cell = document.createElement("div");
+            cell.className = "slot-cell";
+            cell.textContent = symbolEmojis[sym] || "💎";
+            slotGridElement.appendChild(cell);
+        });
+    });
+}
+
+async function playSlots() {
+    if (spinning || upgrading || !state) return;
+
+    const amount = parseBet();
+    if (!betAll && !amount) {
+        tg.showAlert("Введи сумму ставки");
+        return;
+    }
+
+    spinning = true;
+    slotButton.disabled = true;
+    slotStatus.textContent = "Зевс взмахивает посохом...";
+
+    let result;
+    try {
+        await flushQueue();
+        result = await api("slot", {
+            amount: amount,
+            all: betAll
+        });
+    } catch (error) {
+        tg.showAlert(error.message);
+        slotStatus.textContent = "Ошибка запуска слотов";
+        spinning = false;
+        slotButton.disabled = false;
+        return;
+    }
+
+    const balanceBefore = state.balance;
+
+    let counter = 0;
+    const interval = setInterval(() => {
+        renderSlotGrid(
+            Array.from({ length: 5 }, () =>
+                Array.from({ length: 6 }, () => Math.floor(Math.random() * 9) + 1)
+            )
+        );
+        counter++;
+        if (counter > 10) {
+            clearInterval(interval);
+            renderSlotGrid(result.grid);
+
+            state = {
+                balance: result.balance,
+                income: result.income,
+                upgrade_cost: result.upgrade_cost
+            };
+            updateUI();
+
+            const delta = Math.abs(result.balance - balanceBefore);
+
+            if (result.win) {
+                slotStatus.textContent = `⚡ Победа! Множитель ×${result.slotMultiplier}! +${formatCoins(delta)} коинов`;
+            } else {
+                slotStatus.textContent = `Эфир пуст. Попробуй еще раз! −${formatCoins(amount || state.balance)} коинов`;
+            }
+
+            spinning = false;
+            slotButton.disabled = false;
+        }
+    }, 100);
+}
+
+if (slotButton) {
+    slotButton.addEventListener("click", playSlots);
+}
+
+// Первичная отрисовка пустой сетки слотов при загрузке
+renderSlotGrid(
+    Array.from({ length: 5 }, () =>
+        Array.from({ length: 6 }, () => Math.floor(Math.random() * 9) + 1)
+    )
+);
 
 // ВКЛАДКИ ИГР
 
