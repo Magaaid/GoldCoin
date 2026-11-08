@@ -705,7 +705,7 @@ tabButtons.forEach(button => {
     });
 });
 
-// AVIAMASTERS (Динамический полет: много плюсов, минусов, делений и умножений + высокий риск)
+// AVIAMASTERS (Рандомный полет с генерацией секторов и шансом победы 15%)
 const aviaButton = document.getElementById("aviaButton");
 const aviaMultiplierElement = document.getElementById("aviaMultiplier");
 const aviaStatus = document.getElementById("aviaStatus");
@@ -727,17 +727,25 @@ async function playAviamasters() {
 
     aviaStatus.textContent = "✈️ Самолет заходит на взлетную полосу...";
     
-    // Длинная цепочка с частой сменой математических знаков
-    const pathSteps = [
-        { mult: 1.4, type: "add", text: "📈 Набор высоты (+0.4)" },
-        { mult: 0.6, type: "sub", text: "⚠️ Потеря высоты (−0.6)" },
-        { mult: 1.8, type: "mult", text: "🚀 Ускорение (×1.8)" },
-        { mult: 1.5, type: "div", text: "💨 Зона турбулентности (÷1.5)" },
-        { mult: 2.2, type: "add", text: "🔥 Отличный рывок (+1.2)" },
-        { mult: 0.4, type: "sub", text: "⚠️ Встречный ветер (−1.0)" },
-        { mult: 2.5, type: "mult", text: "⭐ Бонусный сектор (×2.5)" },
-        { mult: 2.0, type: "div", text: "🌪️ Мощный вихрь (÷2)" }
+    // Возможные типы секторов для случайного выпадения
+    const possibleSteps = [
+        { type: "add", val: 0.3, text: "📈 Набор высоты (+0.3)" },
+        { type: "add", val: 0.6, text: "📈 Отличный подъем (+0.6)" },
+        { type: "sub", val: 0.4, text: "⚠️ Потеря высоты (−0.4)" },
+        { type: "sub", val: 0.8, text: "⚠️ Сильный снос (−0.8)" },
+        { type: "mult", val: 1.5, text: "🚀 Ускорение (×1.5)" },
+        { type: "mult", val: 2.0, text: "🔥 Супер-ускорение (×2)" },
+        { type: "div", val: 1.3, text: "💨 Турбулентность (÷1.3)" },
+        { type: "div", val: 1.8, text: "🌪️ Мощный вихрь (÷1.8)" }
     ];
+
+    // Генерируем случайную длину пути (от 6 до 10 шагов) и выбираем сектора рандомно
+    const totalSteps = Math.floor(Math.random() * 5) + 6;
+    const pathSteps = [];
+    for (let i = 0; i < totalSteps; i++) {
+        const randomStep = possibleSteps[Math.floor(Math.random() * possibleSteps.length)];
+        pathSteps.push({ ...randomStep });
+    }
 
     let currentStep = 0;
     let finalMultiplier = 1.00;
@@ -746,10 +754,10 @@ async function playAviamasters() {
         if (currentStep < pathSteps.length) {
             const step = pathSteps[currentStep];
             
-            if (step.type === "add") finalMultiplier += (step.mult - 1);
-            else if (step.type === "mult") finalMultiplier *= step.mult;
-            else if (step.type === "div") finalMultiplier /= step.mult;
-            else if (step.type === "sub") finalMultiplier = Math.max(0.1, finalMultiplier - step.mult);
+            if (step.type === "add") finalMultiplier += step.val;
+            else if (step.type === "mult") finalMultiplier *= step.val;
+            else if (step.type === "div") finalMultiplier /= step.val;
+            else if (step.type === "sub") finalMultiplier = Math.max(0.1, finalMultiplier - step.val);
 
             finalMultiplier = Math.max(0.05, Number(finalMultiplier.toFixed(2)));
             
