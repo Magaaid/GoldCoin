@@ -29,7 +29,29 @@
             <button class="tab-button" data-game="transfer">💸 Перевод</button>
             <button class="tab-button" data-game="promo">🎁 Промо</button>
             <button class="tab-button" data-game="settings">⚙️ Настройки</button>
-        </nav>
+                </nav>
+
+        <!-- ОТДЕЛЬНАЯ КНОПКА НАСТРОЕК -->
+        <button
+            id="settingsQuickButton"
+            onclick="openSettingsPanel()"
+            style="
+                display: block;
+                width: 100%;
+                padding: 14px;
+                background: #8b5cf6;
+                color: white;
+                border: none;
+                border-radius: 12px;
+                font-size: 15px;
+                font-weight: 800;
+                cursor: pointer;
+            "
+        >
+            ⚙️ ОТКРЫТЬ НАСТРОЙКИ
+        </button>
+
+        <!-- Общая панель ставки -->
 
         <!-- Общая панель ставки -->
         <section class="card bet-card">
