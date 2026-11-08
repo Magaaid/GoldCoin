@@ -1,1 +1,79 @@
 
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    background: #10131c;
+    color: white;
+    font-family: Arial, sans-serif;
+}
+
+.app {
+    max-width: 480px;
+    margin: auto;
+    padding: 25px 18px;
+    text-align: center;
+}
+
+h1 {
+    color: #f5c542;
+    font-size: 32px;
+    margin-bottom: 5px;
+}
+
+.subtitle {
+    color: #9299aa;
+    margin-bottom: 35px;
+}
+
+.balance-card,
+.upgrade-card {
+    background: #1c2230;
+    border: 1px solid #30394c;
+    border-radius: 20px;
+    padding: 24px;
+    margin-bottom: 22px;
+}
+
+.balance-card p {
+    color: #aab1c0;
+    font-size: 13px;
+}
+
+.balance {
+    color: #f5c542;
+    font-size: 30px;
+    font-weight: bold;
+    margin-top: 12px;
+    overflow-wrap: anywhere;
+}
+
+button {
+    border: none;
+    border-radius: 14px;
+    padding: 17px;
+    font-size: 17px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.earn-button {
+    width: 100%;
+    background: #f5c542;
+    color: #171717;
+    margin-bottom: 22px;
+}
+
+.upgrade-card button {
+    width: 100%;
+    background: #303c55;
+    color: white;
+    margin-top: 12px;
+}
+
+button:active {
+    transform: scale(0.97);
+}
+
