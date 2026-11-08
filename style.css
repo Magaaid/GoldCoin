@@ -534,5 +534,28 @@ input {
     opacity: 0.5;
     cursor: not-allowed;
 }
+/* Стили для блока промокодов */
+.promo-card {
+    background: #191e2b;
+}
+
+.promo-btn {
+    width: 100%;
+    background: #303c55;
+    color: white;
+    margin-top: 10px;
+    border: 1px solid #4a5a7d;
+}
+
+.promo-btn:hover {
+    background: #3d4d6e;
+}
+
+.promo-status {
+    margin-top: 10px;
+    font-size: 14px;
+    font-weight: bold;
+    min-height: 20px;
+}
 
 
