@@ -689,6 +689,66 @@ async function redeemPromo() {
 
 if (promoButton) promoButton.addEventListener("click", redeemPromo);
 
+// ПЕРЕВОДЫ ПО ЮЗЕРНЕЙМУ
+const transferTargetInput = document.getElementById("transferTargetInput");
+const transferAmountInput = document.getElementById("transferAmountInput");
+const transferButton = document.getElementById("transferButton");
+const transferStatus = document.getElementById("transferStatus");
+
+async function makeTransfer() {
+    if (spinning || upgrading || !state) return;
+
+    let targetUsername = transferTargetInput.value.trim().replace(/^@/, "").toLowerCase();
+    const rawAmount = transferAmountInput.value.trim().replace(",", ".");
+    const coins = Number(rawAmount);
+
+    if (!targetUsername) {
+        transferStatus.textContent = "Введи юзернейм получателя!";
+        transferStatus.style.color = "#ff525b";
+        return;
+    }
+
+    if (!rawAmount || !Number.isFinite(coins) || coins <= 0) {
+        transferStatus.textContent = "Введи корректную сумму перевода!";
+        transferStatus.style.color = "#ff525b";
+        return;
+    }
+
+    const amount = Math.round(coins * 1000000000);
+
+    if (amount > state.balance) {
+        transferStatus.textContent = "Недостаточно байтов на балансе!";
+        transferStatus.style.color = "#ff525b";
+        return;
+    }
+
+    transferButton.disabled = true;
+    transferStatus.textContent = "Выполняется перевод...";
+    transferStatus.style.color = "#aab1c0";
+
+    try {
+        await flushQueue();
+        const result = await api("transfer", { targetUsername, amount });
+
+        state = { balance: result.balance, income: result.income, upgrade_cost: result.upgrade_cost };
+        updateUI();
+
+        transferStatus.textContent = `🎉 Успешно! Переведено ${formatCoins(amount)} байтов игроку @${targetUsername}`;
+        transferStatus.style.color = "#39d98a";
+        transferTargetInput.value = "";
+        transferAmountInput.value = "";
+    } catch (error) {
+        transferStatus.textContent = error.message;
+        transferStatus.style.color = "#ff525b";
+    } finally {
+        transferButton.disabled = false;
+    }
+}
+
+if (transferButton) {
+    transferButton.addEventListener("click", makeTransfer);
+}
+
 // ВКЛАДКИ
 const tabButtons = document.querySelectorAll(".tab-button");
 const gameViews = document.querySelectorAll(".game-view");
