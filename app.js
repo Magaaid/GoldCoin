@@ -921,7 +921,7 @@ function renderBjHands(hideDealerSecond = true) {
         dealerCardsDiv.textContent = `${bjDealerHand[0].val}${bjDealerHand[0].suit} 🂠`;
         dealerScoreSpan.textContent = calculateBjHand([bjDealerHand[0]]);
     } else {
-        dealerCardsDiv.textContent = bjDealerHand.map(c => `${c.val}${c.suit}`).join(" ");
+        dealerCardsDiv.textContent = bjPlayerHand.map(c => `${c.val}${c.suit}`).join(" ");
         dealerScoreSpan.textContent = calculateBjHand(bjDealerHand);
     }
 }
@@ -1077,7 +1077,16 @@ if (bjHitButton) bjHitButton.addEventListener("click", hitBlackjack);
 if (bjStandButton) bjStandButton.addEventListener("click", standBlackjack);
 if (bjDoubleButton) bjDoubleButton.addEventListener("click", doubleDownBlackjack);
 
-// --- ПЕРЕКЛЮЧЕНИЕ ВКЛАДОК И НАСТРОЙКИ ТЕМЫ ---
+// --- АВТОМАТИЧЕСКОЕ ДОБАВЛЕНИЕ КНОПКИ И ЛОГИКА ВКЛАДОК С НАСТРОЙКАМИ ---
+const tabsContainer = document.querySelector(".tabs");
+if (tabsContainer && !document.querySelector('[data-game="settings"]')) {
+    const settingsTab = document.createElement("button");
+    settingsTab.className = "tab-button";
+    settingsTab.dataset.game = "settings";
+    settingsTab.textContent = "⚙️ Настройки";
+    tabsContainer.appendChild(settingsTab);
+}
+
 const tabButtons = document.querySelectorAll(".tab-button");
 const gameViews = document.querySelectorAll(".game-view");
 
