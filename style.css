@@ -1235,5 +1235,39 @@ function playSound(type) {
     transform: scale(0.95);
     box-shadow: 0 2px 8px rgba(185, 28, 28, 0.6);
 }
+/* Стили для шаров-множителей (иксов) в стиле Olympus */
+.slot-cell.multiplier-orb {
+    background: radial-gradient(circle, #fde047 0%, #ca8a04 70%, #713f12 100%);
+    border: 2px solid #fef08a;
+    border-radius: 12px;
+    box-shadow: 0 0 12px rgba(253, 224, 71, 0.7);
+    font-weight: 900;
+    color: #fff;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.6);
+    animation: orbPulse 1.2s infinite alternate ease-in-out;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+@keyframes orbPulse {
+    0% { transform: scale(1); box-shadow: 0 0 8px rgba(253, 224, 71, 0.5); }
+    100% { transform: scale(1.08); box-shadow: 0 0 20px rgba(253, 224, 71, 0.9); }
+}
+
+/* Бейдж для подсчета суммарного икса на экране */
+.orb-total-badge {
+    background: linear-gradient(135deg, #eab308, #ca8a04);
+    color: #111;
+    font-weight: bold;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 13px;
+    box-shadow: 0 2px 8px rgba(234, 179, 8, 0.4);
+    display: inline-block;
+    margin-left: 8px;
+}
+
 
 
