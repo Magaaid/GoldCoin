@@ -494,37 +494,78 @@ async function flipCoin() {
 }
 if (coinButton) coinButton.addEventListener("click", flipCoin);
 
-// СЛОТЫ И БОНУСКА
+// СЛОТЫ И БОНУСКА (GATES OF OLYMPUS С ШАРАМИ-МНОЖИТЕЛЯМИ)
 const slotGridElement = document.getElementById("slotGrid");
 const slotButton = document.getElementById("slotButton");
 const slotStatus = document.getElementById("slotStatus");
 const zeusBadge = document.getElementById("zeusMultiplierBadge");
 
 const symbolData = {
-    1: { icon: "💎" }, 2: { icon: "🟢" }, 3: { icon: "🟡" },
-    4: { icon: "🟠" }, 5: { icon: "🟣" }, 6: { icon: "🏆" },
-    7: { icon: "💍" }, 8: { icon: "⏳" }, 9: { icon: "👑" },
-    10: { icon: "⚡" }
+    1: { icon: "💎", name: "Кристалл" }, 
+    2: { icon: "🟢", name: "Зеленый камень" }, 
+    3: { icon: "🟡", name: "Желтый камень" },
+    4: { icon: "🟠", name: "Оранжевый камень" }, 
+    5: { icon: "🟣", name: "Фиолетовый камень" }, 
+    6: { icon: "🏆", name: "Чаша" },
+    7: { icon: "💍", name: "Кольцо" }, 
+    8: { icon: "⏳", name: "Песочные часы" }, 
+    9: { icon: "👑", name: "Корона" },
+    10: { icon: "⚡", name: "Зевс (Scatter)" }
 };
+
+// Реалистичные номиналы шаров-множителей Олимпа (чаще мелкие, редко крупные)
+const multiplierOrbs = [2, 3, 4, 5, 8, 10, 15, 20, 25, 50, 100, 250, 500];
 
 function renderSlotGrid(grid, animate = true) {
     if (!slotGridElement) return;
     slotGridElement.innerHTML = "";
     
     grid.forEach((row, rIndex) => {
-        row.forEach((sym, cIndex) => {
+        row.forEach((cellData, cIndex) => {
             const cell = document.createElement("div");
             cell.className = "slot-cell";
             if (animate) {
                 cell.classList.add("animate-drop");
-                cell.style.animationDelay = `${cIndex * 70}ms`;
+                cell.style.animationDelay = `${cIndex * 60}ms`;
             }
-            if (sym === 10) cell.classList.add("scatter-cell");
-            if (sym >= 8) cell.classList.add("high-cell");
-            cell.textContent = symbolData[sym]?.icon || "💎";
+
+            // Проверяем, выпал ли шар-множитель
+            if (typeof cellData === "object" && cellData !== null && cellData.isOrb) {
+                cell.classList.add("multiplier-orb");
+                cell.textContent = `x${cellData.multiplier}`;
+            } else {
+                const sym = typeof cellData === "number" ? cellData : cellData.sym;
+                if (sym === 10) cell.classList.add("scatter-cell");
+                if (sym >= 8) cell.classList.add("high-cell");
+                cell.textContent = symbolData[sym]?.icon || "💎";
+            }
+
             slotGridElement.appendChild(cell);
         });
     });
+}
+
+// Генератор сетки с реалистичным шансом выпадения шаров-множителей (~7%, как в оригинале)
+function generateRandomGridWithOrbs() {
+    return Array.from({ length: 5 }, () =>
+        Array.from({ length: 6 }, () => {
+            if (Math.random() < 0.07) { // 7% шанс на шар
+                // Распределение весов иксов: мелкие чаще, крупные реже
+                const rand = Math.random();
+                let multiplier = 2;
+                if (rand > 0.95) multiplier = 500;
+                else if (rand > 0.90) multiplier = 100;
+                else if (rand > 0.80) multiplier = 50;
+                else if (rand > 0.65) multiplier = 25;
+                else if (rand > 0.45) multiplier = 10;
+                else if (rand > 0.25) multiplier = 5;
+                else multiplier = multiplierOrbs[Math.floor(Math.random() * 4)];
+
+                return { isOrb: true, multiplier: multiplier };
+            }
+            return Math.floor(Math.random() * 9) + 1;
+        })
+    );
 }
 
 async function requestSlotSpin(isBonus = false) {
@@ -562,12 +603,7 @@ async function requestSlotSpin(isBonus = false) {
                 
                 let steps = 0;
                 const innerInterval = setInterval(() => {
-                    renderSlotGrid(
-                        Array.from({ length: 5 }, () =>
-                            Array.from({ length: 6 }, () => Math.floor(Math.random() * 9) + 1)
-                        ),
-                        false
-                    );
+                    renderSlotGrid(generateRandomGridWithOrbs(), false);
                     steps++;
                     if (steps > 6) {
                         clearInterval(innerInterval);
@@ -618,12 +654,7 @@ async function requestSlotSpin(isBonus = false) {
         const totalSteps = 25;
 
         const stepSpin = () => {
-            renderSlotGrid(
-                Array.from({ length: 5 }, () =>
-                    Array.from({ length: 6 }, () => Math.floor(Math.random() * 9) + 1)
-                ),
-                false
-            );
+            renderSlotGrid(generateRandomGridWithOrbs(), false);
             counter++;
 
             if (counter < totalSteps) {
@@ -664,12 +695,7 @@ async function requestSlotSpin(isBonus = false) {
 if (slotButton) slotButton.addEventListener("click", () => requestSlotSpin(false));
 if (buyBonusButton) buyBonusButton.addEventListener("click", () => requestSlotSpin(true));
 
-renderSlotGrid(
-    Array.from({ length: 5 }, () =>
-        Array.from({ length: 6 }, () => Math.floor(Math.random() * 9) + 1)
-    ),
-    false
-);
+renderSlotGrid(generateRandomGridWithOrbs(), false);
 
 // ПРОМОКОДЫ
 const promoInput = document.getElementById("promoInput");
