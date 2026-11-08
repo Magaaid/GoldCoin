@@ -1,4 +1,4 @@
-Const tg = window.Telegram.WebApp;
+const tg = window.Telegram.WebApp;
 
 tg.ready();
 tg.expand();
@@ -14,103 +14,103 @@ let flushPromise = null;
 let upgrading = false;
 
 function formatCoins(value) {
-    Return (value / 1000000000).toFixed(10).replace(".", ",");
+    return (value / 1000000000).toFixed(10).replace(".", ",");
 }
 
 function updateUI() {
-    If (!state) return;
+    if (!state) return;
 
-    BalanceElement.textContent =
-        FormatCoins(state.balance + pendingClicks * state.income) +
+    balanceElement.textContent =
+        formatCoins(state.balance + pendingClicks * state.income) +
         " байтов";
 
-    EarnButton.textContent = "+" + formatCoins(state.income);
-    UpgradeButton.textContent =
+    earnButton.textContent = "+" + formatCoins(state.income);
+    upgradeButton.textContent =
         "Улучшение — " + formatCoins(state.upgrade_cost) + " байтов";
     
-    UpdateBonusButtonCost();
+    updateBonusButtonCost();
 }
 
 async function api(action = null, extra = {}) {
-    Const options = {
-        Method: action ? "POST" : "GET",
-        Headers: { "X-Telegram-Init-Data": tg.initData }
+    const options = {
+        method: action ? "POST" : "GET",
+        headers: { "X-Telegram-Init-Data": tg.initData }
     };
 
-    If (action) {
-        Options.headers["Content-Type"] = "application/json";
-        Options.body = JSON.stringify({ action, ...extra });
+    if (action) {
+        options.headers["Content-Type"] = "application/json";
+        options.body = JSON.stringify({ action, ...extra });
     }
 
-    Const response = await fetch("/api/state", options);
-    Const data = await response.json();
+    const response = await fetch("/api/state", options);
+    const data = await response.json();
 
-    If (!response.ok) {
-        Throw new Error(data.error || "Ошибка сервера");
+    if (!response.ok) {
+        throw new Error(data.error || "Ошибка сервера");
     }
 
-    Return data;
+    return data;
 }
 
 function scheduleFlush() {
-    If (flushTimer) clearTimeout(flushTimer);
-    FlushTimer = setTimeout(() => {
-        FlushQueue().catch(error => {
-            Tg.showAlert("Ошибка сохранения: " + error.message);
+    if (flushTimer) clearTimeout(flushTimer);
+    flushTimer = setTimeout(() => {
+        flushQueue().catch(error => {
+            tg.showAlert("Ошибка сохранения: " + error.message);
         });
     }, 120);
 }
 
 async function flushQueue() {
-    If (flushTimer) {
-        ClearTimeout(flushTimer);
-        FlushTimer = null;
+    if (flushTimer) {
+        clearTimeout(flushTimer);
+        flushTimer = null;
     }
 
-    If (flushPromise) {
-        Await flushPromise;
-        If (pendingClicks > 0) return flushQueue();
-        Return;
+    if (flushPromise) {
+        await flushPromise;
+        if (pendingClicks > 0) return flushQueue();
+        return;
     }
 
-    FlushPromise = (async () => {
-        While (pendingClicks > 0) {
-            Const count = Math.min(pendingClicks, 1000);
-            Const result = await api("earn_batch", { count });
-            PendingClicks -= count;
-            State = result;
-            UpdateUI();
+    flushPromise = (async () => {
+        while (pendingClicks > 0) {
+            const count = Math.min(pendingClicks, 1000);
+            const result = await api("earn_batch", { count });
+            pendingClicks -= count;
+            state = result;
+            updateUI();
         }
     })();
 
-    Try {
-        Await flushPromise;
+    try {
+        await flushPromise;
     } finally {
-        FlushPromise = null;
+        flushPromise = null;
     }
 }
 
 function earn() {
-    If (!state || upgrading || spinning) return;
-    PendingClicks++;
-    UpdateUI();
-    ScheduleFlush();
+    if (!state || upgrading || spinning) return;
+    pendingClicks++;
+    updateUI();
+    scheduleFlush();
 }
 
 async function upgrade() {
-    If (!state || upgrading || spinning) return;
-    Upgrading = true;
-    UpgradeButton.disabled = true;
+    if (!state || upgrading || spinning) return;
+    upgrading = true;
+    upgradeButton.disabled = true;
 
-    Try {
-        Await flushQueue();
-        State = await api("upgrade");
-        UpdateUI();
+    try {
+        await flushQueue();
+        state = await api("upgrade");
+        updateUI();
     } catch (error) {
-        Tg.showAlert(error.message);
+        tg.showAlert(error.message);
     } finally {
-        Upgrading = false;
-        UpgradeButton.disabled = false;
+        upgrading = false;
+        upgradeButton.disabled = false;
     }
 }
 
@@ -121,7 +121,7 @@ const numbers = [
     10, 5, 24, 16, 33, 1, 20, 14, 31,
     9, 22, 18, 29, 7, 28, 12, 35, 3, 26
 ];
-Const redNumbers = [1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36];
+const redNumbers = [1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36];
 
 const wheel = document.getElementById("wheel");
 const ball = document.getElementById("ball");
@@ -131,207 +131,207 @@ const messageElement = document.getElementById("rouletteMessage");
 const historyElement = document.getElementById("rouletteHistory");
 
 const SEGMENT = 360 / numbers.length;
-Let spinning = false;
-Let wheelRotation = 0;
-Let history = [];
-Let labels = [];
+let spinning = false;
+let wheelRotation = 0;
+let history = [];
+let labels = [];
 
 function normalizeAngle(angle) {
-    Return ((angle % 360) + 360) % 360;
+    return ((angle % 360) + 360) % 360;
 }
 
 function getColor(number) {
-    If (number === 0) return "green";
-    Return redNumbers.includes(number) ? "red" : "black";
+    if (number === 0) return "green";
+    return redNumbers.includes(number) ? "red" : "black";
 }
 
 function getColorHex(number) {
-    Const color = getColor(number);
-    If (color === "red") return "#b92c35";
-    If (color === "green") return "#16834b";
-    Return "#171923";
+    const color = getColor(number);
+    if (color === "red") return "#b92c35";
+    if (color === "green") return "#16834b";
+    return "#171923";
 }
 
 function updateLabels(rotation) {
-    Labels.forEach(label => {
-        Const angle = Number(label.dataset.angle);
-        Label.style.transform = `rotate(${angle}deg) translateY(-108px) rotate(${-angle - rotation}deg)`;
+    labels.forEach(label => {
+        const angle = Number(label.dataset.angle);
+        label.style.transform = `rotate(${angle}deg) translateY(-108px) rotate(${-angle - rotation}deg)`;
     });
 }
 
 function createWheel() {
-    Const gradient = numbers.map((number, index) => {
-        Const start = index * SEGMENT;
-        Const end = (index + 1) * SEGMENT;
-        Return `${getColorHex(number)} ${start}deg ${end}deg`;
+    const gradient = numbers.map((number, index) => {
+        const start = index * SEGMENT;
+        const end = (index + 1) * SEGMENT;
+        return `${getColorHex(number)} ${start}deg ${end}deg`;
     });
 
-    Wheel.style.background = `conic-gradient(${gradient.join(",")})`;
-    Wheel.querySelectorAll(".wheel-number").forEach(el => el.remove());
-    Labels = [];
+    wheel.style.background = `conic-gradient(${gradient.join(",")})`;
+    wheel.querySelectorAll(".wheel-number").forEach(el => el.remove());
+    labels = [];
 
-    Numbers.forEach((number, index) => {
-        Const label = document.createElement("div");
-        Const angle = (index + 0.5) * SEGMENT;
+    numbers.forEach((number, index) => {
+        const label = document.createElement("div");
+        const angle = (index + 0.5) * SEGMENT;
 
-        Label.className = "wheel-number";
-        Label.textContent = number;
-        Label.dataset.angle = angle;
+        label.className = "wheel-number";
+        label.textContent = number;
+        label.dataset.angle = angle;
 
-        Label.style.position = "absolute";
-        Label.style.left = "50%";
-        Label.style.top = "50%";
-        Label.style.width = "24px";
-        Label.style.height = "18px";
-        Label.style.lineHeight = "18px";
-        Label.style.marginLeft = "-12px";
-        Label.style.marginTop = "-9px";
-        Label.style.textAlign = "center";
-        Label.style.fontSize = "11px";
-        Label.style.fontWeight = "bold";
-        Label.style.color = "white";
-        Label.style.pointerEvents = "none";
-        Label.style.zIndex = "2";
+        label.style.position = "absolute";
+        label.style.left = "50%";
+        label.style.top = "50%";
+        label.style.width = "24px";
+        label.style.height = "18px";
+        label.style.lineHeight = "18px";
+        label.style.marginLeft = "-12px";
+        label.style.marginTop = "-9px";
+        label.style.textAlign = "center";
+        label.style.fontSize = "11px";
+        label.style.fontWeight = "bold";
+        label.style.color = "white";
+        label.style.pointerEvents = "none";
+        label.style.zIndex = "2";
 
-        Wheel.appendChild(label);
-        Labels.push(label);
+        wheel.appendChild(label);
+        labels.push(label);
     });
 
-    UpdateLabels(0);
+    updateLabels(0);
 }
 
-const wheelFrame = wheel ? Wheel.parentElement : null;
+const wheelFrame = wheel ? wheel.parentElement : null;
 if (ball && wheelFrame) {
-    WheelFrame.appendChild(ball);
-    Ball.style.transform = "translate(-50%, -50%)";
+    wheelFrame.appendChild(ball);
+    ball.style.transform = "translate(-50%, -50%)";
 }
 
 function setBallPosition(angle, radius) {
-    Const rad = angle * Math.PI / 180;
-    Const x = Math.sin(rad) * radius;
-    Const y = -Math.cos(rad) * radius;
-    Ball.style.left = `calc(50% + ${x}px)`;
-    Ball.style.top = `calc(50% + ${y}px)`;
+    const rad = angle * Math.PI / 180;
+    const x = Math.sin(rad) * radius;
+    const y = -Math.cos(rad) * radius;
+    ball.style.left = `calc(50% + ${x}px)`;
+    ball.style.top = `calc(50% + ${y}px)`;
 }
 
 function getTargetRotation(index) {
-    Const sectorCenter = (index + 0.5) * SEGMENT;
-    Const desired = normalizeAngle(-sectorCenter);
-    Const current = normalizeAngle(wheelRotation);
-    Const extra = normalizeAngle(desired - current);
-    Return wheelRotation + 360 * 7 + extra;
+    const sectorCenter = (index + 0.5) * SEGMENT;
+    const desired = normalizeAngle(-sectorCenter);
+    const current = normalizeAngle(wheelRotation);
+    const extra = normalizeAngle(desired - current);
+    return wheelRotation + 360 * 7 + extra;
 }
 
 function renderHistory() {
-    HistoryElement.innerHTML = "";
-    History.forEach(item => {
-        Const chip = document.createElement("span");
-        Chip.textContent = item.number;
-        Chip.style.display = "inline-grid";
-        Chip.style.placeItems = "center";
-        Chip.style.width = "32px";
-        Chip.style.height = "32px";
-        Chip.style.borderRadius = "50%";
-        Chip.style.background = getColorHex(item.number);
-        Chip.style.color = "white";
-        Chip.style.fontWeight = "bold";
-        HistoryElement.appendChild(chip);
+    historyElement.innerHTML = "";
+    history.forEach(item => {
+        const chip = document.createElement("span");
+        chip.textContent = item.number;
+        chip.style.display = "inline-grid";
+        chip.style.placeItems = "center";
+        chip.style.width = "32px";
+        chip.style.height = "32px";
+        chip.style.borderRadius = "50%";
+        chip.style.background = getColorHex(item.number);
+        chip.style.color = "white";
+        chip.style.fontWeight = "bold";
+        historyElement.appendChild(chip);
     });
 }
 
 function showResult(number) {
-    Const color = getColor(number);
-    ResultElement.textContent = number;
-    ResultElement.style.color = color === "red" ? "#ff525b" : color === "green" ? "#39d98a" : "white";
-    MessageElement.textContent = color === "green" ? "Зелёное" : color === "red" ? "Красное" : "Чёрное";
+    const color = getColor(number);
+    resultElement.textContent = number;
+    resultElement.style.color = color === "red" ? "#ff525b" : color === "green" ? "#39d98a" : "white";
+    messageElement.textContent = color === "green" ? "Зелёное" : color === "red" ? "Красное" : "Чёрное";
 
-    History.unshift({ number });
-    History = history.slice(0, 12);
-    RenderHistory();
+    history.unshift({ number });
+    history = history.slice(0, 12);
+    renderHistory();
 }
 
 function animateSpin(number, onDone) {
-    Const index = numbers.indexOf(number);
-    Const duration = 6500;
-    Const startTime = performance.now();
-    Const startRotation = wheelRotation;
-    Const targetRotation = getTargetRotation(index);
-    Const ballTurns = 7;
+    const index = numbers.indexOf(number);
+    const duration = 6500;
+    const startTime = performance.now();
+    const startRotation = wheelRotation;
+    const targetRotation = getTargetRotation(index);
+    const ballTurns = 7;
 
-    Function frame(now) {
-        Const progress = Math.min((now - startTime) / duration, 1);
-        Const eased = 1 - Math.pow(1 - progress, 3);
-        Const currentRotation = startRotation + (targetRotation - startRotation) * eased;
+    function frame(now) {
+        const progress = Math.min((now - startTime) / duration, 1);
+        const eased = 1 - Math.pow(1 - progress, 3);
+        const currentRotation = startRotation + (targetRotation - startRotation) * eased;
 
-        Wheel.style.transform = `rotate(${currentRotation}deg)`;
-        UpdateLabels(currentRotation);
+        wheel.style.transform = `rotate(${currentRotation}deg)`;
+        updateLabels(currentRotation);
 
-        Const ballAngle = -360 * ballTurns * eased;
-        Const drop = Math.max(0, (progress - 0.82) / 0.18);
-        Const radius = 119 - 22 * drop;
+        const ballAngle = -360 * ballTurns * eased;
+        const drop = Math.max(0, (progress - 0.82) / 0.18);
+        const radius = 119 - 22 * drop;
 
-        SetBallPosition(ballAngle, radius);
+        setBallPosition(ballAngle, radius);
 
-        If (progress < 1) {
-            RequestAnimationFrame(frame);
+        if (progress < 1) {
+            requestAnimationFrame(frame);
         } else {
-            WheelRotation = targetRotation;
-            Wheel.style.transform = `rotate(${wheelRotation}deg)`;
-            UpdateLabels(wheelRotation);
-            SetBallPosition(0, 97);
-            OnDone();
+            wheelRotation = targetRotation;
+            wheel.style.transform = `rotate(${wheelRotation}deg)`;
+            updateLabels(wheelRotation);
+            setBallPosition(0, 97);
+            onDone();
         }
     }
-    RequestAnimationFrame(frame);
+    requestAnimationFrame(frame);
 }
 
 async function spin() {
-    If (spinning || upgrading || !wheel || !ball || !state) return;
-    If (!selectedPrediction) {
-        Tg.showAlert("Сначала выбери прогноз");
-        Return;
+    if (spinning || upgrading || !wheel || !ball || !state) return;
+    if (!selectedPrediction) {
+        tg.showAlert("Сначала выбери прогноз");
+        return;
     }
 
-    Const amount = parseBet();
-    If (!betAll && !amount) {
-        Tg.showAlert("Введи сумму ставки (мин. 100 байтов)");
-        Return;
+    const amount = parseBet();
+    if (!betAll && !amount) {
+        tg.showAlert("Введи сумму ставки (мин. 100 байтов)");
+        return;
     }
 
-    Spinning = true;
-    SpinButton.disabled = true;
-    ResultElement.textContent = "?";
-    MessageElement.textContent = "Колесо вращается...";
+    spinning = true;
+    spinButton.disabled = true;
+    resultElement.textContent = "?";
+    messageElement.textContent = "Колесо вращается...";
 
-    Let result;
-    Try {
-        Await flushQueue();
-        Result = await api("spin", { choice: selectedPrediction, amount: amount, all: betAll });
+    let result;
+    try {
+        await flushQueue();
+        result = await api("spin", { choice: selectedPrediction, amount: amount, all: betAll });
     } catch (error) {
-        Tg.showAlert(error.message);
-        MessageElement.textContent = "Нажми, чтобы запустить колесо";
-        Spinning = false;
-        SpinButton.disabled = false;
-        Return;
+        tg.showAlert(error.message);
+        messageElement.textContent = "Нажми, чтобы запустить колесо";
+        spinning = false;
+        spinButton.disabled = false;
+        return;
     }
 
-    Const balanceBefore = state.balance;
-    Const choiceName = predictionNames[selectedPrediction];
+    const balanceBefore = state.balance;
+    const choiceName = predictionNames[selectedPrediction];
 
-    AnimateSpin(result.number, () => {
-        State = { balance: result.balance, income: result.income, upgrade_cost: result.upgrade_cost };
-        UpdateUI();
-        ShowResult(result.number);
+    animateSpin(result.number, () => {
+        state = { balance: result.balance, income: result.income, upgrade_cost: result.upgrade_cost };
+        updateUI();
+        showResult(result.number);
 
-        Const delta = Math.abs(result.balance - balanceBefore);
-        PredictionStatus.textContent = result.win
+        const delta = Math.abs(result.balance - balanceBefore);
+        predictionStatus.textContent = result.win
             ? `Победа! ${choiceName}. Выпало ${result.number}. +${formatCoins(delta)} байтов`
             : `Проигрыш. ${choiceName}. Выпало ${result.number}. −${formatCoins(delta)} байтов`;
 
-        SelectedPrediction = null;
-        PredictionButtons.forEach(item => item.classList.remove("selected"));
-        Spinning = false;
-        SpinButton.disabled = false;
+        selectedPrediction = null;
+        predictionButtons.forEach(item => item.classList.remove("selected"));
+        spinning = false;
+        spinButton.disabled = false;
     });
 }
 
@@ -339,18 +339,18 @@ if (wheel) createWheel();
 if (spinButton) spinButton.addEventListener("click", spin);
 
 async function loadGame() {
-    Try {
-        If (!tg.initData) throw new Error("Открой игру через Telegram");
-        State = await api();
-        UpdateUI();
+    try {
+        if (!tg.initData) throw new Error("Открой игру через Telegram");
+        state = await api();
+        updateUI();
     } catch (error) {
-        Tg.showAlert("Не удалось загрузить игру: " + error.message);
+        tg.showAlert("Не удалось загрузить игру: " + error.message);
     }
 }
 
 earnButton.addEventListener("click", earn);
 upgradeButton.addEventListener("click", upgrade);
-LoadGame();
+loadGame();
 
 // СТАВКА И БОНУСКА
 let betAll = false;
@@ -359,42 +359,42 @@ const quickButtons = document.querySelectorAll(".prediction-option[data-fraction
 const buyBonusButton = document.getElementById("buyBonusButton");
 
 function parseBet() {
-    Const raw = betInput.value.trim().replace(",", ".");
-    Const coins = Number(raw);
-    If (!raw || !Number.isFinite(coins) || coins < 1) return null;
-    Return Math.round(coins * 1000000000);
+    const raw = betInput.value.trim().replace(",", ".");
+    const coins = Number(raw);
+    if (!raw || !Number.isFinite(coins) || coins < 1) return null;
+    return Math.round(coins * 1000000000);
 }
 
 function updateBonusButtonCost() {
-    If (!buyBonusButton) return;
-    Let amount = parseBet();
-    If (betAll && state) {
-        Amount = state.balance;
+    if (!buyBonusButton) return;
+    let amount = parseBet();
+    if (betAll && state) {
+        amount = state.balance;
     }
     
-    If (amount && amount > 0) {
-        Const bonusCost = amount * 100;
-        BuyBonusButton.textContent = `🎁 КУПИТЬ БОНУСКУ — ${formatCoins(bonusCost)}`;
+    if (amount && amount > 0) {
+        const bonusCost = amount * 100;
+        buyBonusButton.textContent = `🎁 КУПИТЬ БОНУСКУ — ${formatCoins(bonusCost)}`;
     } else {
-        BuyBonusButton.textContent = `🎁 КУПИТЬ БОНУСКУ (×100)`;
+        buyBonusButton.textContent = `🎁 КУПИТЬ БОНУСКУ (×100)`;
     }
 }
 
 betInput.addEventListener("input", () => {
-    BetAll = false;
-    QuickButtons.forEach(item => item.classList.remove("selected"));
-    UpdateBonusButtonCost();
+    betAll = false;
+    quickButtons.forEach(item => item.classList.remove("selected"));
+    updateBonusButtonCost();
 });
 
 quickButtons.forEach(button => {
-    Button.addEventListener("click", () => {
-        If (spinning || !state) return;
-        Const fraction = Number(button.dataset.fraction);
-        QuickButtons.forEach(item => item.classList.remove("selected"));
-        Button.classList.add("selected");
-        BetAll = fraction === 1;
-        BetInput.value = formatCoins(Math.floor(state.balance * fraction));
-        UpdateBonusButtonCost();
+    button.addEventListener("click", () => {
+        if (spinning || !state) return;
+        const fraction = Number(button.dataset.fraction);
+        quickButtons.forEach(item => item.classList.remove("selected"));
+        button.classList.add("selected");
+        betAll = fraction === 1;
+        betInput.value = formatCoins(Math.floor(state.balance * fraction));
+        updateBonusButtonCost();
     });
 });
 
@@ -406,12 +406,12 @@ const predictionMultipliers = { red: 1.9, black: 1.9, even: 1.9, odd: 1.9, zero:
 const predictionNames = { red: "Красное", black: "Чёрное", even: "Чётное", odd: "Нечётное", zero: "Ноль" };
 
 predictionButtons.forEach(button => {
-    Button.addEventListener("click", () => {
-        If (spinning) return;
-        PredictionButtons.forEach(item => item.classList.remove("selected"));
-        Button.classList.add("selected");
-        SelectedPrediction = button.dataset.choice;
-        PredictionStatus.textContent = "Прогноз: " + predictionNames[selectedPrediction] + " ×" + predictionMultipliers[selectedPrediction];
+    button.addEventListener("click", () => {
+        if (spinning) return;
+        predictionButtons.forEach(item => item.classList.remove("selected"));
+        button.classList.add("selected");
+        selectedPrediction = button.dataset.choice;
+        predictionStatus.textContent = "Прогноз: " + predictionNames[selectedPrediction] + " ×" + predictionMultipliers[selectedPrediction];
     });
 });
 
@@ -425,71 +425,71 @@ const coinChoiceButtons = document.querySelectorAll(".prediction-option[data-coi
 const coinNames = { heads: "Орёл", tails: "Решка" };
 
 coinChoiceButtons.forEach(button => {
-    Button.addEventListener("click", () => {
-        If (spinning) return;
-        CoinChoiceButtons.forEach(item => item.classList.remove("selected"));
-        Button.classList.add("selected");
-        SelectedCoin = button.dataset.coin;
-        CoinStatus.textContent = "Выбрано: " + coinNames[selectedCoin] + " ×1.9";
+    button.addEventListener("click", () => {
+        if (spinning) return;
+        coinChoiceButtons.forEach(item => item.classList.remove("selected"));
+        button.classList.add("selected");
+        selectedCoin = button.dataset.coin;
+        coinStatus.textContent = "Выбрано: " + coinNames[selectedCoin] + " ×1.9";
     });
 });
 
 function animateCoin(side, onDone) {
-    Const needed = side === "heads" ? 0 : 180;
-    Const current = normalizeAngle(coinRotation);
-    Const extra = normalizeAngle(needed - current);
-    CoinRotation = coinRotation + 360 * 5 + extra;
-    CoinElement.style.transform = `rotateY(${coinRotation}deg)`;
-    SetTimeout(onDone, 2100);
+    const needed = side === "heads" ? 0 : 180;
+    const current = normalizeAngle(coinRotation);
+    const extra = normalizeAngle(needed - current);
+    coinRotation = coinRotation + 360 * 5 + extra;
+    coinElement.style.transform = `rotateY(${coinRotation}deg)`;
+    setTimeout(onDone, 2100);
 }
 
 async function flipCoin() {
-    If (spinning || upgrading || !state) return;
-    If (!selectedCoin) {
-        Tg.showAlert("Сначала выбери орла или решку");
-        Return;
+    if (spinning || upgrading || !state) return;
+    if (!selectedCoin) {
+        tg.showAlert("Сначала выбери орла или решку");
+        return;
     }
 
-    Const amount = parseBet();
-    If (!betAll && !amount) {
-        Tg.showAlert("Введи сумму ставки (мин. 100 байтов)");
-        Return;
+    const amount = parseBet();
+    if (!betAll && !amount) {
+        tg.showAlert("Введи сумму ставки (мин. 100 байтов)");
+        return;
     }
 
-    Spinning = true;
-    CoinButton.disabled = true;
-    CoinStatus.textContent = "Монета в воздухе...";
+    spinning = true;
+    coinButton.disabled = true;
+    coinStatus.textContent = "Монета в воздухе...";
 
-    Let result;
-    Try {
-        Await flushQueue();
-        Result = await api("coin", { choice: selectedCoin, amount: amount, all: betAll });
+    let result;
+    try {
+        await flushQueue();
+        result = await api("coin", { choice: selectedCoin, amount: amount, all: betAll });
     } catch (error) {
-        Tg.showAlert(error.message);
-        CoinStatus.textContent = "Выбери сторону и сумму ставки";
-        Spinning = false;
-        CoinButton.disabled = false;
-        Return;
+        tg.showAlert(error.message);
+        coinStatus.textContent = "Выбери сторону и сумму ставки";
+        spinning = false;
+        coinButton.disabled = false;
+        return;
     }
 
-    Const balanceBefore = state.balance;
-    Const choiceName = coinNames[selectedCoin];
+    const balanceBefore = state.balance;
+    const choiceName = coinNames[selectedCoin];
 
-    AnimateCoin(result.side, () => {
-        State = { balance: result.balance, income: result.income, upgrade_cost: result.upgrade_cost };
-        UpdateUI();
+    animateCoin(result.side, () => {
+        state = { balance: result.balance, income: result.income, upgrade_cost: result.upgrade_cost };
+        updateUI();
 
-        Const delta = Math.abs(result.balance - balanceBefore);
-        Const sideName = coinNames[result.side];
+        const delta = Math.abs(result.balance - balanceBefore);
+        const sideName = coinNames[result.side];
 
-        CoinStatus.textContent = result.win
+        coinStatus.textContent = result.win
             ? `Победа! Выпал ${sideName}. +${formatCoins(delta)} байтов`
             : `Проигрыш. Выпал ${sideName} (ты ставил на ${choiceName.toLowerCase()}). −${formatCoins(delta)} байтов`;
 
-        SelectedCoin = null;
-        CoinChoiceButtons.forEach(item => item.classList.remove("selected"));
-        Spinning = false;
-        CoinButton.disabled = false;
+        selectedCoin = null;
+        coinChoiceButtons.forEach(item => item.classList.remove("selected"));
+        spinning = false;
+        coinButton.disabled = false;
     });
 }
 if (coinButton) coinButton.addEventListener("click", flipCoin);
@@ -508,135 +508,135 @@ const symbolData = {
 };
 
 function renderSlotGrid(grid, animate = true) {
-    If (!slotGridElement) return;
-    SlotGridElement.innerHTML = "";
+    if (!slotGridElement) return;
+    slotGridElement.innerHTML = "";
     
-    Grid.forEach((row, rIndex) => {
-        Row.forEach((sym, cIndex) => {
-            Const cell = document.createElement("div");
-            Cell.className = "slot-cell";
-            If (animate) {
-                Cell.classList.add("animate-drop");
-                Cell.style.animationDelay = `${cIndex * 70}ms`;
+    grid.forEach((row, rIndex) => {
+        row.forEach((sym, cIndex) => {
+            const cell = document.createElement("div");
+            cell.className = "slot-cell";
+            if (animate) {
+                cell.classList.add("animate-drop");
+                cell.style.animationDelay = `${cIndex * 70}ms`;
             }
-            If (sym === 10) cell.classList.add("scatter-cell");
-            If (sym >= 8) cell.classList.add("high-cell");
-            Cell.textContent = symbolData[sym]?.icon || "💎";
-            SlotGridElement.appendChild(cell);
+            if (sym === 10) cell.classList.add("scatter-cell");
+            if (sym >= 8) cell.classList.add("high-cell");
+            cell.textContent = symbolData[sym]?.icon || "💎";
+            slotGridElement.appendChild(cell);
         });
     });
 }
 
 async function requestSlotSpin(isBonus = false) {
-    If (spinning || upgrading || !state) return;
+    if (spinning || upgrading || !state) return;
 
-    Let amount = parseBet();
-    If (betAll) amount = state.balance;
-    If (!amount) amount = 1000000000;
+    let amount = parseBet();
+    if (betAll) amount = state.balance;
+    if (!amount) amount = 1000000000;
 
-    Spinning = true;
-    SlotButton.disabled = true;
-    BuyBonusButton.disabled = true;
+    spinning = true;
+    slotButton.disabled = true;
+    buyBonusButton.disabled = true;
 
-    Let result;
-    Try {
-        Await flushQueue();
-        Result = await api("slot", { amount: amount, all: betAll, isBonus: isBonus });
+    let result;
+    try {
+        await flushQueue();
+        result = await api("slot", { amount: amount, all: betAll, isBonus: isBonus });
     } catch (error) {
-        Tg.showAlert(error.message);
-        SlotStatus.textContent = error.message;
-        Spinning = false;
-        SlotButton.disabled = false;
-        BuyBonusButton.disabled = false;
-        Return;
+        tg.showAlert(error.message);
+        slotStatus.textContent = error.message;
+        spinning = false;
+        slotButton.disabled = false;
+        buyBonusButton.disabled = false;
+        return;
     }
 
-    If (isBonus) {
-        Let currentSpin = 1;
-        SlotStatus.textContent = `🎁 БОНУСКА АКТИВИРОВАНА! Спин 1 из 15...`;
-        ZeusBadge.textContent = `⚡ ×1`;
+    if (isBonus) {
+        let currentSpin = 1;
+        slotStatus.textContent = `🎁 БОНУСКА АКТИВИРОВАНА! Спин 1 из 15...`;
+        zeusBadge.textContent = `⚡ ×1`;
 
-        Const bonusInterval = setInterval(() => {
-            RenderSlotGrid(
+        const bonusInterval = setInterval(() => {
+            renderSlotGrid(
                 Array.from({ length: 5 }, () =>
                     Array.from({ length: 6 }, () => Math.floor(Math.random() * 9) + 1)
                 ),
                 false
             );
 
-            CurrentSpin++;
-            If (currentSpin <= 15) {
-                SlotStatus.textContent = `🎁 Бесплатное вращение ${currentSpin} из 15...`;
+            currentSpin++;
+            if (currentSpin <= 15) {
+                slotStatus.textContent = `🎁 Бесплатное вращение ${currentSpin} из 15...`;
             } else {
                 clearInterval(bonusInterval);
-                RenderSlotGrid(result.grid, true);
+                renderSlotGrid(result.grid, true);
 
-                State = { balance: result.balance, income: result.income, upgrade_cost: result.upgrade_cost };
-                UpdateUI();
+                state = { balance: result.balance, income: result.income, upgrade_cost: result.upgrade_cost };
+                updateUI();
 
-                ZeusBadge.textContent = `⚡ ×${result.zeus}`;
-                If (result.zeus > 0) {
-                    Const frame = document.querySelector(".olympus-frame");
-                    If (frame) {
-                        Frame.classList.remove("zeus-flash");
-                        Void frame.offsetWidth;
-                        Frame.classList.add("zeus-flash");
+                zeusBadge.textContent = `⚡ ×${result.zeus}`;
+                if (result.zeus > 0) {
+                    const frame = document.querySelector(".olympus-frame");
+                    if (frame) {
+                        frame.classList.remove("zeus-flash");
+                        void frame.offsetWidth;
+                        frame.classList.add("zeus-flash");
                     }
                 }
 
-                Const bonusCost = amount * 100;
-                Const netProfit = (amount * result.slotMultiplier) - bonusCost;
-                Const formattedDelta = formatCoins(Math.abs(netProfit));
+                const bonusCost = amount * 100;
+                const netProfit = (amount * result.slotMultiplier) - bonusCost;
+                const formattedDelta = formatCoins(Math.abs(netProfit));
 
-                If (netProfit >= 0) {
-                    SlotStatus.textContent = `🎉 БОНУСКА ЗАВЕРШЕНА! Множитель ×${result.slotMultiplier}! Выигрыш: +${formattedDelta} байтов`;
+                if (netProfit >= 0) {
+                    slotStatus.textContent = `🎉 БОНУСКА ЗАВЕРШЕНА! Множитель ×${result.slotMultiplier}! Выигрыш: +${formattedDelta} байтов`;
                 } else {
-                    SlotStatus.textContent = `💀 БОНУСКА ЗАВЕРШЕНА! Множитель ×${result.slotMultiplier}. В минус: −${formattedDelta} байтов`;
+                    slotStatus.textContent = `💀 БОНУСКА ЗАВЕРШЕНА! Множитель ×${result.slotMultiplier}. В минус: −${formattedDelta} байтов`;
                 }
 
-                Spinning = false;
-                SlotButton.disabled = false;
-                BuyBonusButton.disabled = false;
+                spinning = false;
+                slotButton.disabled = false;
+                buyBonusButton.disabled = false;
             }
         }, 300);
 
     } else {
-        SlotStatus.textContent = `⚡ Барабаны крутятся...`;
-        Let counter = 0;
-        Const interval = setInterval(() => {
-            RenderSlotGrid(
+        slotStatus.textContent = `⚡ Барабаны крутятся...`;
+        let counter = 0;
+        const interval = setInterval(() => {
+            renderSlotGrid(
                 Array.from({ length: 5 }, () =>
                     Array.from({ length: 6 }, () => Math.floor(Math.random() * 9) + 1)
                 ),
                 false
             );
-            Counter++;
-            If (counter > 10) {
+            counter++;
+            if (counter > 10) {
                 clearInterval(interval);
-                RenderSlotGrid(result.grid, true);
+                renderSlotGrid(result.grid, true);
 
-                State = { balance: result.balance, income: result.income, upgrade_cost: result.upgrade_cost };
-                UpdateUI();
+                state = { balance: result.balance, income: result.income, upgrade_cost: result.upgrade_cost };
+                updateUI();
 
-                ZeusBadge.textContent = `⚡ ×${result.zeus}`;
-                If (result.zeus > 0) {
-                    Const frame = document.querySelector(".olympus-frame");
-                    If (frame) {
-                        Frame.classList.remove("zeus-flash");
-                        Void frame.offsetWidth;
-                        Frame.classList.add("zeus-flash");
+                zeusBadge.textContent = `⚡ ×${result.zeus}`;
+                if (result.zeus > 0) {
+                    const frame = document.querySelector(".olympus-frame");
+                    if (frame) {
+                        frame.classList.remove("zeus-flash");
+                        void frame.offsetWidth;
+                        frame.classList.add("zeus-flash");
                     }
                 }
 
-                If (result.win) {
-                    SlotStatus.textContent = `⚡ Победа! Множитель ×${result.slotMultiplier}! +${formatCoins(Math.abs(amount * result.slotMultiplier - amount))} байтов`;
+                if (result.win) {
+                    slotStatus.textContent = `⚡ Победа! Множитель ×${result.slotMultiplier}! +${formatCoins(Math.abs(amount * result.slotMultiplier - amount))} байтов`;
                 } else {
-                    SlotStatus.textContent = `Манна богов исчерпана. Попробуй еще!`;
+                    slotStatus.textContent = `Манна богов исчерпана. Попробуй еще!`;
                 }
 
-                Spinning = false;
-                SlotButton.disabled = false;
-                BuyBonusButton.disabled = false;
+                spinning = false;
+                slotButton.disabled = false;
+                buyBonusButton.disabled = false;
             }
         }, 80);
     }
@@ -658,32 +658,32 @@ const promoButton = document.getElementById("promoButton");
 const promoStatus = document.getElementById("promoStatus");
 
 async function redeemPromo() {
-    Const code = promoInput.value.trim();
-    If (!code) {
-        PromoStatus.textContent = "Введите промокод!";
-        PromoStatus.style.color = "#ff525b";
-        Return;
+    const code = promoInput.value.trim();
+    if (!code) {
+        promoStatus.textContent = "Введите промокод!";
+        promoStatus.style.color = "#ff525b";
+        return;
     }
 
-    PromoButton.disabled = true;
-    PromoStatus.textContent = "Проверка...";
-    PromoStatus.style.color = "#aab1c0";
+    promoButton.disabled = true;
+    promoStatus.textContent = "Проверка...";
+    promoStatus.style.color = "#aab1c0";
 
-    Try {
-        Await flushQueue();
-        Const result = await api("redeem_promo", { code });
+    try {
+        await flushQueue();
+        const result = await api("redeem_promo", { code });
 
-        State = { balance: result.balance, income: result.income, upgrade_cost: result.upgrade_cost };
-        UpdateUI();
+        state = { balance: result.balance, income: result.income, upgrade_cost: result.upgrade_cost };
+        updateUI();
 
-        PromoStatus.textContent = `🎉 Промокод активирован! Награда зачислена.`;
-        PromoStatus.style.color = "#39d98a";
-        PromoInput.value = "";
+        promoStatus.textContent = `🎉 Промокод активирован! Награда зачислена.`;
+        promoStatus.style.color = "#39d98a";
+        promoInput.value = "";
     } catch (error) {
-        PromoStatus.textContent = error.message;
-        PromoStatus.style.color = "#ff525b";
+        promoStatus.textContent = error.message;
+        promoStatus.style.color = "#ff525b";
     } finally {
-        PromoButton.disabled = false;
+        promoButton.disabled = false;
     }
 }
 
@@ -696,57 +696,57 @@ const transferButton = document.getElementById("transferButton");
 const transferStatus = document.getElementById("transferStatus");
 
 async function makeTransfer() {
-    If (spinning || upgrading || !state) return;
+    if (spinning || upgrading || !state) return;
 
-    Let targetUsername = transferTargetInput.value.trim().replace(/^@/, "").toLowerCase();
-    Const rawAmount = transferAmountInput.value.trim().replace(",", ".");
-    Const coins = Number(rawAmount);
+    let targetUsername = transferTargetInput.value.trim().replace(/^@/, "").toLowerCase();
+    const rawAmount = transferAmountInput.value.trim().replace(",", ".");
+    const coins = Number(rawAmount);
 
-    If (!targetUsername) {
-        TransferStatus.textContent = "Введи юзернейм получателя!";
-        TransferStatus.style.color = "#ff525b";
-        Return;
+    if (!targetUsername) {
+        transferStatus.textContent = "Введи юзернейм получателя!";
+        transferStatus.style.color = "#ff525b";
+        return;
     }
 
-    If (!rawAmount || !Number.isFinite(coins) || coins <= 0) {
-        TransferStatus.textContent = "Введи корректную сумму перевода!";
-        TransferStatus.style.color = "#ff525b";
-        Return;
+    if (!rawAmount || !Number.isFinite(coins) || coins <= 0) {
+        transferStatus.textContent = "Введи корректную сумму перевода!";
+        transferStatus.style.color = "#ff525b";
+        return;
     }
 
-    Const amount = Math.round(coins * 1000000000);
+    const amount = Math.round(coins * 1000000000);
 
-    If (amount > state.balance) {
-        TransferStatus.textContent = "Недостаточно байтов на балансе!";
-        TransferStatus.style.color = "#ff525b";
-        Return;
+    if (amount > state.balance) {
+        transferStatus.textContent = "Недостаточно байтов на балансе!";
+        transferStatus.style.color = "#ff525b";
+        return;
     }
 
-    TransferButton.disabled = true;
-    TransferStatus.textContent = "Выполняется перевод...";
-    TransferStatus.style.color = "#aab1c0";
+    transferButton.disabled = true;
+    transferStatus.textContent = "Выполняется перевод...";
+    transferStatus.style.color = "#aab1c0";
 
-    Try {
-        Await flushQueue();
-        Const result = await api("transfer", { targetUsername, amount });
+    try {
+        await flushQueue();
+        const result = await api("transfer", { targetUsername, amount });
 
-        State = { balance: result.balance, income: result.income, upgrade_cost: result.upgrade_cost };
-        UpdateUI();
+        state = { balance: result.balance, income: result.income, upgrade_cost: result.upgrade_cost };
+        updateUI();
 
-        TransferStatus.textContent = `🎉 Успешно! Переведено ${formatCoins(amount)} байтов игроку @${targetUsername}`;
-        TransferStatus.style.color = "#39d98a";
-        TransferTargetInput.value = "";
-        TransferAmountInput.value = "";
+        transferStatus.textContent = `🎉 Успешно! Переведено ${formatCoins(amount)} байтов игроку @${targetUsername}`;
+        transferStatus.style.color = "#39d98a";
+        transferTargetInput.value = "";
+        transferAmountInput.value = "";
     } catch (error) {
-        TransferStatus.textContent = error.message;
-        TransferStatus.style.color = "#ff525b";
+        transferStatus.textContent = error.message;
+        transferStatus.style.color = "#ff525b";
     } finally {
-        TransferButton.disabled = false;
+        transferButton.disabled = false;
     }
 }
 
 if (transferButton) {
-    TransferButton.addEventListener("click", makeTransfer);
+    transferButton.addEventListener("click", makeTransfer);
 }
 
 // AVIAMASTERS
@@ -756,22 +756,22 @@ const aviaStatus = document.getElementById("aviaStatus");
 const planeContainer = document.getElementById("planeContainer");
 
 async function playAviamasters() {
-    If (spinning || upgrading || !state) return;
+    if (spinning || upgrading || !state) return;
 
-    Let amount = parseBet();
-    If (betAll) amount = state.balance;
-    If (!amount) {
-        Tg.showAlert("Введи сумму ставки!");
-        Return;
+    let amount = parseBet();
+    if (betAll) amount = state.balance;
+    if (!amount) {
+        tg.showAlert("Введи сумму ставки!");
+        return;
     }
 
-    Spinning = true;
-    AviaButton.disabled = true;
-    If (buyBonusButton) buyBonusButton.disabled = true;
+    spinning = true;
+    aviaButton.disabled = true;
+    if (buyBonusButton) buyBonusButton.disabled = true;
 
-    AviaStatus.textContent = "✈️ Самолет заходит на взлетную полосу...";
+    aviaStatus.textContent = "✈️ Самолет заходит на взлетную полосу...";
     
-    Const possibleSteps = [
+    const possibleSteps = [
         { type: "add", val: 0.3, text: "📈 Набор высоты (+0.3)" },
         { type: "add", val: 0.6, text: "📈 Отличный подъем (+0.6)" },
         { type: "sub", val: 0.4, text: "⚠️ Потеря высоты (−0.4)" },
@@ -782,81 +782,81 @@ async function playAviamasters() {
         { type: "div", val: 1.8, text: "🌪️ Мощный вихрь (÷1.8)" }
     ];
 
-    Const totalSteps = Math.floor(Math.random() * 5) + 6;
-    Const pathSteps = [];
-    For (let i = 0; i < totalSteps; i++) {
-        Const randomStep = possibleSteps[Math.floor(Math.random() * possibleSteps.length)];
-        PathSteps.push({ ...randomStep });
+    const totalSteps = Math.floor(Math.random() * 5) + 6;
+    const pathSteps = [];
+    for (let i = 0; i < totalSteps; i++) {
+        const randomStep = possibleSteps[Math.floor(Math.random() * possibleSteps.length)];
+        pathSteps.push({ ...randomStep });
     }
 
-    Let currentStep = 0;
-    Let finalMultiplier = 1.00;
+    let currentStep = 0;
+    let finalMultiplier = 1.00;
 
-    Const flightInterval = setInterval(async () => {
-        If (currentStep < pathSteps.length) {
-            Const step = pathSteps[currentStep];
+    const flightInterval = setInterval(async () => {
+        if (currentStep < pathSteps.length) {
+            const step = pathSteps[currentStep];
             
-            If (step.type === "add") finalMultiplier += step.val;
+            if (step.type === "add") finalMultiplier += step.val;
             else if (step.type === "mult") finalMultiplier *= step.val;
             else if (step.type === "div") finalMultiplier /= step.val;
             else if (step.type === "sub") finalMultiplier = Math.max(0.1, finalMultiplier - step.val);
 
-            FinalMultiplier = Math.max(0.05, Number(finalMultiplier.toFixed(2)));
+            finalMultiplier = Math.max(0.05, Number(finalMultiplier.toFixed(2)));
             
-            AviaMultiplierElement.textContent = `×${finalMultiplier}`;
-            AviaStatus.textContent = step.text;
+            aviaMultiplierElement.textContent = `×${finalMultiplier}`;
+            aviaStatus.textContent = step.text;
             
-            AviaMultiplierElement.style.color = (step.type === "div" || step.type === "sub") ? "#ff525b" : "#38bdf8";
+            aviaMultiplierElement.style.color = (step.type === "div" || step.type === "sub") ? "#ff525b" : "#38bdf8";
 
-            If (planeContainer) {
-                Const yOffset = (step.type === "div" || step.type === "sub") ? 12 : -12;
-                PlaneContainer.style.transform = `translate(${currentStep * 8}px, ${yOffset}px) rotate(${(step.type === "div" || step.type === "sub") ? -15 : 15}deg)`;
+            if (planeContainer) {
+                const yOffset = (step.type === "div" || step.type === "sub") ? 12 : -12;
+                planeContainer.style.transform = `translate(${currentStep * 8}px, ${yOffset}px) rotate(${(step.type === "div" || step.type === "sub") ? -15 : 15}deg)`;
             }
 
-            CurrentStep++;
+            currentStep++;
         } else {
             clearInterval(flightInterval);
 
-            Const isCrashed = Math.random() < 0.85;
+            const isCrashed = Math.random() < 0.85;
 
-            If (isCrashed) {
-                FinalMultiplier = 0;
-                AviaMultiplierElement.textContent = "0.00";
-                AviaMultiplierElement.style.color = "#ff525b";
-                AviaStatus.textContent = "💥 Ракета сбила самолет! Ставка сгорела.";
+            if (isCrashed) {
+                finalMultiplier = 0;
+                aviaMultiplierElement.textContent = "0.00";
+                aviaMultiplierElement.style.color = "#ff525b";
+                aviaStatus.textContent = "💥 Ракета сбила самолет! Ставка сгорела.";
             } else {
-                AviaMultiplierElement.style.color = "#38bdf8";
-                AviaStatus.textContent = `🎉 Эпический пролет! Итоговый множитель: ×${finalMultiplier.toFixed(2)}`;
+                aviaMultiplierElement.style.color = "#38bdf8";
+                aviaStatus.textContent = `🎉 Эпический пролет! Итоговый множитель: ×${finalMultiplier.toFixed(2)}`;
             }
 
-            Try {
-                Await flushQueue();
-                Const result = await api("spin", { choice: isCrashed ? "zero" : "red", amount: amount, all: betAll });
-                State = { balance: result.balance, income: result.income, upgrade_cost: result.upgrade_cost };
-                UpdateUI();
+            try {
+                await flushQueue();
+                const result = await api("spin", { choice: isCrashed ? "zero" : "red", amount: amount, all: betAll });
+                state = { balance: result.balance, income: result.income, upgrade_cost: result.upgrade_cost };
+                updateUI();
             } catch (e) {
-                If (isCrashed) {
-                    State.balance = Math.max(0, state.balance - amount);
+                if (isCrashed) {
+                    state.balance = Math.max(0, state.balance - amount);
                 } else {
-                    State.balance += Math.floor(amount * finalMultiplier);
+                    state.balance += Math.floor(amount * finalMultiplier);
                 }
-                UpdateUI();
+                updateUI();
             }
 
-            SetTimeout(() => {
-                AviaMultiplierElement.style.color = "#38bdf8";
-                If (planeContainer) planeContainer.style.transform = "none";
-                AviaButton.disabled = false;
-                Spinning = false;
-                AviaMultiplierElement.textContent = "×1.00";
-                AviaStatus.textContent = "Сделай ставку и взлетай!";
+            setTimeout(() => {
+                aviaMultiplierElement.style.color = "#38bdf8";
+                if (planeContainer) planeContainer.style.transform = "none";
+                aviaButton.disabled = false;
+                spinning = false;
+                aviaMultiplierElement.textContent = "×1.00";
+                aviaStatus.textContent = "Сделай ставку и взлетай!";
             }, 2500);
         }
     }, 550);
 }
 
 if (aviaButton) {
-    AviaButton.addEventListener("click", playAviamasters);
+    aviaButton.addEventListener("click", playAviamasters);
 }
 
 // БЛЕКДЖЕК ЛОГИКА
@@ -878,198 +878,198 @@ let bjBetAmount = 0;
 let bjGameActive = false;
 
 function createBjDeck() {
-    Const suits = ["♠", "♣", "♥", "♦"];
-    Const values = ["2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A"];
-    Let deck = [];
-    For (let suit of suits) {
-        For (let val of values) {
-            Deck.push({ val, suit });
+    const suits = ["♠", "♣", "♥", "♦"];
+    const values = ["2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A"];
+    let deck = [];
+    for (let suit of suits) {
+        for (let val of values) {
+            deck.push({ val, suit });
         }
     }
-    For (let i = deck.length - 1; i > 0; i--) {
-        Const j = Math.floor(Math.random() * (i + 1));
+    for (let i = deck.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
         [deck[i], deck[j]] = [deck[j], deck[i]];
     }
-    Return deck;
+    return deck;
 }
 
 function calculateBjHand(hand) {
-    Let sum = 0;
-    Let aces = 0;
-    For (let card of hand) {
-        If (card.val === "A") {
-            Aces++;
-            Sum += 11;
+    let sum = 0;
+    let aces = 0;
+    for (let card of hand) {
+        if (card.val === "A") {
+            aces++;
+            sum += 11;
         } else if (["K", "Q", "J", "10"].includes(card.val)) {
-            Sum += 10;
+            sum += 10;
         } else {
-            Sum += parseInt(card.val);
+            sum += parseInt(card.val);
         }
     }
-    While (sum > 21 && aces > 0) {
-        Sum -= 10;
-        Aces--;
+    while (sum > 21 && aces > 0) {
+        sum -= 10;
+        aces--;
     }
-    Return sum;
+    return sum;
 }
 
 function renderBjHands(hideDealerSecond = true) {
-    PlayerCardsDiv.textContent = bjPlayerHand.map(c => `${c.val}${c.suit}`).join(" ");
-    PlayerScoreSpan.textContent = calculateBjHand(bjPlayerHand);
+    playerCardsDiv.textContent = bjPlayerHand.map(c => `${c.val}${c.suit}`).join(" ");
+    playerScoreSpan.textContent = calculateBjHand(bjPlayerHand);
 
-    If (hideDealerSecond && bjDealerHand.length >= 2) {
-        DealerCardsDiv.textContent = `${bjDealerHand[0].val}${bjDealerHand[0].suit} 🂠`;
-        DealerScoreSpan.textContent = calculateBjHand([bjDealerHand[0]]);
+    if (hideDealerSecond && bjDealerHand.length >= 2) {
+        dealerCardsDiv.textContent = `${bjDealerHand[0].val}${bjDealerHand[0].suit} 🂠`;
+        dealerScoreSpan.textContent = calculateBjHand([bjDealerHand[0]]);
     } else {
-        DealerCardsDiv.textContent = bjDealerHand.map(c => `${c.val}${c.suit}`).join(" ");
-        DealerScoreSpan.textContent = calculateBjHand(bjDealerHand);
+        dealerCardsDiv.textContent = bjDealerHand.map(c => `${c.val}${c.suit}`).join(" ");
+        dealerScoreSpan.textContent = calculateBjHand(bjDealerHand);
     }
 }
 
 async function startBlackjack() {
-    If (spinning || upgrading || !state) return;
+    if (spinning || upgrading || !state) return;
 
-    BjBetAmount = parseBet();
-    If (betAll) bjBetAmount = state.balance;
-    If (!bjBetAmount || bjBetAmount <= 0) {
-        Tg.showAlert("Введи сумму ставки!");
-        Return;
+    bjBetAmount = parseBet();
+    if (betAll) bjBetAmount = state.balance;
+    if (!bjBetAmount || bjBetAmount <= 0) {
+        tg.showAlert("Введи сумму ставки!");
+        return;
     }
-    If (bjBetAmount > state.balance) {
-        Tg.showAlert("Недостаточно байтов на балансе!");
-        Return;
+    if (bjBetAmount > state.balance) {
+        tg.showAlert("Недостаточно байтов на балансе!");
+        return;
     }
 
-    Spinning = true;
-    If (bjDealButton) bjDealButton.disabled = true;
+    spinning = true;
+    if (bjDealButton) bjDealButton.disabled = true;
 
-    Try {
-        Await flushQueue();
-        Const res = await api("spin", { choice: "zero", amount: bjBetAmount, all: betAll });
-        State = { balance: res.balance, income: res.income, upgrade_cost: res.upgrade_cost };
-        UpdateUI();
+    try {
+        await flushQueue();
+        const res = await api("spin", { choice: "zero", amount: bjBetAmount, all: betAll });
+        state = { balance: res.balance, income: res.income, upgrade_cost: res.upgrade_cost };
+        updateUI();
     } catch (e) {
-        State.balance -= bjBetAmount;
-        UpdateUI();
+        state.balance -= bjBetAmount;
+        updateUI();
     } finally {
-        Spinning = false;
+        spinning = false;
     }
 
-    BjDeck = createBjDeck();
-    BjPlayerHand = [bjDeck.pop(), bjDeck.pop()];
-    BjDealerHand = [bjDeck.pop(), bjDeck.pop()];
-    BjGameActive = true;
+    bjDeck = createBjDeck();
+    bjPlayerHand = [bjDeck.pop(), bjDeck.pop()];
+    bjDealerHand = [bjDeck.pop(), bjDeck.pop()];
+    bjGameActive = true;
 
-    RenderBjHands(true);
-    BjStatus.textContent = "Твой ход: Ещё, Хватит или Удвоить?";
+    renderBjHands(true);
+    bjStatus.textContent = "Твой ход: Ещё, Хватит или Удвоить?";
     
-    If (bjDealButton) bjDealButton.classList.add("hidden");
-    If (bjActionButtons) bjActionButtons.classList.remove("hidden");
+    if (bjDealButton) bjDealButton.classList.add("hidden");
+    if (bjActionButtons) bjActionButtons.classList.remove("hidden");
     
-    If (bjDoubleButton) {
-        BjDoubleButton.disabled = state.balance < bjBetAmount;
-        BjDoubleButton.classList.remove("hidden");
+    if (bjDoubleButton) {
+        bjDoubleButton.disabled = state.balance < bjBetAmount;
+        bjDoubleButton.classList.remove("hidden");
     }
 
-    If (calculateBjHand(bjPlayerHand) === 21) {
-        EndBlackjack("blackjack");
+    if (calculateBjHand(bjPlayerHand) === 21) {
+        endBlackjack("blackjack");
     }
 }
 
 async function hitBlackjack() {
-    If (!bjGameActive || spinning) return;
-    BjPlayerHand.push(bjDeck.pop());
-    RenderBjHands(true);
+    if (!bjGameActive || spinning) return;
+    bjPlayerHand.push(bjDeck.pop());
+    renderBjHands(true);
     
-    If (bjDoubleButton) bjDoubleButton.classList.add("hidden");
+    if (bjDoubleButton) bjDoubleButton.classList.add("hidden");
 
-    Const playerSum = calculateBjHand(bjPlayerHand);
-    If (playerSum > 21) {
-        EndBlackjack("bust");
+    const playerSum = calculateBjHand(bjPlayerHand);
+    if (playerSum > 21) {
+        endBlackjack("bust");
     } else if (playerSum === 21) {
-        StandBlackjack();
+        standBlackjack();
     }
 }
 
 async function doubleDownBlackjack() {
-    If (!bjGameActive || spinning) return;
-    If (state.balance < bjBetAmount) {
-        Tg.showAlert("Недостаточно байтов для удвоения ставки!");
-        Return;
+    if (!bjGameActive || spinning) return;
+    if (state.balance < bjBetAmount) {
+        tg.showAlert("Недостаточно байтов для удвоения ставки!");
+        return;
     }
 
-    State.balance -= bjBetAmount;
-    BjBetAmount *= 2;
-    UpdateUI();
+    state.balance -= bjBetAmount;
+    bjBetAmount *= 2;
+    updateUI();
 
-    BjPlayerHand.push(bjDeck.pop());
-    RenderBjHands(true);
+    bjPlayerHand.push(bjDeck.pop());
+    renderBjHands(true);
 
-    Const playerSum = calculateBjHand(bjPlayerHand);
-    If (playerSum > 21) {
-        EndBlackjack("bust");
+    const playerSum = calculateBjHand(bjPlayerHand);
+    if (playerSum > 21) {
+        endBlackjack("bust");
     } else {
-        StandBlackjack();
+        standBlackjack();
     }
 }
 
 async function standBlackjack() {
-    If (!bjGameActive || spinning) return;
-    BjGameActive = false;
+    if (!bjGameActive || spinning) return;
+    bjGameActive = false;
 
-    RenderBjHands(false);
-    BjStatus.textContent = "Ход дилера...";
+    renderBjHands(false);
+    bjStatus.textContent = "Ход дилера...";
 
-    Let dealerSum = calculateBjHand(bjDealerHand);
-    While (dealerSum < 17) {
-        Await new Promise(r => setTimeout(r, 600));
-        BjDealerHand.push(bjDeck.pop());
-        RenderBjHands(false);
-        DealerSum = calculateBjHand(bjDealerHand);
+    let dealerSum = calculateBjHand(bjDealerHand);
+    while (dealerSum < 17) {
+        await new Promise(r => setTimeout(r, 600));
+        bjDealerHand.push(bjDeck.pop());
+        renderBjHands(false);
+        dealerSum = calculateBjHand(bjDealerHand);
     }
 
-    Const playerSum = calculateBjHand(bjPlayerHand);
+    const playerSum = calculateBjHand(bjPlayerHand);
 
-    If (dealerSum > 21 || playerSum > dealerSum) {
-        EndBlackjack("win");
+    if (dealerSum > 21 || playerSum > dealerSum) {
+        endBlackjack("win");
     } else if (playerSum < dealerSum) {
-        EndBlackjack("lose");
+        endBlackjack("lose");
     } else {
-        EndBlackjack("push");
+        endBlackjack("push");
     }
 }
 
 async function endBlackjack(result) {
-    BjGameActive = false;
-    RenderBjHands(false);
+    bjGameActive = false;
+    renderBjHands(false);
     
-    If (bjActionButtons) bjActionButtons.classList.add("hidden");
-    If (bjDealButton) {
-        BjDealButton.classList.remove("hidden");
-        BjDealButton.disabled = false;
+    if (bjActionButtons) bjActionButtons.classList.add("hidden");
+    if (bjDealButton) {
+        bjDealButton.classList.remove("hidden");
+        bjDealButton.disabled = false;
     }
-    If (bjDoubleButton) bjDoubleButton.classList.remove("hidden");
+    if (bjDoubleButton) bjDoubleButton.classList.remove("hidden");
 
-    Let payout = 0;
-    If (result === "blackjack") {
-        Payout = Math.floor(bjBetAmount * 2.5);
-        State.balance += payout;
-        BjStatus.textContent = `🎉 БЛЕКДЖЕК! Выигрыш: +${formatCoins(payout)} байтов`;
+    let payout = 0;
+    if (result === "blackjack") {
+        payout = Math.floor(bjBetAmount * 2.5);
+        state.balance += payout;
+        bjStatus.textContent = `🎉 БЛЕКДЖЕК! Выигрыш: +${formatCoins(payout)} байтов`;
     } else if (result === "win") {
-        Payout = bjBetAmount * 2;
-        State.balance += payout;
-        BjStatus.textContent = `🎉 Победа! Выигрыш: +${formatCoins(payout)} байтов`;
+        payout = bjBetAmount * 2;
+        state.balance += payout;
+        bjStatus.textContent = `🎉 Победа! Выигрыш: +${formatCoins(payout)} байтов`;
     } else if (result === "push") {
-        State.balance += bjBetAmount;
-        BjStatus.textContent = `🤝 Ничья (Push). Ставка возвращена.`;
+        state.balance += bjBetAmount;
+        bjStatus.textContent = `🤝 Ничья (Push). Ставка возвращена.`;
     } else if (result === "bust") {
-        BjStatus.textContent = `💥 Перебор! Ты проиграл.`;
+        bjStatus.textContent = `💥 Перебор! Ты проиграл.`;
     } else {
-        BjStatus.textContent = `💀 Дилер выиграл. Проигрыш.`;
+        bjStatus.textContent = `💀 Дилер выиграл. Проигрыш.`;
     }
 
-    UpdateUI();
-    Spinning = false;
+    updateUI();
+    spinning = false;
 }
 
 if (bjDealButton) bjDealButton.addEventListener("click", startBlackjack);
@@ -1082,18 +1082,18 @@ const tabButtons = document.querySelectorAll(".tab-button");
 const gameViews = document.querySelectorAll(".game-view");
 
 tabButtons.forEach(button => {
-    Button.addEventListener("click", () => {
-        If (typeof spinning !== 'undefined' && spinning) return;
+    button.addEventListener("click", () => {
+        if (typeof spinning !== 'undefined' && spinning) return;
         
-        TabButtons.forEach(item => item.classList.remove("active"));
-        Button.classList.add("active");
+        tabButtons.forEach(item => item.classList.remove("active"));
+        button.classList.add("active");
 
-        Const targetGame = button.dataset.game;
-        GameViews.forEach(view => {
-            If (view.id === "game-" + targetGame) {
-                View.classList.remove("hidden");
+        const targetGame = button.dataset.game;
+        gameViews.forEach(view => {
+            if (view.id === "game-" + targetGame) {
+                view.classList.remove("hidden");
             } else {
-                View.classList.add("hidden");
+                view.classList.add("hidden");
             }
         });
     });
@@ -1103,29 +1103,29 @@ const colorButtons = document.querySelectorAll(".color-btn");
 const settingsStatus = document.getElementById("settingsStatus");
 
 function setThemeColor(color) {
-    Document.documentElement.style.setProperty("--accent-color", color);
+    document.documentElement.style.setProperty("--accent-color", color);
     
-    ColorButtons.forEach(btn => {
-        If (btn.dataset.color === color) {
-            Btn.classList.add("active-color");
+    colorButtons.forEach(btn => {
+        if (btn.dataset.color === color) {
+            btn.classList.add("active-color");
         } else {
-            Btn.classList.remove("active-color");
+            btn.classList.remove("active-color");
         }
     });
 
-    LocalStorage.setItem("gcoin_theme_color", color);
+    localStorage.setItem("gcoin_theme_color", color);
 }
 
 colorButtons.forEach(button => {
-    Button.addEventListener("click", () => {
-        Const color = button.dataset.color;
-        SetThemeColor(color);
-        If (settingsStatus) {
-            SettingsStatus.textContent = `🎨 Тема успешно изменена!`;
-            SettingsStatus.style.color = color;
+    button.addEventListener("click", () => {
+        const color = button.dataset.color;
+        setThemeColor(color);
+        if (settingsStatus) {
+            settingsStatus.textContent = `🎨 Тема успешно изменена!`;
+            settingsStatus.style.color = color;
         }
     });
 });
 
-Const savedTheme = localStorage.getItem("gcoin_theme_color") || "#8b5cf6";
-SetThemeColor(savedTheme);
+const savedTheme = localStorage.getItem("gcoin_theme_color") || "#8b5cf6";
+setThemeColor(savedTheme);
