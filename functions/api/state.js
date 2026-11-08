@@ -127,9 +127,6 @@ const MULTIPLIERS = {
     zero: 36
 };
 
-// Ставка — доля от текущего баланса
-const ALLOWED_PERCENTS = [10, 25, 50, 100];
-
 // Честное случайное число 0..36 без перекоса
 function randomRouletteNumber() {
     const buf = new Uint32Array(1);
@@ -225,40 +222,39 @@ export async function onRequestPost({ request, env }) {
 
         } else if (body.action === "spin") {
             const choice = String(body.choice);
-            const percent = Number(body.percent);
 
             if (!(choice in MULTIPLIERS)) {
                 return response({ error: "Неизвестный прогноз" }, 400);
             }
 
-            if (!ALLOWED_PERCENTS.includes(percent)) {
-                return response({ error: "Неверная ставка" }, 400);
+            const current = await getUser(env, id);
+
+            // «Всё» берём с сервера, остальное — сумма от игрока
+            const amount = body.all === true
+                ? current.balance
+                : Number(body.amount);
+
+            if (!Number.isFinite(amount) || amount < 1) {
+                return response({ error: "Слишком маленькая ставка" }, 400);
             }
 
-            const fraction = percent / 100;
-            const multiplier = MULTIPLIERS[choice];
+            if (amount > current.balance) {
+                return response({ error: "Недостаточно коинов" }, 400);
+            }
 
+            const multiplier = MULTIPLIERS[choice];
             const number = randomRouletteNumber();
             const win = isWin(choice, number);
 
-            // Одна атомарная операция:
-            // выигрыш  -> баланс + ставка * (множитель - 1)
-            // проигрыш -> баланс - ставка
+            // Выигрыш: + ставка × (множитель − 1), проигрыш: − ставка
+            const delta = win ? amount * (multiplier - 1) : -amount;
+
             const result = await env.DB.prepare(`
                 UPDATE users
-                SET balance = balance + CASE
-                    WHEN ? = 1 THEN balance * ? * ?
-                    ELSE -balance * ?
-                END
+                SET balance = balance + ?
                 WHERE telegram_id = ?
-                AND balance > 0
-            `).bind(
-                win ? 1 : 0,
-                fraction,
-                multiplier - 1,
-                fraction,
-                id
-            ).run();
+                AND balance >= ?
+            `).bind(delta, id, amount).run();
 
             if (result.meta.changes === 0) {
                 return response({ error: "Недостаточно коинов" }, 400);
