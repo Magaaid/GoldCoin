@@ -705,3 +705,69 @@ tabButtons.forEach(button => {
         });
     });
 });
+// AVIAMASTERS ЛОГИКА
+const aviaButton = document.getElementById("aviaButton");
+const aviaMultiplierElement = document.getElementById("aviaMultiplier");
+const aviaStatus = document.getElementById("aviaStatus");
+const planeContainer = document.getElementById("planeContainer");
+
+async function playAviamasters() {
+    if (spinning || upgrading || !state) return;
+
+    let amount = parseBet();
+    if (betAll) amount = state.balance;
+    if (!amount) {
+        tg.showAlert("Введи сумму ставки!");
+        return;
+    }
+
+    spinning = true;
+    aviaButton.disabled = true;
+    if (buyBonusButton) buyBonusButton.disabled = true;
+
+    let currentMultiplier = 1.00;
+    // Настройка краша (вероятность раннего падения или высокий полет)
+    const crashAt = Math.random() < 0.4 ? (1.05 + Math.random() * 0.7) : (1.4 + Math.pow(Math.random(), 3) * 12);
+    
+    aviaStatus.textContent = "Самолет набирает высоту...";
+
+    const flightInterval = setInterval(async () => {
+        currentMultiplier += 0.05 + (currentMultiplier * 0.035);
+        
+        if (currentMultiplier >= crashAt) {
+            clearInterval(flightInterval);
+            currentMultiplier = crashAt;
+            aviaMultiplierElement.textContent = `×${currentMultiplier.toFixed(2)}`;
+            aviaMultiplierElement.style.color = "#ff525b";
+            if (planeContainer) planeContainer.style.transform = "scale(0.8) rotate(45deg)";
+            
+            aviaStatus.textContent = `💥 Краш! Самолет улетел. Проигрыш`;
+
+            try {
+                await flushQueue();
+                const result = await api("spin", { choice: "zero", amount: amount, all: betAll });
+                state = { balance: result.balance, income: result.income, upgrade_cost: result.upgrade_cost };
+                updateUI();
+            } catch (e) {
+                state.balance = Math.max(0, state.balance - amount);
+                updateUI();
+            }
+
+            setTimeout(() => {
+                aviaMultiplierElement.style.color = "#38bdf8";
+                if (planeContainer) planeContainer.style.transform = "none";
+                aviaButton.disabled = false;
+                spinning = false;
+                aviaStatus.textContent = "Сделай ставку и взлетай!";
+            }, 2000);
+
+        } else {
+            aviaMultiplierElement.textContent = `×${currentMultiplier.toFixed(2)}`;
+        }
+    }, 90);
+}
+
+if (aviaButton) {
+    aviaButton.addEventListener("click", playAviamasters);
+}
+
