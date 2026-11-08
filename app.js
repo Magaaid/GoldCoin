@@ -42,6 +42,8 @@ async function api(action = null) {
     }
 
     const response = await fetch("/api/state", options);
+    console.log("Telegram initData length:", tg.initData.length);
+console.log("Request status:", response.status);
 
     const data = await response.json();
 
