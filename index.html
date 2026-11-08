@@ -15,10 +15,14 @@
 
         <section class="balance-card">
             <p>ТВОЙ БАЛАНС</p>
-            <div class="balance" id="balance">0,0000000000 коинов</div>
+            <div class="balance" id="balance">
+                0,0000000000 коинов
+            </div>
         </section>
 
-        <button class="earn-button" id="earnButton">+0,0000000005</button>
+        <button class="earn-button" id="earnButton">
+            +0,0000000005
+        </button>
 
         <section class="upgrade-card">
             <h2>Улучшение</h2>
@@ -28,12 +32,42 @@
             </button>
         </section>
 
+        <section class="prediction-card">
+            <h2>ПРОГНОЗ</h2>
+            <p>Выбери, что, по-твоему, выпадет</p>
+
+            <div class="prediction-grid">
+                <button class="prediction-option red" data-choice="red">
+                    Красное <b>×1.9</b>
+                </button>
+
+                <button class="prediction-option black" data-choice="black">
+                    Чёрное <b>×1.9</b>
+                </button>
+
+                <button class="prediction-option" data-choice="even">
+                    Чётное <b>×1.9</b>
+                </button>
+
+                <button class="prediction-option" data-choice="odd">
+                    Нечётное <b>×1.9</b>
+                </button>
+
+                <button class="prediction-option zero" data-choice="zero">
+                    Ноль (0) <b>×36</b>
+                </button>
+            </div>
+
+            <p id="predictionStatus">Прогноз не выбран</p>
+        </section>
+
         <section class="roulette-card">
             <h2>РУЛЕТКА</h2>
             <p>Попробуй угадать выпавшее число</p>
 
             <div class="roulette-wheel">
                 <div class="wheel-pointer">▼</div>
+
                 <div id="wheel" class="wheel">
                     <div id="ball" class="ball"></div>
                     <div class="wheel-center">GC</div>
@@ -44,13 +78,16 @@
                 ?
             </div>
 
-            <p id="rouletteMessage">Нажми, чтобы запустить колесо</p>
+            <p id="rouletteMessage">
+                Нажми, чтобы запустить колесо
+            </p>
 
             <button id="spinButton" class="spin-button">
                 КРУТИТЬ
             </button>
 
             <h3>История результатов</h3>
+
             <div id="rouletteHistory" class="roulette-history">
                 Пока пусто
             </div>
