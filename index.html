@@ -28,6 +28,7 @@
             <button class="tab-button" data-game="blackjack">🃏 Блекджек</button>
             <button class="tab-button" data-game="transfer">💸 Перевод</button>
             <button class="tab-button" data-game="promo">🎁 Промо</button>
+            <button class="tab-button" data-game="settings">⚙️ Настройки</button>
         </nav>
 
         <!-- Общая панель ставки -->
@@ -179,6 +180,27 @@
             <input type="text" id="promoInput" class="bet-input" placeholder="Введите промокод">
             <button id="promoButton" class="btn btn-primary full-width">Активировать</button>
             <div id="promoStatus" class="status-text"></div>
+        </div>
+
+        <!-- 7. НАСТРОЙКИ ТЕМЫ -->
+        <div id="game-settings" class="game-view card hidden">
+            <h3>🎨 Настройки темы</h3>
+            <p>Выбери любимый цвет интерфейса для своего казино:</p>
+            
+            <div class="color-picker-grid">
+                <button class="color-btn" data-color="#3b82f6" style="background: #3b82f6;" title="Синий неон"></button>
+                <button class="color-btn" data-color="#8b5cf6" style="background: #8b5cf6;" title="Фиолетовый космос"></button>
+                <button class="color-btn" data-color="#10b981" style="background: #10b981;" title="Изумрудный зелёный"></button>
+                <button class="color-btn" data-color="#f59e0b" style="background: #f59e0b;" title="Золотое солнце"></button>
+                <button class="color-btn" data-color="#ef4444" style="background: #ef4444;" title="Киберпанк красный"></button>
+                <button class="color-btn" data-color="#ec4899" style="background: #ec4899;" title="Неоновый розовый"></button>
+                <button class="color-btn" data-color="#06b6d4" style="background: #06b6d4;" title="Бирюзовый океан"></button>
+                <button class="color-btn" data-color="#84cc16" style="background: #84cc16;" title="Лаймовый свежий"></button>
+                <button class="color-btn" data-color="#6366f1" style="background: #6366f1;" title="Индиго глубокий"></button>
+                <button class="color-btn" data-color="#a855f7" style="background: #a855f7;" title="Пурпурный маг"></button>
+            </div>
+            
+            <div id="settingsStatus" class="status-text" style="margin-top: 15px;">Текущая тема применена</div>
         </div>
     </div>
 
