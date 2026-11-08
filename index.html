@@ -210,5 +210,39 @@
     </div>
 
     <script src="app.js"></script>
+
+    <!-- ПРИНУДИТЕЛЬНЫЙ ВСТРОЕННЫЙ СКРИПТ ДЛЯ НАДЕЖНОСТИ -->
+    <script>
+        console.log("⚡ Встроенный скрипт загрузки настроек запущен");
+
+        document.addEventListener("DOMContentLoaded", () => {
+            const goToSettingsBtn = document.getElementById("goToSettingsBtn");
+            
+            if (goToSettingsBtn) {
+                goToSettingsBtn.addEventListener("click", () => {
+                    console.log("Клик по кнопке настроек из промо!");
+
+                    // Переключаем активную кнопку в меню
+                    document.querySelectorAll(".tab-button").forEach(item => {
+                        item.classList.remove("active");
+                        if (item.dataset.game === "settings") {
+                            item.classList.add("active");
+                        }
+                    });
+
+                    // Показываем настройки, скрываем остальные экраны
+                    document.querySelectorAll(".game-view").forEach(view => {
+                        if (view.id === "game-settings") {
+                            view.classList.remove("hidden");
+                        } else {
+                            view.classList.add("hidden");
+                        }
+                    });
+                });
+            } else {
+                console.error("❌ Кнопка goToSettingsBtn не найдена в DOM!");
+            }
+        });
+    </script>
 </body>
 </html>
