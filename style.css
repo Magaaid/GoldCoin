@@ -1037,3 +1037,41 @@ input {
 .olympus-frame.zeus-flash {
     animation: zeusFlash 0.6s ease-out;
 }
+/* Тема Aviamasters */
+.aviamaster-theme {
+    background: linear-gradient(180deg, #0f172a 0%, #1e1b4b 50%, #312e81 100%);
+    border: 1px solid rgba(56, 189, 248, 0.3);
+}
+
+.aviamaster-stage {
+    position: relative;
+    height: 220px;
+    background: radial-gradient(circle at center, rgba(56, 189, 248, 0.15) 0%, rgba(15, 23, 42, 0.8) 100%);
+    border-radius: 14px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 12px;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.avia-multiplier {
+    font-size: 36px;
+    font-weight: 900;
+    color: #38bdf8;
+    text-shadow: 0 0 15px rgba(56, 189, 248, 0.5);
+    margin-bottom: 10px;
+}
+
+.plane-container {
+    font-size: 42px;
+    transition: transform 0.1s linear;
+    animation: floatPlane 2s ease-in-out infinite alternate;
+}
+
+@keyframes floatPlane {
+    0% { transform: translateY(-5px) rotate(-5deg); }
+    100% { transform: translateY(5px) rotate(5deg); }
+}
