@@ -539,3 +539,15 @@ scrollbar-width: none;
     background: #8b5cf6 !important;
     min-width: max-content !important;
 }
+.settings-quick-button {
+    display: block !important;
+    width: 100%;
+    padding: 14px;
+    background: #8b5cf6;
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-size: 15px;
+    font-weight: 800;
+    cursor: pointer;
+}
