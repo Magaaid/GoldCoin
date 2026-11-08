@@ -1222,3 +1222,21 @@ if (copyRefBtn) {
 }
 
 setTimeout(initReferralSystem, 1000);
+function createCardElement(suit, value, isHidden = false) {
+    const cardDiv = document.createElement('div');
+    cardDiv.className = `bj-card ${isHidden ? '' : 'flipped'}`;
+
+    // Определяем цвет (червы ♥ и бубны ♦ — красные)
+    const isRed = (suit === '♥' || suit === '♦');
+    const redClass = isRed ? 'red' : '';
+
+    cardDiv.innerHTML = `
+        <div class="card-face card-back">?</div>
+        <div class="card-face card-front ${redClass}">
+            <span class="card-value">${value}</span>
+            <span class="card-suit">${suit}</span>
+        </div>
+    `;
+
+    return cardDiv;
+}
