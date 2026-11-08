@@ -2,133 +2,122 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GoldCoin</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>GCoin</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <main class="app">
-        <h1>GOLDCOIN</h1>
-        <p class="subtitle">Твоя цифровая экономика</p>
-
-        <section class="balance-card">
-            <p>ТВОЙ БАЛАНС</p>
-            <div class="balance" id="balance">
-                0,0000000000 байтов
+    <div class="app">
+        <!-- Баланс и кликер -->
+        <header class="card header-card">
+            <div class="balance-label">Твой баланс</div>
+            <div id="balance" class="balance-value">0,0000000000 байтов</div>
+            <div class="clicker-actions">
+                <button id="earnButton" class="btn btn-primary">+0,0000000005</button>
+                <button id="upgradeButton" class="btn btn-secondary">Улучшение — 0,0000010240 байтов</button>
             </div>
-        </section>
+        </header>
 
-        <button class="earn-button" id="earnButton">
-            +0,0000000005
-        </button>
-
-        <section class="upgrade-card">
-            <h2>Улучшение</h2>
-            <p>Увеличивает доход за нажатие в 2 раза</p>
-            <button id="upgradeButton">
-                Улучшение — 0,000001024 байтов
-            </button>
-        </section>
-
-        <!-- БЛОК ПРОМОКОДОВ -->
-        <section class="upgrade-card promo-card">
-            <h2>ПРОМОКОД</h2>
-            <p>Введите секретный код для получения награды</p>
-            <input id="promoInput" class="bet-input" type="text" placeholder="Например: ZEUS">
-            <button id="promoButton" class="promo-btn">Активировать</button>
-            <p id="promoStatus" class="promo-status"></p>
-        </section>
-
-        <nav class="game-tabs">
-            <button class="tab-button active" data-game="roulette">🎡 Рулетка</button>
+        <!-- Переключение игр -->
+        <nav class="tabs">
+            <button class="tab-button active" data-game="slot">⚡ Слоты</button>
+            <button class="tab-button" data-game="roulette">🎡 Рулетка</button>
             <button class="tab-button" data-game="coin">🪙 Монетка</button>
-            <button class="tab-button" data-game="slots">⚡ Слоты</button>
+            <button class="tab-button" data-game="promo">🎁 Промо</button>
         </nav>
 
-        <section class="bet-card">
-            <h2>СТАВКА</h2>
-            <p>Сумма ставки (мин. 100 байтов)</p>
-
-            <input id="betInput" class="bet-input" type="text"
-                   inputmode="decimal" autocomplete="off"
-                   placeholder="Например 1000">
-
-            <div class="bet-quick">
-                <button class="prediction-option" data-fraction="0.25">¼</button>
-                <button class="prediction-option" data-fraction="0.5">½</button>
+        <!-- Общая панель ставки -->
+        <section class="card bet-card">
+            <div class="bet-header">Сумма ставки (байты)</div>
+            <input type="text" id="betInput" class="bet-input" placeholder="Введите ставку (мин. 1)" inputmode="decimal">
+            <div class="quick-bets">
+                <button class="prediction-option" data-fraction="0.25">25%</button>
+                <button class="prediction-option" data-fraction="0.5">50%</button>
                 <button class="prediction-option" data-fraction="1">Всё</button>
             </div>
         </section>
 
-        <div id="game-roulette" class="game-view">
-            <section class="prediction-card">
-                <h2>ПРОГНОЗ</h2>
-                <p>Выбери, что, по-твоему, выпадет</p>
-
-                <div class="prediction-grid">
-                    <button class="prediction-option red" data-choice="red">Красное <b>×1.9</b></button>
-                    <button class="prediction-option black" data-choice="black">Чёрное <b>×1.9</b></button>
-                    <button class="prediction-option" data-choice="even">Чётное <b>×1.9</b></button>
-                    <button class="prediction-option" data-choice="odd">Нечётное <b>×1.9</b></button>
-                    <button class="prediction-option zero" data-choice="zero">Ноль (0) <b>×36</b></button>
+        <!-- 1. СЛОТЫ (Gates of Olympus) -->
+        <div id="game-slot" class="game-view olympus-theme">
+            <div class="olympus-header">
+                <div class="olympus-logo">
+                    <span class="logo-small">GATES OF</span>
+                    <span class="logo-main">OLYMPUS</span>
                 </div>
-                <p id="predictionStatus">Прогноз не выбран</p>
-            </section>
+                <div id="zeusMultiplierBadge" class="zeus-badge">⚡ ×1</div>
+            </div>
 
-            <section class="roulette-card">
-                <h2>РУЛЕТКА</h2>
-                <p>Попробуй угадать выпавшее число</p>
-                <div class="roulette-wheel">
-                    <div class="wheel-pointer">▼</div>
-                    <div id="wheel" class="wheel">
-                        <div id="ball" class="ball"></div>
-                        <div class="wheel-center">GC</div>
-                    </div>
+            <div class="olympus-frame">
+                <div id="slotGrid" class="olympus-grid"></div>
+            </div>
+
+            <div id="slotStatus" class="olympus-status">Удачи!</div>
+
+            <div class="olympus-controls">
+                <button id="buyBonusButton" class="olympus-bonus-btn">
+                    🎁 КУПИТЬ БОНУСКУ (×100)
+                </button>
+                <div class="olympus-bottom-row" style="justify-content: center;">
+                    <button id="slotButton" class="olympus-spin-btn">
+                        <span class="spin-icon">↻</span>
+                        <span class="spin-text">SPIN</span>
+                    </button>
                 </div>
-                <div class="roulette-result" id="rouletteResult">?</div>
-                <p id="rouletteMessage">Нажми, чтобы запустить колесо</p>
-                <button id="spinButton" class="spin-button">КРУТИТЬ</button>
-                <h3>История результатов</h3>
-                <div id="rouletteHistory" class="roulette-history">Пока пусто</div>
-            </section>
+            </div>
         </div>
 
-        <div id="game-coin" class="game-view hidden">
-            <section class="coin-card">
-                <h2>МОНЕТКА</h2>
-                <p>Угадай, как упадёт монета</p>
-                <div class="coin-grid">
-                    <button class="prediction-option" data-coin="heads">Орёл <b>×1.9</b></button>
-                    <button class="prediction-option" data-coin="tails">Решка <b>×1.9</b></button>
-                </div>
-                <div class="coin-stage">
-                    <div id="coin" class="coin">
-                        <div class="coin-face front">ОРЁЛ</div>
-                        <div class="coin-face back">РЕШКА</div>
-                    </div>
-                </div>
-                <p id="coinStatus">Выбери сторону и сумму ставки</p>
-                <button id="coinButton" class="spin-button">БРОСИТЬ</button>
-            </section>
+        <!-- 2. РУЛЕТКА -->
+        <div id="game-roulette" class="game-view card hidden">
+            <div class="wheel-frame">
+                <div id="wheel" class="wheel"></div>
+                <div id="ball" class="ball"></div>
+            </div>
+
+            <div class="roulette-info">
+                <div id="rouletteResult" class="roulette-result">?</div>
+                <div id="rouletteMessage" class="roulette-message">Нажми, чтобы запустить колесо</div>
+            </div>
+
+            <div id="predictionStatus" class="status-text">Выбери прогноз</div>
+            <div class="predictions-grid">
+                <button class="prediction-option" data-choice="red">Красное ×1.9</button>
+                <button class="prediction-option" data-choice="black">Чёрное ×1.9</button>
+                <button class="prediction-option" data-choice="even">Чётное ×1.9</button>
+                <button class="prediction-option" data-choice="odd">Нечётное ×1.9</button>
+                <button class="prediction-option" data-choice="zero">Ноль ×36</button>
+            </div>
+
+            <button id="spinButton" class="btn btn-primary full-width">Крутить колесо</button>
+            <div id="rouletteHistory" class="roulette-history"></div>
         </div>
 
-        <div id="game-slots" class="game-view hidden">
-            <section class="coin-card slot-card-main">
-                <div class="slot-header-flex">
-                    <h2>GATES OF OLYMPUS</h2>
-                    <div id="zeusMultiplierBadge" class="zeus-badge">⚡ ×1</div>
+        <!-- 3. МОНЕТКА -->
+        <div id="game-coin" class="game-view card hidden">
+            <div class="coin-stage">
+                <div id="coin" class="coin">
+                    <div class="coin-face coin-heads">ОРЁЛ</div>
+                    <div class="coin-face coin-tails">РЕШКА</div>
                 </div>
-                <p>Собери от 8 одинаковых сокровищ в любом месте</p>
-                <div id="slotGrid" class="slot-grid"></div>
-                <p id="slotStatus">Выбери ставку и крути или купи бонус</p>
-                <div class="slot-buttons-grid">
-                    <button id="slotButton" class="spin-button">КРУТИТЬ СПИН</button>
-                    <button id="buyBonusButton" class="bonus-buy-button">🎁 КУПИТЬ БОНУСКУ</button>
-                </div>
-            </section>
+            </div>
+
+            <div id="coinStatus" class="status-text">Выбери сторону и сумму ставки</div>
+            <div class="predictions-grid">
+                <button class="prediction-option" data-coin="heads">Орёл ×1.9</button>
+                <button class="prediction-option" data-coin="tails">Решка ×1.9</button>
+            </div>
+
+            <button id="coinButton" class="btn btn-primary full-width">Подбросить монетку</button>
         </div>
-    </main>
+
+        <!-- 4. ПРОМОКОДЫ -->
+        <div id="game-promo" class="game-view card hidden">
+            <h3>Активация промокода</h3>
+            <input type="text" id="promoInput" class="bet-input" placeholder="Введите промокод">
+            <button id="promoButton" class="btn btn-primary full-width">Активировать</button>
+            <div id="promoStatus" class="status-text"></div>
+        </div>
+    </div>
 
     <script src="app.js"></script>
 </body>
