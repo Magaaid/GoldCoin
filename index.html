@@ -231,21 +231,45 @@
         </div>
     </div>
 
-    <script src="app.js?v=999"></script>
+    <script src="app.js?v=1000"></script>
 
-    <!-- СТРАХОВОЙ СКРИПТ: ЕСЛИ КНОПКА ПО КАКОЙ-ТО ПРИЧИНЕ НЕ ОТОБРАЗИЛАСЬ, ОНА СОЗДАСТСЯ АВТОМАТИЧЕСКИ -->
-    <script>
-        document.addEventListener("DOMContentLoaded", () => {
-            const promoView = document.getElementById("game-promo");
-            if (promoView && !document.getElementById("goToSettingsBtn")) {
-                const btn = document.createElement("button");
-                btn.id = "goToSettingsBtn";
-                btn.className = "btn btn-secondary full-width";
-                btn.style.marginTop = "15px";
-                btn.textContent = "⚙️ Открыть настройки темы";
-                promoView.appendChild(btn);
-            }
+<script>
+    function openSettingsPanel() {
+        document.querySelectorAll(".tab-button").forEach(button => {
+            button.classList.toggle(
+                "active",
+                button.dataset.game === "settings"
+            );
         });
-    </script>
+
+        document.querySelectorAll(".game-view").forEach(view => {
+            view.classList.toggle(
+                "hidden",
+                view.id !== "game-settings"
+            );
+        });
+
+        window.scrollTo({
+            top: 0,
+            behavior: "smooth"
+        });
+    }
+
+    document.addEventListener("DOMContentLoaded", function () {
+        const settingsButton = document.getElementById("settingsQuickButton");
+
+        if (settingsButton) {
+            settingsButton.style.display = "block";
+            settingsButton.addEventListener("click", openSettingsPanel);
+        }
+
+        const promoButton = document.getElementById("goToSettingsBtn");
+
+        if (promoButton) {
+            promoButton.addEventListener("click", openSettingsPanel);
+        }
+    });
+</script>
 </body>
+</html>
 </html>
