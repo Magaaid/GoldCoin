@@ -57,13 +57,16 @@
                 </button>
             </div>
 
-            <p>Размер ставки (доля от баланса)</p>
+            <p>Сумма ставки (в коинах)</p>
 
-            <div class="prediction-grid">
-                <button class="prediction-option" data-bet="10">10%</button>
-                <button class="prediction-option" data-bet="25">25%</button>
-                <button class="prediction-option" data-bet="50">50%</button>
-                <button class="prediction-option" data-bet="100">Всё</button>
+            <input id="betInput" class="bet-input" type="text"
+                   inputmode="decimal" autocomplete="off"
+                   placeholder="Например 0,000001">
+
+            <div class="bet-quick">
+                <button class="prediction-option" data-fraction="0.25">¼</button>
+                <button class="prediction-option" data-fraction="0.5">½</button>
+                <button class="prediction-option" data-fraction="1">Всё</button>
             </div>
 
             <p id="predictionStatus">Прогноз не выбран</p>
