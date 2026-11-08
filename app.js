@@ -27,6 +27,8 @@ function updateUI() {
     earnButton.textContent = "+" + formatCoins(state.income);
     upgradeButton.textContent =
         "Улучшение — " + formatCoins(state.upgrade_cost) + " байтов";
+    
+    updateBonusButtonCost();
 }
 
 async function api(action = null, extra = {}) {
@@ -350,10 +352,11 @@ earnButton.addEventListener("click", earn);
 upgradeButton.addEventListener("click", upgrade);
 loadGame();
 
-// СТАВКА
+// СТАВКА И БОНУСКА
 let betAll = false;
 const betInput = document.getElementById("betInput");
 const quickButtons = document.querySelectorAll(".prediction-option[data-fraction]");
+const buyBonusButton = document.getElementById("buyBonusButton");
 
 function parseBet() {
     const raw = betInput.value.trim().replace(",", ".");
@@ -362,9 +365,25 @@ function parseBet() {
     return Math.round(coins * 1000000000);
 }
 
+function updateBonusButtonCost() {
+    if (!buyBonusButton) return;
+    let amount = parseBet();
+    if (betAll && state) {
+        amount = state.balance;
+    }
+    
+    if (amount && amount > 0) {
+        const bonusCost = amount * 100;
+        buyBonusButton.textContent = `🎁 КУПИТЬ БОНУСКУ — ${formatCoins(bonusCost)}`;
+    } else {
+        buyBonusButton.textContent = `🎁 КУПИТЬ БОНУСКУ (×100)`;
+    }
+}
+
 betInput.addEventListener("input", () => {
     betAll = false;
     quickButtons.forEach(item => item.classList.remove("selected"));
+    updateBonusButtonCost();
 });
 
 quickButtons.forEach(button => {
@@ -375,6 +394,7 @@ quickButtons.forEach(button => {
         button.classList.add("selected");
         betAll = fraction === 1;
         betInput.value = formatCoins(Math.floor(state.balance * fraction));
+        updateBonusButtonCost();
     });
 });
 
@@ -477,7 +497,6 @@ if (coinButton) coinButton.addEventListener("click", flipCoin);
 // СЛОТЫ И БОНУСКА (С ПЛАВНОЙ АНИМАЦИЕЙ И 15 ФРИСПИНАМИ)
 const slotGridElement = document.getElementById("slotGrid");
 const slotButton = document.getElementById("slotButton");
-const buyBonusButton = document.getElementById("buyBonusButton");
 const slotStatus = document.getElementById("slotStatus");
 const zeusBadge = document.getElementById("zeusMultiplierBadge");
 
@@ -509,7 +528,7 @@ async function requestSlotSpin(isBonus = false) {
 
     let amount = parseBet();
     if (betAll) amount = state.balance;
-    if (!amount) amount = 1000000000; // По умолчанию 1 байт, если не введено
+    if (!amount) amount = 1000000000;
 
     spinning = true;
     slotButton.disabled = true;
@@ -531,13 +550,11 @@ async function requestSlotSpin(isBonus = false) {
     const balanceBefore = state.balance;
 
     if (isBonus) {
-        // Анимация полноценной бонуски: 15 шагов с отсчетом фриспинов
         let currentSpin = 1;
         slotStatus.textContent = `🎁 БОНУСКА АКТИВИРОВАНА! Спин 1 из 15...`;
         zeusBadge.textContent = `⚡ ×1`;
 
         const bonusInterval = setInterval(() => {
-            // Крутим случайные символы для качаства анимации
             renderSlotGrid(
                 Array.from({ length: 5 }, () =>
                     Array.from({ length: 6 }, () => Math.floor(Math.random() * 9) + 1)
@@ -549,7 +566,6 @@ async function requestSlotSpin(isBonus = false) {
                 slotStatus.textContent = `🎁 Бесплатное вращение ${currentSpin} из 15...`;
             } else {
                 clearInterval(bonusInterval);
-                // Показываем финальный результат бонуски
                 renderSlotGrid(result.grid);
 
                 state = { balance: result.balance, income: result.income, upgrade_cost: result.upgrade_cost };
@@ -563,10 +579,9 @@ async function requestSlotSpin(isBonus = false) {
                 slotButton.disabled = false;
                 buyBonusButton.disabled = false;
             }
-        }, 300); // 300мс на каждый из 15 фриспинов (~4.5 секунды шоу)
+        }, 300);
 
     } else {
-        // Плавная анимация обычного спина
         slotStatus.textContent = `⚡ Барабаны крутятся...`;
         let counter = 0;
         const interval = setInterval(() => {
@@ -603,7 +618,6 @@ async function requestSlotSpin(isBonus = false) {
 if (slotButton) slotButton.addEventListener("click", () => requestSlotSpin(false));
 if (buyBonusButton) buyBonusButton.addEventListener("click", () => requestSlotSpin(true));
 
-// Первичная отрисовка
 renderSlotGrid(
     Array.from({ length: 5 }, () =>
         Array.from({ length: 6 }, () => Math.floor(Math.random() * 9) + 1)
