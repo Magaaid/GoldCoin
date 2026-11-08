@@ -1145,3 +1145,19 @@ h1 {
     color: #fff !important;
     border-color: var(--accent-color) !important;
 }
+/* Обычные кнопки процентов */
+.prediction-option,
+.bet-quick button,
+.quick-bets button {
+    background: #252d3e !important;
+    color: #fff !important;
+    border: 1px solid #3b455a !important;
+}
+
+/* Выбранная кнопка */
+.prediction-option.selected,
+.quick-bets button.selected {
+    background: var(--accent-color) !important;
+    color: #fff !important;
+    border-color: var(--accent-color) !important;
+}
