@@ -382,3 +382,80 @@ earnButton.addEventListener("click", earn);
 upgradeButton.addEventListener("click", upgrade);
 
 loadGame();
+// СИСТЕМА ПРОГНОЗОВ
+
+let selectedPrediction = null;
+
+const predictionStatus =
+    document.getElementById("predictionStatus");
+
+const predictionOptions =
+    document.querySelectorAll(".prediction-option");
+
+const predictionMultipliers = {
+    red: 1.9,
+    black: 1.9,
+    even: 1.9,
+    odd: 1.9,
+    zero: 36
+};
+
+predictionOptions.forEach(button => {
+    button.addEventListener("click", () => {
+        predictionOptions.forEach(item => {
+            item.classList.remove("selected");
+        });
+
+        button.classList.add("selected");
+
+        selectedPrediction = button.dataset.choice;
+
+        predictionStatus.textContent =
+            "Выбран прогноз: " +
+            button.childNodes[0].textContent.trim() +
+            " — ×" +
+            predictionMultipliers[selectedPrediction];
+    });
+});
+
+function checkPrediction(number) {
+    if (!selectedPrediction) {
+        predictionStatus.textContent =
+            "Прогноз не выбран";
+        return;
+    }
+
+    let correct = false;
+
+    if (selectedPrediction === "zero") {
+        correct = number === 0;
+    }
+
+    if (selectedPrediction === "red") {
+        correct = redNumbers.includes(number);
+    }
+
+    if (selectedPrediction === "black") {
+        correct =
+            number !== 0 &&
+            !redNumbers.includes(number);
+    }
+
+    if (selectedPrediction === "even") {
+        correct = number !== 0 && number % 2 === 0;
+    }
+
+    if (selectedPrediction === "odd") {
+        correct = number % 2 === 1;
+    }
+
+    predictionStatus.textContent = correct
+        ? "Прогноз совпал! Выпало: " + number
+        : "Прогноз не совпал. Выпало: " + number;
+
+    selectedPrediction = null;
+
+    predictionOptions.forEach(item => {
+        item.classList.remove("selected");
+    });
+}
