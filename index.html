@@ -5,6 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>GCoin</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script>
+window.addEventListener("error", function(e) {
+    const errorBox = document.createElement("pre");
+    errorBox.style.cssText =
+        "background:#900;color:white;padding:15px;font-size:14px;white-space:pre-wrap;";
+    errorBox.textContent = "JS ERROR: " + e.message;
+    document.body.prepend(errorBox);
+});
+    </script>
     <link rel="stylesheet" href="style.css?v=1000">
 </head>
 <body>
