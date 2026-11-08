@@ -494,7 +494,7 @@ async function flipCoin() {
 }
 if (coinButton) coinButton.addEventListener("click", flipCoin);
 
-// СЛОТЫ И БОНУСКА (GATES OF OLYMPUS С ШАРАМИ-МНОЖИТЕЛЯМИ)
+// СЛОТЫ И БОНУСКА (GATES OF OLYMPUS — ЗАМЕДЛЕННЫЕ И ПЛАВНЫЕ)
 const slotGridElement = document.getElementById("slotGrid");
 const slotButton = document.getElementById("slotButton");
 const slotStatus = document.getElementById("slotStatus");
@@ -513,7 +513,6 @@ const symbolData = {
     10: { icon: "⚡", name: "Зевс (Scatter)" }
 };
 
-// Реалистичные номиналы шаров-множителей Олимпа (чаще мелкие, редко крупные)
 const multiplierOrbs = [2, 3, 4, 5, 8, 10, 15, 20, 25, 50, 100, 250, 500];
 
 function renderSlotGrid(grid, animate = true) {
@@ -526,10 +525,9 @@ function renderSlotGrid(grid, animate = true) {
             cell.className = "slot-cell";
             if (animate) {
                 cell.classList.add("animate-drop");
-                cell.style.animationDelay = `${cIndex * 60}ms`;
+                cell.style.animationDelay = `${cIndex * 100}ms`;
             }
 
-            // Проверяем, выпал ли шар-множитель
             if (typeof cellData === "object" && cellData !== null && cellData.isOrb) {
                 cell.classList.add("multiplier-orb");
                 cell.textContent = `x${cellData.multiplier}`;
@@ -545,12 +543,10 @@ function renderSlotGrid(grid, animate = true) {
     });
 }
 
-// Генератор сетки с реалистичным шансом выпадения шаров-множителей (~7%, как в оригинале)
 function generateRandomGridWithOrbs() {
     return Array.from({ length: 5 }, () =>
         Array.from({ length: 6 }, () => {
-            if (Math.random() < 0.07) { // 7% шанс на шар
-                // Распределение весов иксов: мелкие чаще, крупные реже
+            if (Math.random() < 0.07) {
                 const rand = Math.random();
                 let multiplier = 2;
                 if (rand > 0.95) multiplier = 500;
@@ -605,12 +601,12 @@ async function requestSlotSpin(isBonus = false) {
                 const innerInterval = setInterval(() => {
                     renderSlotGrid(generateRandomGridWithOrbs(), false);
                     steps++;
-                    if (steps > 6) {
+                    if (steps > 5) {
                         clearInterval(innerInterval);
                         currentSpin++;
-                        setTimeout(runBonusSpin, 250);
+                        setTimeout(runBonusSpin, 700);
                     }
-                }, 70);
+                }, 200);
 
             } else {
                 renderSlotGrid(result.grid, true);
@@ -649,16 +645,16 @@ async function requestSlotSpin(isBonus = false) {
     } else {
         slotStatus.textContent = `⚡ Барабаны крутятся...`;
         
-        let delay = 50;
+        let delay = 120;
         let counter = 0;
-        const totalSteps = 25;
+        const totalSteps = 22;
 
         const stepSpin = () => {
             renderSlotGrid(generateRandomGridWithOrbs(), false);
             counter++;
 
             if (counter < totalSteps) {
-                delay += 15;
+                delay += 35;
                 setTimeout(stepSpin, delay);
             } else {
                 renderSlotGrid(result.grid, true);
