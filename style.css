@@ -1692,6 +1692,39 @@ input {
     background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%) !important;
     color: #ffffff !important;
 }
+/* --- СТИЛИ ДЛЯ НАСТРОЕК ТЕМЫ --- */
+.color-picker-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 12px;
+    margin-top: 15px;
+    padding: 10px;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.color-btn {
+    width: 100%;
+    height: 44px;
+    border-radius: 10px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+}
+
+.color-btn:hover {
+    transform: scale(1.1);
+    border-color: #ffffff;
+    box-shadow: 0 0 15px currentColor;
+}
+
+.color-btn.active-color {
+    border-color: #ffffff;
+    transform: scale(1.05);
+    box-shadow: 0 0 20px currentColor, inset 0 0 8px rgba(255, 255, 255, 0.8);
+}
 
 
 
