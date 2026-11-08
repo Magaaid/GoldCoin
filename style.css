@@ -224,3 +224,65 @@ button:active {
     gap: 8px;
     color: #aab1c0;
 }
+.prediction-card {
+    margin-top: 25px;
+    padding: 20px;
+    background: #191e2b;
+    border: 1px solid #30394c;
+    border-radius: 18px;
+    text-align: center;
+}
+
+.prediction-card h2 {
+    margin-top: 0;
+}
+
+.prediction-card p {
+    color: #aeb7c9;
+}
+
+.prediction-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-top: 18px;
+}
+
+.prediction-option {
+    padding: 15px 8px;
+    border: 1px solid #3b455a;
+    border-radius: 12px;
+    background: #252d3e;
+    color: white;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.prediction-option b {
+    display: block;
+    margin-top: 5px;
+    font-size: 17px;
+}
+
+.prediction-option.red {
+    background: #862d39;
+}
+
+.prediction-option.black {
+    background: #10131c;
+}
+
+.prediction-option.zero {
+    grid-column: 1 / -1;
+    background: #167447;
+}
+
+.prediction-option.selected {
+    border: 3px solid #e8c45d;
+}
+
+#predictionStatus {
+    margin-top: 18px;
+    font-weight: bold;
+    color: white;
+}
