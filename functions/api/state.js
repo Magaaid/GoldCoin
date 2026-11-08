@@ -1,4 +1,4 @@
-Function response(data, status = 200) {
+function response(data, status = 200) {
     return new Response(JSON.stringify(data), {
         status,
         headers: {
