@@ -28,6 +28,8 @@
             <button class="tab-button" data-game="blackjack">🃏 Блекджек</button>
             <button class="tab-button" data-game="transfer">💸 Перевод</button>
             <button class="tab-button" data-game="promo">🎁 Промо</button>
+            <button class="tab-button" data-game="referral">👥 Рефералы</button>
+            <button class="tab-button" data-game="settings">⚙️ Настройки</button>
         </nav>
 
         <!-- Общая панель ставки -->
@@ -180,22 +182,43 @@
             <button id="promoButton" class="btn btn-primary full-width">Активировать</button>
             <div id="promoStatus" class="status-text"></div>
         </div>
-    <!-- НАСТРОЙКИ -->
-<div id="game-settings" class="game-view card hidden">
-    <h3>⚙️ Настройки</h3>
 
-    <p>Цвет интерфейса</p>
+        <!-- 8. РЕФЕРАЛЬНАЯ СИСТЕМА -->
+        <div id="game-referral" class="game-view card hidden">
+            <h3>👥 Приглашай друзей</h3>
+            <p>За каждого друга ты получаешь бонусную награду и процент от его кликов!</p>
+            
+            <div class="bj-section" style="margin-top: 15px;">
+                <div class="bj-label">Твоя реферальная ссылка</div>
+                <input type="text" id="refLinkInput" class="bet-input" readonly value="Генерируется...">
+            </div>
 
-    <div class="settings-colors">
-        <button class="color-btn" data-color="#8b5cf6" style="background:#8b5cf6"></button>
-        <button class="color-btn" data-color="#3b82f6" style="background:#3b82f6"></button>
-        <button class="color-btn" data-color="#22c55e" style="background:#22c55e"></button>
-        <button class="color-btn" data-color="#ef4444" style="background:#ef4444"></button>
-        <button class="color-btn" data-color="#f59e0b" style="background:#f59e0b"></button>
+            <button id="copyRefBtn" class="btn btn-primary full-width" style="margin-top: 10px;">📋 Скопировать ссылку</button>
+            <div id="refStatus" class="status-text" style="margin-top: 10px;"></div>
+
+            <div class="bj-section" style="margin-top: 20px;">
+                <div class="bj-label">Приглашено друзей: <span id="refCount">0</span></div>
+                <div class="bj-label">Заработано с рефералов: <span id="refEarned">0,0000000000</span> байтов</div>
+            </div>
+        </div>
+
+        <!-- НАСТРОЙКИ -->
+        <div id="game-settings" class="game-view card hidden">
+            <h3>⚙️ Настройки</h3>
+
+            <p>Цвет интерфейса</p>
+
+            <div class="settings-colors">
+                <button class="color-btn" data-color="#8b5cf6" style="background:#8b5cf6"></button>
+                <button class="color-btn" data-color="#3b82f6" style="background:#3b82f6"></button>
+                <button class="color-btn" data-color="#22c55e" style="background:#22c55e"></button>
+                <button class="color-btn" data-color="#ef4444" style="background:#ef4444"></button>
+                <button class="color-btn" data-color="#f59e0b" style="background:#f59e0b"></button>
+            </div>
+
+            <div id="settingsStatus" class="status-text"></div>
+        </div>
     </div>
-
-    <div id="settingsStatus" class="status-text"></div>
-</div> </div>
 
     <script src="app.js"></script>
 </body>
