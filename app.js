@@ -1250,3 +1250,4 @@ if (copyRefBtn) {
 }
 
 setTimeout(initReferralSystem, 1000);
+renderSlotGrid(generateRandomGridWithOrbs(), false);
