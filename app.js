@@ -705,7 +705,7 @@ tabButtons.forEach(button => {
     });
 });
 
-// AVIAMASTERS (Полет с плюсами, минусами, умножением и делением)
+// AVIAMASTERS (Динамический полет: много плюсов, минусов, делений и умножений + высокий риск)
 const aviaButton = document.getElementById("aviaButton");
 const aviaMultiplierElement = document.getElementById("aviaMultiplier");
 const aviaStatus = document.getElementById("aviaStatus");
@@ -727,13 +727,16 @@ async function playAviamasters() {
 
     aviaStatus.textContent = "✈️ Самолет заходит на взлетную полосу...";
     
-    // Путь самолетика: содержит сложение, умножение, деление и вычитание
+    // Длинная цепочка с частой сменой математических знаков
     const pathSteps = [
-        { mult: 1.3, type: "add", text: "📈 Набор высоты (+0.3)" },
-        { mult: 0.8, type: "div", text: "💨 Зона турбулентности (÷1.25)" },
-        { mult: 2.0, type: "mult", text: "🚀 Ускорение (×2)" },
-        { mult: 0.5, type: "sub", text: "⚠️ Потеря высоты (−0.5)" },
-        { mult: 3.0, type: "mult", text: "🔥 Финальный рывок (×3)" }
+        { mult: 1.4, type: "add", text: "📈 Набор высоты (+0.4)" },
+        { mult: 0.6, type: "sub", text: "⚠️ Потеря высоты (−0.6)" },
+        { mult: 1.8, type: "mult", text: "🚀 Ускорение (×1.8)" },
+        { mult: 1.5, type: "div", text: "💨 Зона турбулентности (÷1.5)" },
+        { mult: 2.2, type: "add", text: "🔥 Отличный рывок (+1.2)" },
+        { mult: 0.4, type: "sub", text: "⚠️ Встречный ветер (−1.0)" },
+        { mult: 2.5, type: "mult", text: "⭐ Бонусный сектор (×2.5)" },
+        { mult: 2.0, type: "div", text: "🌪️ Мощный вихрь (÷2)" }
     ];
 
     let currentStep = 0;
@@ -743,30 +746,29 @@ async function playAviamasters() {
         if (currentStep < pathSteps.length) {
             const step = pathSteps[currentStep];
             
-            // Динамический расчет с учетом всех математических знаков
             if (step.type === "add") finalMultiplier += (step.mult - 1);
             else if (step.type === "mult") finalMultiplier *= step.mult;
             else if (step.type === "div") finalMultiplier /= step.mult;
-            else if (step.type === "sub") finalMultiplier = Math.max(0.2, finalMultiplier - step.mult);
+            else if (step.type === "sub") finalMultiplier = Math.max(0.1, finalMultiplier - step.mult);
 
-            finalMultiplier = Math.max(0.1, Number(finalMultiplier.toFixed(2)));
+            finalMultiplier = Math.max(0.05, Number(finalMultiplier.toFixed(2)));
             
             aviaMultiplierElement.textContent = `×${finalMultiplier}`;
             aviaStatus.textContent = step.text;
             
-            // Цвет текста меняется в зависимости от того, плюс/умножение это или минус/деление
             aviaMultiplierElement.style.color = (step.type === "div" || step.type === "sub") ? "#ff525b" : "#38bdf8";
 
             if (planeContainer) {
-                const yOffset = (step.type === "div" || step.type === "sub") ? 10 : -10;
-                planeContainer.style.transform = `translate(${currentStep * 12}px, ${yOffset}px) rotate(${(step.type === "div" || step.type === "sub") ? -15 : 15}deg)`;
+                const yOffset = (step.type === "div" || step.type === "sub") ? 12 : -12;
+                planeContainer.style.transform = `translate(${currentStep * 8}px, ${yOffset}px) rotate(${(step.type === "div" || step.type === "sub") ? -15 : 15}deg)`;
             }
 
             currentStep++;
         } else {
             clearInterval(flightInterval);
 
-            const isCrashed = Math.random() < 0.25;
+            // Жесткий шанс на краш: 85% проигрыша, 15% победы
+            const isCrashed = Math.random() < 0.85;
 
             if (isCrashed) {
                 finalMultiplier = 0;
@@ -775,7 +777,7 @@ async function playAviamasters() {
                 aviaStatus.textContent = "💥 Ракета сбила самолет! Ставка сгорела.";
             } else {
                 aviaMultiplierElement.style.color = "#38bdf8";
-                aviaStatus.textContent = `🎉 Полет успешен! Итоговый множитель: ×${finalMultiplier.toFixed(2)}`;
+                aviaStatus.textContent = `🎉 Эпический пролет! Итоговый множитель: ×${finalMultiplier.toFixed(2)}`;
             }
 
             try {
@@ -801,7 +803,7 @@ async function playAviamasters() {
                 aviaStatus.textContent = "Сделай ставку и взлетай!";
             }, 2500);
         }
-    }, 700);
+    }, 550);
 }
 
 if (aviaButton) {
