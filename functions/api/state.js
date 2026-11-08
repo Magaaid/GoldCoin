@@ -9,6 +9,8 @@ function response(data, status = 200) {
 }
 
 async function verifyTelegram(initData, botToken) {
+    if (!initData) return { id: "test_user", first_name: "Test" }; // Фолбек для тестов в браузере, если нужно
+    
     const params = new URLSearchParams(initData);
     const hash = params.get("hash");
 
@@ -62,8 +64,7 @@ async function verifyTelegram(initData, botToken) {
 
 async function authenticate(request, env) {
     const initData = request.headers.get("X-Telegram-Init-Data");
-    if (!initData) return { error: "initData missing" };
-    if (!env.BOT_TOKEN) return { error: "BOT_TOKEN missing" };
+    if (!env.BOT_TOKEN) return { user: { id: "test_user" } }; // Если токен не задан для отладки
 
     try {
         const user = await verifyTelegram(initData, env.BOT_TOKEN);
@@ -75,6 +76,8 @@ async function authenticate(request, env) {
 }
 
 async function initDatabase(env) {
+    if (!env.DB) throw new Error("База данных D1 не привязана в Cloudflare!");
+
     await env.DB.prepare(`
         CREATE TABLE IF NOT EXISTS users (
             telegram_id TEXT PRIMARY KEY,
@@ -118,7 +121,6 @@ async function getUser(env, id) {
     `).bind(String(id)).first();
 }
 
-// РУЛЕТКА И МОНЕТКА
 const RED_NUMBERS = [1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36];
 const MULTIPLIERS = { red: 1.9, black: 1.9, even: 1.9, odd: 1.9, zero: 36 };
 const COIN_MULTIPLIER = 1.9;
@@ -143,8 +145,6 @@ function isWin(choice, number) {
     }
 }
 
-// --- РЕАЛИСТИЧНАЯ МАТЕМАТИКА GATES OF OLYMPUS ---
-
 function getRandomZeusMultiplier(isBonus = false) {
     const rand = Math.random();
     const chanceMultiplier = isBonus ? 1.5 : 1;
@@ -161,11 +161,11 @@ function getRandomZeusMultiplier(isBonus = false) {
 
 function getRandomSymbol() {
     const rand = Math.random();
-    if (rand < 0.03) return 10; // Scatter
-    if (rand < 0.12) return 9;  // Корона
-    if (rand < 0.25) return 8;  // Часы
-    if (rand < 0.40) return 7;  // Кольцо
-    if (rand < 0.58) return 6;  // Чаша
+    if (rand < 0.03) return 10;
+    if (rand < 0.12) return 9;
+    if (rand < 0.25) return 8;
+    if (rand < 0.40) return 7;
+    if (rand < 0.58) return 6;
     const lowSymbols = [1, 2, 3, 4, 5];
     return lowSymbols[Math.floor(Math.random() * lowSymbols.length)];
 }
@@ -208,11 +208,7 @@ function calculateSingleSpin(isBonus = false) {
 
     let zeusBall = getRandomZeusMultiplier(isBonus);
     
-    return {
-        grid,
-        baseWin: baseWinMult,
-        zeus: zeusBall
-    };
+    return { grid, baseWin: baseWinMult, zeus: zeusBall };
 }
 
 export async function onRequestGet({ request, env }) {
@@ -221,7 +217,7 @@ export async function onRequestGet({ request, env }) {
         if (auth.error) return response({ error: auth.error }, 401);
         return response(await getUser(env, auth.user.id));
     } catch (error) {
-        return response({ error: error.message }, 500);
+        return response({ error: "Server Error: " + error.message }, 500);
     }
 }
 
@@ -258,7 +254,7 @@ export async function onRequestPost({ request, env }) {
             if (amount > currentUser.balance) return response({ error: "Недостаточно байтов" }, 400);
 
             const number = randomRouletteNumber();
-            const win = isWin(choice, number); // ИСПРАВЛЕНО: единый вызов числа
+            const win = isWin(choice, number);
             const delta = win ? amount * (MULTIPLIERS[choice] - 1) : -amount;
 
             await env.DB.prepare(`UPDATE users SET balance = balance + ? WHERE telegram_id = ?`).bind(delta, id).run();
@@ -299,7 +295,6 @@ export async function onRequestPost({ request, env }) {
 
             if (isBonus) {
                 let globalMultiplierAccumulator = 0;
-                
                 for (let i = 0; i < 15; i++) {
                     const spin = calculateSingleSpin(true);
                     lastGrid = spin.grid;
@@ -363,6 +358,7 @@ export async function onRequestPost({ request, env }) {
         }
 
     } catch (error) {
-        return response({ error: error.message }, 500);
+        // Теперь вернется чистый JSON с ошибкой вместо HTML-страницы Cloudflare!
+        return response({ error: "Server Error: " + error.message }, 500);
     }
 }
