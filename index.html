@@ -127,32 +127,49 @@
             <button id="aviaButton" class="btn btn-primary">Запустить полет</button>
         </div>
 
-        <!-- 5. БЛЕКДЖЕК -->
+        <!-- 5. БЛЕКДЖЕК (Бильярдный стол) -->
         <div id="game-blackjack" class="game-view card hidden blackjack-theme">
             <h2>Блекджек</h2>
-            <p>Обыграй дилера, набрав 21 очко (или ближе к ним)</p>
+            <p>Обыграй дилера на бильярдном столе!</p>
 
-            <div class="bj-table">
-                <div class="bj-section">
-                    <div class="bj-label">Дилер (<span id="dealerScore">0</span>)</div>
-                    <div id="dealerCards" class="bj-cards">🂠 🂠</div>
+            <div class="billiard-table">
+                <!-- Лузы (6 штук как на настоящем бильярдном столе) -->
+                <div class="pocket top-left"></div>
+                <div class="pocket top-right"></div>
+                <div class="pocket mid-left"></div>
+                <div class="pocket mid-right"></div>
+                <div class="pocket bottom-left"></div>
+                <div class="pocket bottom-right"></div>
+
+                <!-- Зона дилера -->
+                <div class="bj-zone dealer-zone">
+                    <div class="bj-label">ДИЛЕР <span id="dealerScore" class="bj-score">0</span></div>
+                    <div id="dealerCards" class="cards-row">
+                        <div class="bj-card">A♠</div>
+                        <div class="bj-card hidden-card">?</div>
+                    </div>
                 </div>
 
-                <div id="bjStatus" class="status-text">Сделай ставку и начни игру</div>
+                <!-- Статус игры по центру -->
+                <div id="bjStatus" class="bj-status">Сделайте ставку</div>
 
-                <div class="bj-section">
-                    <div class="bj-label">Игрок (<span id="playerScore">0</span>)</div>
-                    <div id="playerCards" class="bj-cards">🂠 🂠</div>
+                <!-- Зона игрока -->
+                <div class="bj-zone player-zone">
+                    <div id="playerCards" class="cards-row">
+                        <div class="bj-card red">K♥</div>
+                        <div class="bj-card">10♣</div>
+                    </div>
+                    <div class="bj-label">ВЫ <span id="playerScore" class="bj-score">20</span></div>
                 </div>
             </div>
 
-            <div class="bj-controls">
+            <div class="bj-controls" style="margin-top: 15px;">
                 <button id="bjDealButton" class="btn btn-primary full-width">Раздать карты</button>
-                <div id="bjActionButtons" class="bj-action-grid hidden">
+                <div id="bjActionButtons" class="bj-action-grid hidden" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px;">
                     <button id="bjHitButton" class="btn btn-secondary">Ещё</button>
-                    <button id="bjDoubleButton" class="btn btn-secondary">Удвоить</button>
                     <button id="bjStandButton" class="btn btn-primary">Хватит</button>
                 </div>
+                <button id="bjDoubleButton" class="btn btn-secondary hidden full-width" style="margin-top: 8px;">Удвоить</button>
             </div>
         </div>
 
