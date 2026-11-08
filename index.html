@@ -26,6 +26,7 @@
             <button class="tab-button" data-game="coin">🪙 Монетка</button>
             <button class="tab-button" data-game="aviamaster">✈️ Aviamasters</button>
             <button class="tab-button" data-game="blackjack">🃏 Блекджек</button>
+            <button class="tab-button" data-game="transfer">💸 Перевод</button>
             <button class="tab-button" data-game="promo">🎁 Промо</button>
         </nav>
 
@@ -151,6 +152,25 @@
                     <button id="bjStandButton" class="btn btn-primary">Хватит</button>
                 </div>
             </div>
+        </div>
+
+        <!-- ПЕРЕВОДЫ -->
+        <div id="game-transfer" class="game-view card hidden">
+            <h3>Перевод байтов игроку</h3>
+            <p>Отправь средства любому пользователю по его Telegram Username</p>
+            
+            <div class="bj-section" style="margin-top: 15px;">
+                <div class="bj-label">Telegram Username получателя</div>
+                <input type="text" id="transferTargetInput" class="bet-input" placeholder="Введите @username" inputmode="text">
+            </div>
+
+            <div class="bj-section">
+                <div class="bj-label">Сумма перевода (байты)</div>
+                <input type="text" id="transferAmountInput" class="bet-input" placeholder="Сумма (мин. 1)" inputmode="decimal">
+            </div>
+
+            <button id="transferButton" class="btn btn-primary full-width" style="margin-top: 10px;">Перевести средства</button>
+            <div id="transferStatus" class="status-text" style="margin-top: 10px;"></div>
         </div>
 
         <!-- 6. ПРОМОКОДЫ -->
