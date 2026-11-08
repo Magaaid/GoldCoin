@@ -1114,4 +1114,135 @@ input {
     grid-template-columns: 1fr 1fr 1fr;
     gap: 10px;
 }
+/* --- СТИЛИ ДЛЯ НОВЫХ И УЛУЧШЕННЫХ КНОПОК И ИГР --- */
+
+/* Универсальная красивая кнопка (для Aviamasters и Промо) */
+.aviamaster-theme .btn, 
+#game-promo .btn {
+    background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+    color: #ffffff;
+    font-weight: bold;
+    border: none;
+    border-radius: 12px;
+    padding: 14px;
+    box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.aviamaster-theme .btn:hover, 
+#game-promo .btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(59, 130, 246, 0.6);
+}
+
+.aviamaster-theme .btn:active, 
+#game-promo .btn:active {
+    transform: translateY(0);
+}
+
+/* Стили для Блекджека */
+.blackjack-theme {
+    background: linear-gradient(135deg, #064e3b 0%, #022c22 100%);
+    border: 1px solid rgba(52, 211, 153, 0.3);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    border-radius: 16px;
+    padding: 16px;
+}
+
+.bj-table {
+    background: rgba(0, 0, 0, 0.35);
+    border-radius: 14px;
+    padding: 16px;
+    margin: 15px 0;
+    border: 1px solid rgba(52, 211, 153, 0.2);
+}
+
+.bj-section {
+    margin: 12px 0;
+}
+
+.bj-label {
+    font-size: 11px;
+    color: #34d399;
+    font-weight: 700;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.bj-cards {
+    font-size: 22px;
+    letter-spacing: 8px;
+    min-height: 38px;
+    font-weight: bold;
+    color: #ffffff;
+}
+
+/* Сетка кнопок действий в Блекджеке (Ещё, Удвоить, Хватит) */
+.bj-action-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.bj-action-grid button {
+    padding: 12px 8px;
+    font-size: 13px;
+    font-weight: bold;
+    border-radius: 10px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+/* Кнопка "Ещё" (Hit) */
+#bjHitButton {
+    background: rgba(59, 130, 246, 0.2);
+    color: #60a5fa;
+    border: 1px solid rgba(59, 130, 246, 0.4);
+}
+#bjHitButton:hover {
+    background: rgba(59, 130, 246, 0.3);
+}
+
+/* Кнопка "Удвоить" (Double) */
+#bjDoubleButton {
+    background: rgba(245, 158, 11, 0.2);
+    color: #fbbf24;
+    border: 1px solid rgba(245, 158, 11, 0.4);
+}
+#bjDoubleButton:hover:not(:disabled) {
+    background: rgba(245, 158, 11, 0.3);
+}
+#bjDoubleButton:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+/* Кнопка "Хватит" (Stand) */
+#bjStandButton {
+    background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);
+    color: #ffffff;
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+}
+#bjStandButton:hover {
+    box-shadow: 0 6px 16px rgba(239, 68, 68, 0.6);
+}
+
+/* Главная кнопка раздачи карт */
+#bjDealButton {
+    background: linear-gradient(135deg, #10b981 0%, #047857 100%);
+    color: #ffffff;
+    font-weight: bold;
+    border-radius: 12px;
+    padding: 14px;
+    box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+    transition: all 0.2s ease;
+}
+#bjDealButton:hover {
+    box-shadow: 0 6px 20px rgba(16, 185, 129, 0.6);
+}
+
 
