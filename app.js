@@ -9,7 +9,10 @@ const earnButton = document.getElementById("earnButton");
 const upgradeButton = document.getElementById("upgradeButton");
 
 let state = null;
-let busy = false;
+let pendingClicks = 0;
+let flushTimer = null;
+let flushPromise = null;
+let upgrading = false;
 
 function formatCoins(value) {
     return (value / 1000000000).toFixed(10).replace(".", ",");
@@ -18,17 +21,22 @@ function formatCoins(value) {
 function updateUI() {
     if (!state) return;
 
+    const displayedBalance =
+        state.balance + pendingClicks * state.income;
+
     balanceElement.textContent =
-        formatCoins(state.balance) + " коинов";
+        formatCoins(displayedBalance) + " коинов";
 
     earnButton.textContent =
         "+" + formatCoins(state.income);
 
     upgradeButton.textContent =
-        "Улучшение — " + formatCoins(state.upgrade_cost) + " коинов";
+        "Улучшение — " +
+        formatCoins(state.upgrade_cost) +
+        " коинов";
 }
 
-async function api(action = null) {
+async function api(action = null, count = null) {
     const options = {
         method: action ? "POST" : "GET",
         headers: {
@@ -38,13 +46,10 @@ async function api(action = null) {
 
     if (action) {
         options.headers["Content-Type"] = "application/json";
-        options.body = JSON.stringify({ action });
+        options.body = JSON.stringify({ action, count });
     }
 
     const response = await fetch("/api/state", options);
-    console.log("Telegram initData length:", tg.initData.length);
-console.log("Request status:", response.status);
-
     const data = await response.json();
 
     if (!response.ok) {
@@ -52,6 +57,87 @@ console.log("Request status:", response.status);
     }
 
     return data;
+}
+
+function scheduleFlush() {
+    if (flushTimer) clearTimeout(flushTimer);
+
+    flushTimer = setTimeout(() => {
+        flushQueue().catch(error => {
+            tg.showAlert("Ошибка сохранения: " + error.message);
+        });
+    }, 120);
+}
+
+async function flushQueue() {
+    if (flushTimer) {
+        clearTimeout(flushTimer);
+        flushTimer = null;
+    }
+
+    if (flushPromise) {
+        await flushPromise;
+        if (pendingClicks > 0) {
+            return flushQueue();
+        }
+        return;
+    }
+
+    flushPromise = (async () => {
+        while (pendingClicks > 0) {
+            const count = Math.min(pendingClicks, 1000);
+            pendingClicks -= count;
+            updateUI();
+
+            try {
+                state = await api("earn_batch", count);
+                updateUI();
+            } catch (error) {
+                pendingClicks += count;
+                updateUI();
+                throw error;
+            }
+        }
+    })();
+
+    try {
+        await flushPromise;
+    } finally {
+        flushPromise = null;
+
+        if (pendingClicks > 0 && !flushTimer) {
+            scheduleFlush();
+        }
+    }
+}
+
+function earn() {
+    if (!state || upgrading) return;
+
+    pendingClicks++;
+    updateUI();
+    scheduleFlush();
+}
+
+async function upgrade() {
+    if (!state || upgrading) return;
+
+    upgrading = true;
+    upgradeButton.disabled = true;
+
+    try {
+        await flushQueue();
+
+        state = await api("upgrade");
+        updateUI();
+
+    } catch (error) {
+        tg.showAlert(error.message);
+
+    } finally {
+        upgrading = false;
+        upgradeButton.disabled = false;
+    }
 }
 
 async function loadGame() {
@@ -68,33 +154,7 @@ async function loadGame() {
     }
 }
 
-async function performAction(action) {
-    if (busy || !state) return;
-
-    busy = true;
-    earnButton.disabled = true;
-    upgradeButton.disabled = true;
-
-    try {
-        state = await api(action);
-        updateUI();
-
-    } catch (error) {
-        tg.showAlert(error.message);
-
-    } finally {
-        busy = false;
-        earnButton.disabled = false;
-        upgradeButton.disabled = false;
-    }
-}
-
-earnButton.addEventListener("click", () => {
-    performAction("earn");
-});
-
-upgradeButton.addEventListener("click", () => {
-    performAction("upgrade");
-});
+earnButton.addEventListener("click", earn);
+upgradeButton.addEventListener("click", upgrade);
 
 loadGame();
