@@ -353,7 +353,7 @@ function spin() {
 
             spinning = false;
             spinButton.disabled = false;
-        }
+       checkPrediction(number); }
     }
 
     requestAnimationFrame(frame);
