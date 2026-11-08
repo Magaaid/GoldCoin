@@ -556,7 +556,6 @@ async function requestSlotSpin(isBonus = false) {
         slotStatus.textContent = `🎁 БОНУСКА АКТИВИРОВАНА! Спин 1 из 15...`;
         zeusBadge.textContent = `⚡ ×1`;
 
-        // Плавная имитация бонусных вращений
         const runBonusSpin = () => {
             if (currentSpin <= 15) {
                 slotStatus.textContent = `🎁 Бесплатное вращение ${currentSpin} из 15...`;
@@ -1097,16 +1096,7 @@ if (bjHitButton) bjHitButton.addEventListener("click", hitBlackjack);
 if (bjStandButton) bjStandButton.addEventListener("click", standBlackjack);
 if (bjDoubleButton) bjDoubleButton.addEventListener("click", doubleDownBlackjack);
 
-// --- АВТОМАТИЧЕСКОЕ ДОБАВЛЕНИЕ КНОПКИ И ЛОГИКА ВКЛАДОК С НАСТРОЙКАМИ ---
-const tabsContainer = document.querySelector(".tabs");
-if (tabsContainer && !document.querySelector('[data-game="settings"]')) {
-    const settingsTab = document.createElement("button");
-    settingsTab.className = "tab-button";
-    settingsTab.dataset.game = "settings";
-    settingsTab.textContent = "⚙️ Настройки";
-    tabsContainer.appendChild(settingsTab);
-}
-
+// --- ЛОГИКА ВКЛАДОК ---
 const tabButtons = document.querySelectorAll(".tab-button");
 const gameViews = document.querySelectorAll(".game-view");
 
@@ -1128,6 +1118,7 @@ tabButtons.forEach(button => {
     });
 });
 
+// --- НАСТРОЙКИ ТЕМЫ ---
 const colorButtons = document.querySelectorAll(".color-btn");
 const settingsStatus = document.getElementById("settingsStatus");
 
@@ -1158,25 +1149,54 @@ colorButtons.forEach(button => {
 
 const savedTheme = localStorage.getItem("gcoin_theme_color") || "#8b5cf6";
 setThemeColor(savedTheme);
-// Переход в настройки из вкладки промокодов
-const goToSettingsBtn = document.getElementById("goToSettingsBtn");
-if (goToSettingsBtn) {
-    goToSettingsBtn.addEventListener("click", () => {
-        // Убираем класс active у всех кнопок вкладок и ставим на настройки
-        document.querySelectorAll(".tab-button").forEach(item => {
-            item.classList.remove("active");
-            if (item.dataset.game === "settings") {
-                item.classList.add("active");
-            }
-        });
 
-        // Скрываем все экраны игр и показываем настройки
-        document.querySelectorAll(".game-view").forEach(view => {
-            if (view.id === "game-settings") {
-                view.classList.remove("hidden");
-            } else {
-                view.classList.add("hidden");
+// --- РЕФЕРАЛЬНАЯ СИСТЕМА ---
+const refLinkInput = document.getElementById("refLinkInput");
+const copyRefBtn = document.getElementById("copyRefBtn");
+const refStatus = document.getElementById("refStatus");
+const refCountElement = document.getElementById("refCount");
+const refEarnedElement = document.getElementById("refEarned");
+
+function initReferralSystem() {
+    if (!tg.initDataUnsafe || !tg.initDataUnsafe.user) return;
+    
+    const userId = tg.initDataUnsafe.user.id;
+    const botUsername = "GoldCo1n_bot"; 
+    
+    const refLink = `https://t.me/${botUsername}?start=ref_${userId}`;
+    if (refLinkInput) refLinkInput.value = refLink;
+
+    loadReferralStats();
+}
+
+async function loadReferralStats() {
+    try {
+        const data = await api("get_referrals");
+        if (refCountElement) refCountElement.textContent = data.count || 0;
+        if (refEarnedElement) refEarnedElement.textContent = formatCoins(data.earned || 0);
+    } catch (e) {
+        console.error("Не удалось загрузить рефералов", e);
+    }
+}
+
+if (copyRefBtn) {
+    copyRefBtn.addEventListener("click", () => {
+        if (!refLinkInput.value) return;
+        
+        navigator.clipboard.writeText(refLinkInput.value).then(() => {
+            if (refStatus) {
+                refStatus.textContent = "✅ Ссылка скопирована в буфер обмена!";
+                refStatus.style.color = "#39d98a";
+            }
+        }).catch(() => {
+            refLinkInput.select();
+            document.execCommand("copy");
+            if (refStatus) {
+                refStatus.textContent = "✅ Ссылка скопирована!";
+                refStatus.style.color = "#39d98a";
             }
         });
     });
 }
+
+setTimeout(initReferralSystem, 1000);
