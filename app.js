@@ -727,7 +727,6 @@ async function playAviamasters() {
 
     aviaStatus.textContent = "✈️ Самолет заходит на взлетную полосу...";
     
-    // Возможные типы секторов для случайного выпадения
     const possibleSteps = [
         { type: "add", val: 0.3, text: "📈 Набор высоты (+0.3)" },
         { type: "add", val: 0.6, text: "📈 Отличный подъем (+0.6)" },
@@ -739,7 +738,6 @@ async function playAviamasters() {
         { type: "div", val: 1.8, text: "🌪️ Мощный вихрь (÷1.8)" }
     ];
 
-    // Генерируем случайную длину пути (от 6 до 10 шагов) и выбираем сектора рандомно
     const totalSteps = Math.floor(Math.random() * 5) + 6;
     const pathSteps = [];
     for (let i = 0; i < totalSteps; i++) {
@@ -775,7 +773,6 @@ async function playAviamasters() {
         } else {
             clearInterval(flightInterval);
 
-            // Жесткий шанс на краш: 85% проигрыша, 15% победы
             const isCrashed = Math.random() < 0.85;
 
             if (isCrashed) {
@@ -817,3 +814,219 @@ async function playAviamasters() {
 if (aviaButton) {
     aviaButton.addEventListener("click", playAviamasters);
 }
+
+// БЛЕКДЖЕК ЛОГИКА (С КНОПКОЙ УДВОИТЬ)
+const bjDealButton = document.getElementById("bjDealButton");
+const bjHitButton = document.getElementById("bjHitButton");
+const bjStandButton = document.getElementById("bjStandButton");
+const bjDoubleButton = document.getElementById("bjDoubleButton");
+const bjActionButtons = document.getElementById("bjActionButtons");
+const playerCardsDiv = document.getElementById("playerCards");
+const dealerCardsDiv = document.getElementById("dealerCards");
+const playerScoreSpan = document.getElementById("playerScore");
+const dealerScoreSpan = document.getElementById("dealerScore");
+const bjStatus = document.getElementById("bjStatus");
+
+let bjDeck = [];
+let bjPlayerHand = [];
+let bjDealerHand = [];
+let bjBetAmount = 0;
+let bjGameActive = false;
+
+function createBjDeck() {
+    const suits = ["♠", "♣", "♥", "♦"];
+    const values = ["2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A"];
+    let deck = [];
+    for (let suit of suits) {
+        for (let val of values) {
+            deck.push({ val, suit });
+        }
+    }
+    for (let i = deck.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [deck[i], deck[j]] = [deck[j], deck[i]];
+    }
+    return deck;
+}
+
+function calculateBjHand(hand) {
+    let sum = 0;
+    let aces = 0;
+    for (let card of hand) {
+        if (card.val === "A") {
+            aces++;
+            sum += 11;
+        } else if (["K", "Q", "J", "10"].includes(card.val)) {
+            sum += 10;
+        } else {
+            sum += parseInt(card.val);
+        }
+    }
+    while (sum > 21 && aces > 0) {
+        sum -= 10;
+        aces--;
+    }
+    return sum;
+}
+
+function renderBjHands(hideDealerSecond = true) {
+    playerCardsDiv.textContent = bjPlayerHand.map(c => `${c.val}${c.suit}`).join(" ");
+    playerScoreSpan.textContent = calculateBjHand(bjPlayerHand);
+
+    if (hideDealerSecond && bjDealerHand.length >= 2) {
+        dealerCardsDiv.textContent = `${bjDealerHand[0].val}${bjDealerHand[0].suit} 🂠`;
+        dealerScoreSpan.textContent = calculateBjHand([bjDealerHand[0]]);
+    } else {
+        dealerCardsDiv.textContent = bjDealerHand.map(c => `${c.val}${c.suit}`).join(" ");
+        dealerScoreSpan.textContent = calculateBjHand(bjDealerHand);
+    }
+}
+
+async function startBlackjack() {
+    if (spinning || upgrading || !state) return;
+
+    bjBetAmount = parseBet();
+    if (betAll) bjBetAmount = state.balance;
+    if (!bjBetAmount || bjBetAmount <= 0) {
+        tg.showAlert("Введи сумму ставки!");
+        return;
+    }
+    if (bjBetAmount > state.balance) {
+        tg.showAlert("Недостаточно байтов на балансе!");
+        return;
+    }
+
+    spinning = true;
+    bjDealButton.disabled = true;
+
+    try {
+        await flushQueue();
+        const res = await api("spin", { choice: "zero", amount: bjBetAmount, all: betAll });
+        state = { balance: res.balance, income: res.income, upgrade_cost: res.upgrade_cost };
+        updateUI();
+    } catch (e) {
+        state.balance -= bjBetAmount;
+        updateUI();
+    }
+
+    bjDeck = createBjDeck();
+    bjPlayerHand = [bjDeck.pop(), bjDeck.pop()];
+    bjDealerHand = [bjDeck.pop(), bjDeck.pop()];
+    bjGameActive = true;
+
+    renderBjHands(true);
+    bjStatus.textContent = "Твой ход: Ещё, Хватит или Удвоить?";
+    
+    bjDealButton.classList.add("hidden");
+    bjActionButtons.classList.remove("hidden");
+    
+    // Кнопку удвоения можно нажать только если хватает баланса на вторую такую же ставку
+    if (bjDoubleButton) {
+        bjDoubleButton.disabled = state.balance < bjBetAmount;
+    }
+
+    spinning = false;
+
+    if (calculateBjHand(bjPlayerHand) === 21) {
+        endBlackjack("blackjack");
+    }
+}
+
+async function hitBlackjack() {
+    if (!bjGameActive || spinning) return;
+    bjPlayerHand.push(bjDeck.pop());
+    renderBjHands(true);
+    
+    // При взятии карты кнопку удвоения скрываем (доступна только на раздаче)
+    if (bjDoubleButton) bjDoubleButton.classList.add("hidden");
+
+    const playerSum = calculateBjHand(bjPlayerHand);
+    if (playerSum > 21) {
+        endBlackjack("bust");
+    } else if (playerSum === 21) {
+        standBlackjack();
+    }
+}
+
+async function doubleDownBlackjack() {
+    if (!bjGameActive || spinning) return;
+    if (state.balance < bjBetAmount) {
+        tg.showAlert("Недостаточно байтов для удвоения ставки!");
+        return;
+    }
+
+    // Списываем вторую часть ставки
+    state.balance -= bjBetAmount;
+    bjBetAmount *= 2;
+    updateUI();
+
+    // Даем одну карту и сразу переходим к ходу дилера
+    bjPlayerHand.push(bjDeck.pop());
+    renderBjHands(true);
+
+    const playerSum = calculateBjHand(bjPlayerHand);
+    if (playerSum > 21) {
+        endBlackjack("bust");
+    } else {
+        standBlackjack();
+    }
+}
+
+async function standBlackjack() {
+    if (!bjGameActive || spinning) return;
+    bjGameActive = false;
+
+    renderBjHands(false);
+    bjStatus.textContent = "Ход дилера...";
+
+    let dealerSum = calculateBjHand(bjDealerHand);
+    while (dealerSum < 17) {
+        await new Promise(r => setTimeout(r, 600));
+        bjDealerHand.push(bjDeck.pop());
+        renderBjHands(false);
+        dealerSum = calculateBjHand(bjDealerHand);
+    }
+
+    const playerSum = calculateBjHand(bjPlayerHand);
+
+    if (dealerSum > 21 || playerSum > dealerSum) {
+        endBlackjack("win");
+    } else if (playerSum < dealerSum) {
+        endBlackjack("lose");
+    } else {
+        endBlackjack("push");
+    }
+}
+
+async function endBlackjack(result) {
+    bjGameActive = false;
+    renderBjHands(false);
+    bjActionButtons.classList.add("hidden");
+    bjDealButton.classList.remove("hidden");
+    if (bjDoubleButton) bjDoubleButton.classList.remove("hidden");
+
+    let payout = 0;
+    if (result === "blackjack") {
+        payout = Math.floor(bjBetAmount * 2.5);
+        state.balance += payout;
+        bjStatus.textContent = `🎉 БЛЕКДЖЕК! Выигрыш: +${formatCoins(payout)} байтов`;
+    } else if (result === "win") {
+        payout = bjBetAmount * 2;
+        state.balance += payout;
+        bjStatus.textContent = `🎉 Победа! Выигрыш: +${formatCoins(payout)} байтов`;
+    } else if (result === "push") {
+        state.balance += bjBetAmount;
+        bjStatus.textContent = `🤝 Ничья (Push). Ставка возвращена.`;
+    } else if (result === "bust") {
+        bjStatus.textContent = `💥 Перебор! Ты проиграл.`;
+    } else {
+        bjStatus.textContent = `💀 Дилер выиграл. Проигрыш.`;
+    }
+
+    updateUI();
+}
+
+if (bjDealButton) bjDealButton.addEventListener("click", startBlackjack);
+if (bjHitButton) bjHitButton.addEventListener("click", hitBlackjack);
+if (bjStandButton) bjStandButton.addEventListener("click", standBlackjack);
+if (bjDoubleButton) bjDoubleButton.addEventListener("click", doubleDownBlackjack);
