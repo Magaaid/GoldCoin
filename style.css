@@ -1584,5 +1584,114 @@ input {
     box-shadow: 0 8px 25px rgba(14, 165, 233, 0.7) !important;
     transform: translateY(-2px);
 }
+/* --- 3D РЕАЛИСТИЧНЫЙ БЛЕКДЖЕК --- */
+
+/* 1. Глобальный 3D-контейнер блекджека */
+.blackjack-theme {
+    background: radial-gradient(circle at center, #064e3b 0%, #022c22 100%) !important;
+    border: 2px solid #34d399;
+    box-shadow: inset 0 0 40px rgba(52, 211, 153, 0.2), 0 20px 40px rgba(0, 0, 0, 0.85);
+    border-radius: 20px;
+    perspective: 1200px;
+}
+
+/* 2. Стол для блекджека с эффектом сукна и перспективы */
+.bj-table {
+    background: linear-gradient(135deg, rgba(4, 47, 46, 0.95), rgba(2, 44, 34, 0.98));
+    border: 3px solid #10b981;
+    box-shadow: 
+        inset 0 0 30px rgba(16, 185, 129, 0.35),
+        0 12px 30px rgba(0, 0, 0, 0.8);
+    border-radius: 16px;
+    padding: 16px;
+    margin: 12px 0;
+    transform: rotateX(3deg);
+    transform-style: preserve-3d;
+}
+
+/* 3. Секции дилера и игрока */
+.bj-section {
+    background: rgba(0, 0, 0, 0.35);
+    border: 1px solid rgba(52, 211, 153, 0.25);
+    border-radius: 12px;
+    padding: 12px;
+    margin-bottom: 10px;
+    box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.6);
+}
+
+.bj-label {
+    font-size: 13px;
+    font-weight: 700;
+    color: #6ee7b7;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 6px;
+    display: flex;
+    justify-content: space-between;
+}
+
+/* 4. Объемные 3D-карты */
+.bj-cards {
+    font-size: 24px;
+    font-weight: 900;
+    letter-spacing: 6px;
+    min-height: 40px;
+    display: flex;
+    align-items: center;
+    color: #ffffff;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.9);
+    animation: dealCard 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    transform-style: preserve-3d;
+}
+
+@keyframes dealCard {
+    0% {
+        transform: translateY(-30px) rotateX(45deg) scale(0.8);
+        opacity: 0;
+    }
+    100% {
+        transform: translateY(0) rotateX(0deg) scale(1);
+        opacity: 1;
+    }
+}
+
+/* 5. Панель управления и сетка кнопок */
+.bj-controls {
+    margin-top: 15px;
+}
+
+.bj-action-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+}
+
+/* Стилизация кнопок действий в блекджеке */
+#bjDealButton {
+    background: linear-gradient(135deg, #10b981 0%, #047857 100%) !important;
+    color: #ffffff !important;
+    box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4) !important;
+}
+
+#bjDealButton:hover:not(:disabled) {
+    box-shadow: 0 6px 20px rgba(16, 185, 129, 0.6) !important;
+}
+
+#bjHitButton {
+    background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%) !important;
+    color: #ffffff !important;
+}
+
+#bjDoubleButton {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important;
+    color: #000000 !important;
+    font-weight: 800;
+}
+
+#bjStandButton {
+    background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%) !important;
+    color: #ffffff !important;
+}
+
 
 
