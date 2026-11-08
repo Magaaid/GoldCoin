@@ -517,7 +517,6 @@ function renderSlotGrid(grid, animate = true) {
             cell.className = "slot-cell";
             if (animate) {
                 cell.classList.add("animate-drop");
-                // Плавная задержка строго по вертикальным колонкам слева направо (с 1 по 6)
                 cell.style.animationDelay = `${cIndex * 70}ms`;
             }
             if (sym === 10) cell.classList.add("scatter-cell");
@@ -705,7 +704,8 @@ tabButtons.forEach(button => {
         });
     });
 });
-// AVIAMASTERS ЛОГИКА
+
+// AVIAMASTERS (Настоящая механика полета по секторам)
 const aviaButton = document.getElementById("aviaButton");
 const aviaMultiplierElement = document.getElementById("aviaMultiplier");
 const aviaStatus = document.getElementById("aviaStatus");
@@ -725,31 +725,62 @@ async function playAviamasters() {
     aviaButton.disabled = true;
     if (buyBonusButton) buyBonusButton.disabled = true;
 
-    let currentMultiplier = 1.00;
-    // Настройка краша (вероятность раннего падения или высокий полет)
-    const crashAt = Math.random() < 0.4 ? (1.05 + Math.random() * 0.7) : (1.4 + Math.pow(Math.random(), 3) * 12);
+    aviaStatus.textContent = "✈️ Самолет заходит на взлетную полосу...";
     
-    aviaStatus.textContent = "Самолет набирает высоту...";
+    // Возможные бонусы на пути самолетика
+    const pathSteps = [
+        { mult: 1.2, text: "+20% к высоте!" },
+        { mult: 1.5, text: "⭐ Пролетели бонусный сектор!" },
+        { mult: 2.0, text: "🚀 Ускорение ×2!" },
+        { mult: 3.0, text: "🔥 Отличный набор высоты!" },
+        { mult: 5.0, text: "🏆 Эпический пролет!" }
+    ];
 
+    let currentStep = 0;
+    let finalMultiplier = 1.00;
+
+    // Имитация движения самолетика по шагам полета
     const flightInterval = setInterval(async () => {
-        currentMultiplier += 0.05 + (currentMultiplier * 0.035);
-        
-        if (currentMultiplier >= crashAt) {
-            clearInterval(flightInterval);
-            currentMultiplier = crashAt;
-            aviaMultiplierElement.textContent = `×${currentMultiplier.toFixed(2)}`;
-            aviaMultiplierElement.style.color = "#ff525b";
-            if (planeContainer) planeContainer.style.transform = "scale(0.8) rotate(45deg)";
+        if (currentStep < pathSteps.length) {
+            const step = pathSteps[currentStep];
+            finalMultiplier = step.mult;
+            aviaMultiplierElement.textContent = `×${finalMultiplier.toFixed(2)}`;
+            aviaStatus.textContent = step.text;
             
-            aviaStatus.textContent = `💥 Краш! Самолет улетел. Проигрыш`;
+            // Анимация покачивания самолетика при наборе высоты
+            if (planeContainer) {
+                planeContainer.style.transform = `translate(${currentStep * 15}px, -${currentStep * 8}px) rotate(15deg)`;
+            }
 
+            currentStep++;
+        } else {
+            clearInterval(flightInterval);
+
+            // Проверяем, победа или сбытие ракетой на финише (шанс краша 25%)
+            const isCrashed = Math.random() < 0.25;
+
+            if (isCrashed) {
+                finalMultiplier = 0;
+                aviaMultiplierElement.textContent = "0.00";
+                aviaMultiplierElement.style.color = "#ff525b";
+                aviaStatus.textContent = "💥 Ракета сбила самолет! Ставка сгорела.";
+            } else {
+                aviaMultiplierElement.style.color = "#38bdf8";
+                aviaStatus.textContent = `🎉 Полет успешен! Итоговый множитель: ×${finalMultiplier.toFixed(2)}`;
+            }
+
+            // Отправляем результат на бэкенд
             try {
                 await flushQueue();
-                const result = await api("spin", { choice: "zero", amount: amount, all: betAll });
+                const result = await api("spin", { choice: isCrashed ? "zero" : "red", amount: amount, all: betAll });
                 state = { balance: result.balance, income: result.income, upgrade_cost: result.upgrade_cost };
                 updateUI();
             } catch (e) {
-                state.balance = Math.max(0, state.balance - amount);
+                if (isCrashed) {
+                    state.balance = Math.max(0, state.balance - amount);
+                } else {
+                    state.balance += Math.floor(amount * finalMultiplier);
+                }
                 updateUI();
             }
 
@@ -758,16 +789,13 @@ async function playAviamasters() {
                 if (planeContainer) planeContainer.style.transform = "none";
                 aviaButton.disabled = false;
                 spinning = false;
+                aviaMultiplierElement.textContent = "×1.00";
                 aviaStatus.textContent = "Сделай ставку и взлетай!";
-            }, 2000);
-
-        } else {
-            aviaMultiplierElement.textContent = `×${currentMultiplier.toFixed(2)}`;
+            }, 2500);
         }
-    }, 90);
+    }, 600);
 }
 
 if (aviaButton) {
     aviaButton.addEventListener("click", playAviamasters);
 }
-
