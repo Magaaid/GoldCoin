@@ -1,78 +1,98 @@
-const tg = window.Telegram?.WebApp;
 
-if (tg) {
-    tg.ready();
-    tg.expand();
-}
+const tg = window.Telegram.WebApp;
 
-// Сохранение данных
-let savedData;
-
-try {
-    savedData = JSON.parse(localStorage.getItem("goldcoin_data"));
-} catch {
-    savedData = null;
-}
-
-let balance = savedData?.balance ?? 0;
-let income = savedData?.income ?? 0.5;
-let upgradeCost = savedData?.upgradeCost ?? 1024;
+tg.ready();
+tg.expand();
 
 const balanceElement = document.getElementById("balance");
 const earnButton = document.getElementById("earnButton");
 const upgradeButton = document.getElementById("upgradeButton");
 
-function saveData() {
-    localStorage.setItem("goldcoin_data", JSON.stringify({
-        balance,
-        income,
-        upgradeCost
-    }));
-}
+let state = null;
+let busy = false;
 
 function formatCoins(value) {
-    return (value / 1000000000)
-        .toFixed(10)
-        .replace(".", ",");
+    return (value / 1000000000).toFixed(10).replace(".", ",");
 }
 
 function updateUI() {
+    if (!state) return;
+
     balanceElement.textContent =
-        formatCoins(balance) + " коинов";
+        formatCoins(state.balance) + " коинов";
 
     earnButton.textContent =
-        "+" + formatCoins(income);
+        "+" + formatCoins(state.income);
 
     upgradeButton.textContent =
-        "Улучшение — " + formatCoins(upgradeCost) + " коинов";
+        "Улучшение — " + formatCoins(state.upgrade_cost) + " коинов";
+}
 
-    saveData();
+async function api(action = null) {
+    const options = {
+        method: action ? "POST" : "GET",
+        headers: {
+            "X-Telegram-Init-Data": tg.initData
+        }
+    };
+
+    if (action) {
+        options.headers["Content-Type"] = "application/json";
+        options.body = JSON.stringify({ action });
+    }
+
+    const response = await fetch("/api/state", options);
+
+    const data = await response.json();
+
+    if (!response.ok) {
+        throw new Error(data.error || "Ошибка сервера");
+    }
+
+    return data;
+}
+
+async function loadGame() {
+    try {
+        if (!tg.initData) {
+            throw new Error("Открой игру через Telegram");
+        }
+
+        state = await api();
+        updateUI();
+
+    } catch (error) {
+        tg.showAlert("Не удалось загрузить игру: " + error.message);
+    }
+}
+
+async function performAction(action) {
+    if (busy || !state) return;
+
+    busy = true;
+    earnButton.disabled = true;
+    upgradeButton.disabled = true;
+
+    try {
+        state = await api(action);
+        updateUI();
+
+    } catch (error) {
+        tg.showAlert(error.message);
+
+    } finally {
+        busy = false;
+        earnButton.disabled = false;
+        upgradeButton.disabled = false;
+    }
 }
 
 earnButton.addEventListener("click", () => {
-    balance += income;
-    updateUI();
+    performAction("earn");
 });
 
 upgradeButton.addEventListener("click", () => {
-    if (balance < upgradeCost) {
-        if (tg) {
-            tg.showAlert("Недостаточно коинов!");
-        } else {
-            alert("Недостаточно коинов!");
-        }
-        return;
-    }
-
-    balance -= upgradeCost;
-    income *= 2;
-    upgradeCost *= 2;
-
-    updateUI();
-
-    if (tg) {
-        tg.showAlert("Улучшение куплено!");
-    }
+    performAction("upgrade");
 });
 
-updateUI();
+loadGame();
