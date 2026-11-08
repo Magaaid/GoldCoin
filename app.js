@@ -77,24 +77,26 @@ async function flushQueue() {
 
     if (flushPromise) {
         await flushPromise;
+
         if (pendingClicks > 0) {
             return flushQueue();
         }
+
         return;
     }
 
     flushPromise = (async () => {
         while (pendingClicks > 0) {
             const count = Math.min(pendingClicks, 1000);
-            pendingClicks -= count;
-            updateUI();
 
             try {
-                state = await api("earn_batch", count);
+                const result = await api("earn_batch", count);
+
+                pendingClicks -= count;
+                state = result;
                 updateUI();
+
             } catch (error) {
-                pendingClicks += count;
-                updateUI();
                 throw error;
             }
         }
