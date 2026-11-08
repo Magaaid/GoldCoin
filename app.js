@@ -21,19 +21,14 @@ function formatCoins(value) {
 function updateUI() {
     if (!state) return;
 
-    const displayedBalance =
-        state.balance + pendingClicks * state.income;
-
     balanceElement.textContent =
-        formatCoins(displayedBalance) + " коинов";
+        formatCoins(state.balance + pendingClicks * state.income) +
+        " коинов";
 
-    earnButton.textContent =
-        "+" + formatCoins(state.income);
+    earnButton.textContent = "+" + formatCoins(state.income);
 
     upgradeButton.textContent =
-        "Улучшение — " +
-        formatCoins(state.upgrade_cost) +
-        " коинов";
+        "Улучшение — " + formatCoins(state.upgrade_cost) + " коинов";
 }
 
 async function api(action = null, count = null) {
@@ -77,11 +72,7 @@ async function flushQueue() {
 
     if (flushPromise) {
         await flushPromise;
-
-        if (pendingClicks > 0) {
-            return flushQueue();
-        }
-
+        if (pendingClicks > 0) return flushQueue();
         return;
     }
 
@@ -123,22 +114,17 @@ async function upgrade() {
 
     try {
         await flushQueue();
-
         state = await api("upgrade");
         updateUI();
-
     } catch (error) {
         tg.showAlert(error.message);
-
     } finally {
         upgrading = false;
         upgradeButton.disabled = false;
     }
 }
 
-// ==========================
 // РУЛЕТКА
-// ==========================
 
 const numbers = [
     0, 32, 15, 19, 4, 21, 2, 25, 17,
@@ -163,7 +149,8 @@ let spinning = false;
 let wheelRotation = 0;
 let history = [];
 
-const segment = 360 / numbers.length;
+const SEGMENT = 360 / numbers.length;
+const POINTER_ANGLE = -90;
 
 function getColor(number) {
     if (number === 0) return "green";
@@ -179,8 +166,8 @@ function getColorHex(number) {
 
 function createWheel() {
     const gradient = numbers.map((number, index) => {
-        const start = index * segment;
-        const end = (index + 1) * segment;
+        const start = index * SEGMENT;
+        const end = (index + 1) * SEGMENT;
 
         return `${getColorHex(number)} ${start}deg ${end}deg`;
     });
@@ -192,11 +179,10 @@ function createWheel() {
 
     numbers.forEach((number, index) => {
         const label = document.createElement("div");
-        const angle = (index + 0.5) * segment;
+        const angle = (index + 0.5) * SEGMENT;
 
         label.className = "wheel-number";
         label.textContent = number;
-
         label.style.position = "absolute";
         label.style.left = "50%";
         label.style.top = "50%";
@@ -215,27 +201,33 @@ function createWheel() {
     });
 }
 
-// Угол центра сектора в неподвижной системе колеса
-function getSectorAngle(index) {
-    return (index + 0.5) * segment;
+function normalizeAngle(angle) {
+    return ((angle % 360) + 360) % 360;
 }
 
-// Поворот колеса: выбранный сектор должен оказаться наверху
-function getWheelTarget(index) {
-    const sectorAngle = getSectorAngle(index);
-    const current = ((wheelRotation % 360) + 360) % 360;
+function getTargetRotation(index) {
+    const sectorCenter = (index + 0.5) * SEGMENT;
 
-    const needed =
-        ((360 - sectorAngle - current) % 360 + 360) % 360;
+    const current = normalizeAngle(wheelRotation);
 
-    return wheelRotation + 360 * 7 + needed;
+    const desired = normalizeAngle(
+        POINTER_ANGLE - sectorCenter
+    );
+
+    const extra = normalizeAngle(desired - current);
+
+    return wheelRotation + 360 * 7 + extra;
 }
 
-function animateBall(finalAngle, duration) {
+function animateBall(targetAngle, duration) {
     const start = performance.now();
 
     const startAngle = -90;
-    const totalAngle = -360 * 7 - 90;
+    const rotations = 7;
+
+    const totalAngle =
+        startAngle - rotations * 360 +
+        (targetAngle - startAngle);
 
     function frame(now) {
         const progress = Math.min((now - start) / duration, 1);
@@ -245,9 +237,9 @@ function animateBall(finalAngle, duration) {
             startAngle + (totalAngle - startAngle) * eased;
 
         const radius =
-            progress < 0.78
+            progress < 0.82
                 ? 119
-                : 119 - 22 * ((progress - 0.78) / 0.22);
+                : 119 - 22 * ((progress - 0.82) / 0.18);
 
         const rad = angle * Math.PI / 180;
 
@@ -260,15 +252,13 @@ function animateBall(finalAngle, duration) {
         if (progress < 1) {
             requestAnimationFrame(frame);
         } else {
-            // Финальный угол шарика задаётся относительно колеса.
-            const finalRad = finalAngle * Math.PI / 180;
-            const finalRadius = 97;
+            const finalRad = targetAngle * Math.PI / 180;
 
             ball.style.left =
-                `calc(50% + ${Math.cos(finalRad) * finalRadius}px)`;
+                `calc(50% + ${Math.cos(finalRad) * 97}px)`;
 
             ball.style.top =
-                `calc(50% + ${Math.sin(finalRad) * finalRadius}px)`;
+                `calc(50% + ${Math.sin(finalRad) * 97}px)`;
         }
     }
 
@@ -296,10 +286,9 @@ function renderHistory() {
 }
 
 function showResult(number) {
-    resultElement.textContent = number;
-
     const color = getColor(number);
 
+    resultElement.textContent = number;
     resultElement.style.color =
         color === "red" ? "#ff525b" :
         color === "green" ? "#39d98a" : "white";
@@ -328,11 +317,18 @@ function spin() {
 
     const duration = 6000;
 
-    const targetRotation = getWheelTarget(index);
-    wheelRotation = targetRotation;
+    const sectorCenter = (index + 0.5) * SEGMENT;
 
-    // Угол выбранного сектора после поворота колеса.
-    const finalBallAngle = -90;
+    // После вращения центр выбранного сектора окажется наверху.
+    const targetRotation = getTargetRotation(index);
+
+    // Финальная позиция шарика относительно центра колеса.
+    // Угол считается с учётом поворота самого колеса.
+    const ballAngle = normalizeAngle(
+        POINTER_ANGLE - targetRotation
+    );
+
+    wheelRotation = targetRotation;
 
     wheel.style.transition =
         `transform ${duration}ms cubic-bezier(0.12, 0.65, 0.12, 1)`;
@@ -340,8 +336,7 @@ function spin() {
     wheel.style.transform =
         `rotate(${targetRotation}deg)`;
 
-    // Шарик вращается независимо от колеса.
-    animateBall(finalBallAngle, duration);
+    animateBall(ballAngle, duration);
 
     setTimeout(() => {
         showResult(number);
@@ -365,7 +360,6 @@ async function loadGame() {
 
         state = await api();
         updateUI();
-
     } catch (error) {
         tg.showAlert("Не удалось загрузить игру: " + error.message);
     }
