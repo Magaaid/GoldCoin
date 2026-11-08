@@ -705,7 +705,7 @@ tabButtons.forEach(button => {
     });
 });
 
-// AVIAMASTERS (Настоящая механика полета по секторам)
+// AVIAMASTERS (Полет с плюсами, минусами, умножением и делением)
 const aviaButton = document.getElementById("aviaButton");
 const aviaMultiplierElement = document.getElementById("aviaMultiplier");
 const aviaStatus = document.getElementById("aviaStatus");
@@ -727,36 +727,45 @@ async function playAviamasters() {
 
     aviaStatus.textContent = "✈️ Самолет заходит на взлетную полосу...";
     
-    // Возможные бонусы на пути самолетика
+    // Путь самолетика: содержит сложение, умножение, деление и вычитание
     const pathSteps = [
-        { mult: 1.2, text: "+20% к высоте!" },
-        { mult: 1.5, text: "⭐ Пролетели бонусный сектор!" },
-        { mult: 2.0, text: "🚀 Ускорение ×2!" },
-        { mult: 3.0, text: "🔥 Отличный набор высоты!" },
-        { mult: 5.0, text: "🏆 Эпический пролет!" }
+        { mult: 1.3, type: "add", text: "📈 Набор высоты (+0.3)" },
+        { mult: 0.8, type: "div", text: "💨 Зона турбулентности (÷1.25)" },
+        { mult: 2.0, type: "mult", text: "🚀 Ускорение (×2)" },
+        { mult: 0.5, type: "sub", text: "⚠️ Потеря высоты (−0.5)" },
+        { mult: 3.0, type: "mult", text: "🔥 Финальный рывок (×3)" }
     ];
 
     let currentStep = 0;
     let finalMultiplier = 1.00;
 
-    // Имитация движения самолетика по шагам полета
     const flightInterval = setInterval(async () => {
         if (currentStep < pathSteps.length) {
             const step = pathSteps[currentStep];
-            finalMultiplier = step.mult;
-            aviaMultiplierElement.textContent = `×${finalMultiplier.toFixed(2)}`;
+            
+            // Динамический расчет с учетом всех математических знаков
+            if (step.type === "add") finalMultiplier += (step.mult - 1);
+            else if (step.type === "mult") finalMultiplier *= step.mult;
+            else if (step.type === "div") finalMultiplier /= step.mult;
+            else if (step.type === "sub") finalMultiplier = Math.max(0.2, finalMultiplier - step.mult);
+
+            finalMultiplier = Math.max(0.1, Number(finalMultiplier.toFixed(2)));
+            
+            aviaMultiplierElement.textContent = `×${finalMultiplier}`;
             aviaStatus.textContent = step.text;
             
-            // Анимация покачивания самолетика при наборе высоты
+            // Цвет текста меняется в зависимости от того, плюс/умножение это или минус/деление
+            aviaMultiplierElement.style.color = (step.type === "div" || step.type === "sub") ? "#ff525b" : "#38bdf8";
+
             if (planeContainer) {
-                planeContainer.style.transform = `translate(${currentStep * 15}px, -${currentStep * 8}px) rotate(15deg)`;
+                const yOffset = (step.type === "div" || step.type === "sub") ? 10 : -10;
+                planeContainer.style.transform = `translate(${currentStep * 12}px, ${yOffset}px) rotate(${(step.type === "div" || step.type === "sub") ? -15 : 15}deg)`;
             }
 
             currentStep++;
         } else {
             clearInterval(flightInterval);
 
-            // Проверяем, победа или сбытие ракетой на финише (шанс краша 25%)
             const isCrashed = Math.random() < 0.25;
 
             if (isCrashed) {
@@ -769,7 +778,6 @@ async function playAviamasters() {
                 aviaStatus.textContent = `🎉 Полет успешен! Итоговый множитель: ×${finalMultiplier.toFixed(2)}`;
             }
 
-            // Отправляем результат на бэкенд
             try {
                 await flushQueue();
                 const result = await api("spin", { choice: isCrashed ? "zero" : "red", amount: amount, all: betAll });
@@ -793,7 +801,7 @@ async function playAviamasters() {
                 aviaStatus.textContent = "Сделай ставку и взлетай!";
             }, 2500);
         }
-    }, 600);
+    }, 700);
 }
 
 if (aviaButton) {
