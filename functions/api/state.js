@@ -129,7 +129,6 @@ const MULTIPLIERS = {
 
 const COIN_MULTIPLIER = 1.9;
 
-// Честное случайное число 0..36 без перекоса
 function randomRouletteNumber() {
     const buf = new Uint32Array(1);
     const limit = Math.floor(0x100000000 / 37) * 37;
@@ -139,13 +138,6 @@ function randomRouletteNumber() {
     } while (buf[0] >= limit);
 
     return buf[0] % 37;
-}
-
-function randomCoinSide() {
-    const buf = new Uint8Array(1);
-    crypto.getRandomValues(buf);
-
-    return (buf[0] & 1) === 0 ? "heads" : "tails";
 }
 
 function isWin(choice, number) {
@@ -159,12 +151,88 @@ function isWin(choice, number) {
     }
 }
 
-// Общая логика ставки для любой игры:
-// проверяет сумму, разыгрывает, списывает или умножает.
+// ---------- СЛОТЫ (Gates of Olympus style) ----------
+
+const MULTIFIER_VALUES = [2, 3, 4, 5, 10, 15, 20, 25, 50, 100, 500];
+
+function getRandomSymbol() {
+    const buf = new Uint32Array(1);
+    crypto.getRandomValues(buf);
+    const rand = buf[0] / 0x100000000;
+    
+    if (rand < 0.05) return 10; // Scatter (Зевс)
+    if (rand < 0.15) return 9;  // Корона
+    if (rand < 0.28) return 8;  // Песочные часы
+    if (rand < 0.43) return 7;  // Кольцо
+    if (rand < 0.60) return 6;  // Чаша
+    const lowSymbols = [1, 2, 3, 4, 5];
+    return lowSymbols[Math.floor(rand * lowSymbols.length) % lowSymbols.length];
+}
+
+function getRandomMultiplier() {
+    const buf = new Uint32Array(1);
+    crypto.getRandomValues(buf);
+    if (buf[0] / 0x100000000 > 0.15) return 0;
+    return MULTIFIER_VALUES[Math.floor(buf[0] % MULTIFIER_VALUES.length)];
+}
+
+function spinSlotsGrid() {
+    const rows = 5;
+    const cols = 6;
+    let grid = [];
+    
+    for (let r = 0; r < rows; r++) {
+        let row = [];
+        for (let c = 0; c < cols; c++) {
+            row.push(getRandomSymbol());
+        }
+        grid.push(row);
+    }
+    
+    const counts = {};
+    for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+            const sym = grid[r][c];
+            if (sym !== 10) {
+                counts[sym] = (counts[sym] || 0) + 1;
+            }
+        }
+    }
+
+    let winMultiplier = 0;
+    for (const [sym, count] of Object.entries(counts)) {
+        if (count >= 8) {
+            let baseMult = 1;
+            const s = Number(sym);
+            if (s >= 8) baseMult = 5;
+            else if (s >= 6) baseMult = 2;
+            else baseMult = 0.5;
+            
+            winMultiplier += baseMult * (count / 8);
+        }
+    }
+
+    let zeusMultiplier = 0;
+    if (winMultiplier > 0) {
+        const m = getRandomMultiplier();
+        if (m > 0) zeusMultiplier = m;
+    }
+
+    const totalWinMultiplier = winMultiplier > 0 
+        ? Math.max(0.5, Number((winMultiplier * (zeusMultiplier > 0 ? zeusMultiplier : 1)).toFixed(2))) 
+        : 0;
+
+    return {
+        grid,
+        win: totalWinMultiplier > 0,
+        multiplier: totalWinMultiplier,
+        zeusMultiplier
+    };
+}
+
 async function settleBet(env, id, body, multiplier, play) {
     const current = await getUser(env, id);
 
-    // «Всё» берём с сервера, остальное — сумма от игрока
     const amount = body.all === true
         ? current.balance
         : Number(body.amount);
@@ -177,9 +245,7 @@ async function settleBet(env, id, body, multiplier, play) {
         return response({ error: "Недостаточно коинов" }, 400);
     }
 
-    const outcome = play(); // { win, ...данные игры }
-
-    // Выигрыш: + ставка × (множитель − 1), проигрыш: − ставка
+    const outcome = play(); 
     const delta = outcome.win ? amount * (multiplier - 1) : -amount;
 
     const result = await env.DB.prepare(`
@@ -277,7 +343,6 @@ export async function onRequestPost({ request, env }) {
 
             return await settleBet(env, id, body, MULTIPLIERS[choice], () => {
                 const number = randomRouletteNumber();
-
                 return { number, win: isWin(choice, number) };
             });
 
@@ -289,9 +354,44 @@ export async function onRequestPost({ request, env }) {
             }
 
             return await settleBet(env, id, body, COIN_MULTIPLIER, () => {
-                const side = randomCoinSide();
-
+                const side = (Math.random() < 0.5) ? "heads" : "tails";
                 return { side, win: side === choice };
+            });
+
+        } else if (body.action === "slot") {
+            const current = await getUser(env, id);
+            const amount = body.all === true ? current.balance : Number(body.amount);
+
+            if (!Number.isFinite(amount) || amount < 1) {
+                return response({ error: "Слишком маленькая ставка" }, 400);
+            }
+            if (amount > current.balance) {
+                return response({ error: "Недостаточно коинов" }, 400);
+            }
+
+            const outcome = spinSlotsGrid();
+            const delta = outcome.win
+                ? Math.floor(amount * (outcome.multiplier - 1))
+                : -amount;
+
+            const result = await env.DB.prepare(`
+                UPDATE users
+                SET balance = balance + ?
+                WHERE telegram_id = ?
+                AND balance >= ?
+            `).bind(delta, id, amount).run();
+
+            if (result.meta.changes === 0) {
+                return response({ error: "Недостаточно коинов" }, 400);
+            }
+
+            const user = await getUser(env, id);
+            return response({
+                ...user,
+                win: outcome.win,
+                grid: outcome.grid,
+                slotMultiplier: outcome.multiplier,
+                zeus: outcome.zeusMultiplier
             });
 
         } else {
