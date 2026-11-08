@@ -1,1730 +1,209 @@
-
-* {
-    box-sizing: border-box;
-    -webkit-tap-highlight-color: transparent;
-    user-select: none;
-    -webkit-user-select: none;
-}
-
-body {
-    margin: 0;
-    background: #10131c;
-    color: white;
-    font-family: Arial, sans-serif;
-    touch-action: manipulation;
-}
-
-.app {
-    max-width: 480px;
-    margin: auto;
-    padding: 25px 18px;
-    text-align: center;
-}
-
-h1 {
-    color: #f5c542;
-    font-size: 32px;
-    margin-bottom: 5px;
-}
-
-.subtitle {
-    color: #9299aa;
-    margin-bottom: 35px;
-}
-
-.balance-card,
-.upgrade-card,
-.roulette-card {
-    background: #1c2230;
-    border: 1px solid #30394c;
-    border-radius: 20px;
-    padding: 24px;
-    margin-bottom: 22px;
-}
-
-.balance-card p {
-    color: #aab1c0;
-    font-size: 13px;
-}
-
-.balance {
-    color: #f5c542;
-    font-size: 30px;
-    font-weight: bold;
-    margin-top: 12px;
-    overflow-wrap: anywhere;
-}
-
-button {
-    border: none;
-    border-radius: 14px;
-    padding: 17px;
-    font-size: 17px;
-    font-weight: bold;
-    cursor: pointer;
-    touch-action: manipulation;
-    user-select: none;
-    -webkit-user-select: none;
-}
-
-.earn-button {
-    width: 100%;
-    background: #f5c542;
-    color: #171717;
-    margin-bottom: 22px;
-}
-
-.upgrade-card button {
-    width: 100%;
-    background: #303c55;
-    color: white;
-    margin-top: 12px;
-}
-
-button:active {
-    transform: scale(0.97);
-}
-
-.roulette-card {
-    overflow: hidden;
-}
-
-.roulette-card h2 {
-    color: #f5c542;
-    font-size: 26px;
-    margin-top: 0;
-}
-
-.roulette-card h3 {
-    margin-top: 28px;
-    color: #f5c542;
-}
-
-.roulette-wheel {
-    position: relative;
-    width: min(280px, 100%);
-    aspect-ratio: 1;
-    margin: 25px auto;
-}
-
-.wheel {
-    position: absolute;
-    inset: 0;
-    border-radius: 50%;
-    border: 9px solid #b68b35;
-    background: conic-gradient(
-        #16834b 0deg 9.73deg,
-        #171923 9.73deg 19.46deg,
-        #b92c35 19.46deg 29.19deg,
-        #171923 29.19deg 38.92deg,
-        #b92c35 38.92deg 48.65deg,
-        #171923 48.65deg 58.38deg,
-        #b92c35 58.38deg 68.11deg,
-        #171923 68.11deg 77.84deg,
-        #b92c35 77.84deg 87.57deg,
-        #171923 87.57deg 97.3deg,
-        #b92c35 97.3deg 107.03deg,
-        #171923 107.03deg 116.76deg,
-        #b92c35 116.76deg 126.49deg,
-        #171923 126.49deg 136.22deg,
-        #b92c35 136.22deg 145.95deg,
-        #171923 145.95deg 155.68deg,
-        #b92c35 155.68deg 165.41deg,
-        #171923 165.41deg 175.14deg,
-        #b92c35 175.14deg 184.87deg,
-        #171923 184.87deg 194.6deg,
-        #b92c35 194.6deg 204.33deg,
-        #171923 204.33deg 214.06deg,
-        #b92c35 214.06deg 223.79deg,
-        #171923 223.79deg 233.52deg,
-        #b92c35 233.52deg 243.25deg,
-        #171923 243.25deg 252.98deg,
-        #b92c35 252.98deg 262.71deg,
-        #171923 262.71deg 272.44deg,
-        #b92c35 272.44deg 282.17deg,
-        #171923 282.17deg 291.9deg,
-        #b92c35 291.9deg 301.63deg,
-        #171923 301.63deg 311.36deg,
-        #b92c35 311.36deg 321.09deg,
-        #171923 321.09deg 330.82deg,
-        #b92c35 330.82deg 340.55deg,
-        #171923 340.55deg 350.28deg,
-        #b92c35 350.28deg 360deg
-    );
-    box-shadow: 0 0 25px #0009, inset 0 0 15px #0009;
-}
-
-.wheel-center {
-    position: absolute;
-    width: 52px;
-    height: 52px;
-    background: #d6a83e;
-    border: 5px solid #ffe19a;
-    border-radius: 50%;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    display: grid;
-    place-items: center;
-    color: #171717;
-    font-weight: bold;
-    z-index: 3;
-}
-
-.wheel-pointer {
-    position: absolute;
-    z-index: 5;
-    top: -12px;
-    left: 50%;
-    transform: translateX(-50%);
-    color: #f5c542;
-    font-size: 26px;
-}
-
-.ball {
-    position: absolute;
-    width: 13px;
-    height: 13px;
-    border-radius: 50%;
-    background: radial-gradient(circle at 30% 30%, white, #aaa);
-    top: 8px;
-    left: 50%;
-    transform: translateX(-50%);
-    box-shadow: 0 0 8px white;
-    z-index: 4;
-}
-
-.roulette-result {
-    font-size: 42px;
-    font-weight: bold;
-    color: #f5c542;
-    margin: 15px;
-}
-
-#rouletteMessage {
-    color: #aab1c0;
-    min-height: 20px;
-}
-
-.spin-button {
-    width: 100%;
-    background: #f5c542;
-    color: #171717;
-    margin-top: 12px;
-}
-
-.spin-button:disabled {
-    opacity: 0.5;
-}
-
-.roulette-history {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 8px;
-    color: #aab1c0;
-}
-.prediction-card {
-    margin-top: 25px;
-    padding: 20px;
-    background: #191e2b;
-    border: 1px solid #30394c;
-    border-radius: 18px;
-    text-align: center;
-}
-
-.prediction-card h2 {
-    margin-top: 0;
-}
-
-.prediction-card p {
-    color: #aeb7c9;
-}
-
-.prediction-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-    margin-top: 18px;
-}
-
-.prediction-option {
-    padding: 15px 8px;
-    border: 1px solid #3b455a;
-    border-radius: 12px;
-    background: #252d3e;
-    color: white;
-    font-size: 14px;
-    cursor: pointer;
-}
-
-.prediction-option b {
-    display: block;
-    margin-top: 5px;
-    font-size: 17px;
-}
-
-.prediction-option.red {
-    background: #862d39;
-}
-
-.prediction-option.black {
-    background: #10131c;
-}
-
-.prediction-option.zero {
-    grid-column: 1 / -1;
-    background: #167447;
-}
-
-.prediction-option.selected {
-    border: 3px solid #e8c45d;
-}
-
-#predictionStatus {
-    margin-top: 18px;
-    font-weight: bold;
-    color: white;
-}
-input {
-    user-select: text;
-    -webkit-user-select: text;
-}
-
-.bet-input {
-    width: 100%;
-    margin-top: 8px;
-    padding: 15px;
-    border: 1px solid #3b455a;
-    border-radius: 12px;
-    background: #252d3e;
-    color: white;
-    font-size: 17px;
-    text-align: center;
-    outline: none;
-}
-
-.bet-input:focus {
-    border-color: #e8c45d;
-}
-
-.bet-quick {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 10px;
-    margin-top: 10px;
-}
-.game-tabs {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-    margin-bottom: 22px;
-}
-
-.tab-button {
-    background: #252d3e;
-    color: #aab1c0;
-    border: 1px solid #3b455a;
-    padding: 15px 8px;
-}
-
-.tab-button.active {
-    background: #f5c542;
-    color: #171717;
-    border-color: #f5c542;
-}
-
-.hidden {
-    display: none;
-}
-
-.bet-card,
-.coin-card {
-    background: #1c2230;
-    border: 1px solid #30394c;
-    border-radius: 20px;
-    padding: 24px;
-    margin-bottom: 22px;
-}
-
-.bet-card h2,
-.coin-card h2 {
-    color: #f5c542;
-    font-size: 26px;
-    margin-top: 0;
-}
-
-.bet-card p,
-.coin-card p {
-    color: #aeb7c9;
-}
-
-.coin-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-    margin-top: 18px;
-}
-
-.coin-stage {
-    perspective: 600px;
-    height: 130px;
-    display: grid;
-    place-items: center;
-    margin: 22px 0;
-}
-
-.coin {
-    position: relative;
-    width: 110px;
-    height: 110px;
-    transform-style: preserve-3d;
-    transition: transform 2s cubic-bezier(0.2, 0.7, 0.2, 1);
-}
-
-.coin-face {
-    position: absolute;
-    inset: 0;
-    border-radius: 50%;
-    display: grid;
-    place-items: center;
-    backface-visibility: hidden;
-    -webkit-backface-visibility: hidden;
-    font-weight: bold;
-    font-size: 20px;
-    color: #171717;
-    background: radial-gradient(circle at 30% 30%, #ffe19a, #d6a83e);
-    border: 5px solid #b68b35;
-    box-shadow: 0 0 20px #0008;
-}
-
-.coin-face.back {
-    transform: rotateY(180deg);
-}
-
-#coinStatus {
-    min-height: 40px;
-    font-weight: bold;
-    color: white;
-}
-/* Стили для вкладок (теперь 3 штуки в ряд) */
-.game-tabs {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 10px;
-    margin-bottom: 22px;
-}
-
-/* Стили для сетки слотов (Gates of Olympus) */
-.slot-grid {
-    display: grid;
-    grid-template-columns: repeat(6, 1fr);
-    gap: 8px;
-    background: #10131c;
-    padding: 12px;
-    border-radius: 16px;
-    border: 1px solid #30394c;
-    margin: 20px 0;
-}
-
-.slot-cell {
-    aspect-ratio: 1;
-    background: #252d3e;
-    border: 1px solid #3b455a;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 24px;
-    border-radius: 10px;
-    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
-    transition: transform 0.2s ease;
-}
-
-.slot-cell:hover {
-    transform: scale(1.05);
-}
-
-#slotStatus {
-    min-height: 40px;
-    font-weight: bold;
-    color: white;
-    margin: 15px 0;
-    font-size: 15px;
-}
-/* Стили слотов Gates of Olympus с бонуской */
-.slot-card-main {
-    background: linear-gradient(135deg, #1c2230 0%, #2a1f10 100%);
-    border: 1px solid #d6a83e;
-}
-
-.slot-header-flex {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.zeus-badge {
-    background: #f5c542;
-    color: #171717;
-    font-weight: bold;
-    padding: 6px 12px;
-    border-radius: 8px;
-    font-size: 14px;
-    box-shadow: 0 0 10px rgba(245, 197, 66, 0.5);
-}
-
-.slot-grid {
-    display: grid;
-    grid-template-columns: repeat(6, 1fr);
-    gap: 6px;
-    background: #0b0d14;
-    padding: 10px;
-    border-radius: 16px;
-    border: 2px solid #b68b35;
-    margin: 15px 0;
-    box-shadow: inset 0 0 15px rgba(0,0,0,0.8);
-}
-
-.slot-cell {
-    aspect-ratio: 1;
-    background: #1a2233;
-    border: 1px solid #303e5c;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 26px;
-    border-radius: 8px;
-    box-shadow: inset 0 2px 5px rgba(255,255,255,0.05);
-    transition: transform 0.2s ease;
-}
-
-.slot-cell.high-cell {
-    background: linear-gradient(135deg, #2a2210, #3d2f10);
-    border-color: #f5c542;
-}
-
-.slot-cell.scatter-cell {
-    background: linear-gradient(135deg, #301010, #521616);
-    border-color: #ff525b;
-    animation: pulseScatter 1s infinite alternate;
-}
-
-@keyframes pulseScatter {
-    0% { transform: scale(1); box-shadow: 0 0 5px #ff525b; }
-    100% { transform: scale(1.08); box-shadow: 0 0 12px #ff525b; }
-}
-
-.slot-buttons-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-    margin-top: 10px;
-}
-
-.bonus-buy-button {
-    width: 100%;
-    background: linear-gradient(135deg, #b92c35, #e63946);
-    color: white;
-    border: 1px solid #ff6b6b;
-    margin-top: 12px;
-    box-shadow: 0 4px 15px rgba(185, 44, 53, 0.4);
-}
-
-.bonus-buy-button:disabled, .spin-button:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-}
-/* Стили для блока промокодов */
-.promo-card {
-    background: #191e2b;
-}
-
-.promo-btn {
-    width: 100%;
-    background: #303c55;
-    color: white;
-    margin-top: 10px;
-    border: 1px solid #4a5a7d;
-}
-
-.promo-btn:hover {
-    background: #3d4d6e;
-}
-
-.promo-status {
-    margin-top: 10px;
-    font-size: 14px;
-    font-weight: bold;
-    min-height: 20px;
-}
-/* Общий фон экрана слотов в стиле Олимпа */
-.olympus-theme {
-    background: radial-gradient(circle at 50% 20%, #4c1d95 0%, #2e1065 45%, #0f172a 100%);
-    border-radius: 20px;
-    padding: 14px;
-    color: #fff;
-    position: relative;
-    overflow: hidden;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
-}
-
-/* Шапка с логотипом и множителем */
-.olympus-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 12px;
-}
-
-.olympus-logo {
-    display: flex;
-    flex-direction: column;
-    line-height: 1;
-}
-
-.logo-small {
-    font-size: 10px;
-    letter-spacing: 2px;
-    color: #fde047;
-    font-weight: 700;
-}
-
-.logo-main {
-    font-size: 22px;
-    font-weight: 900;
-    letter-spacing: 1px;
-    background: linear-gradient(180deg, #fef08a 0%, #eab308 60%, #a16207 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.8));
-}
-
-.zeus-badge {
-    background: rgba(15, 23, 42, 0.85);
-    border: 1.5px solid #eab308;
-    color: #fde047;
-    padding: 6px 14px;
-    border-radius: 20px;
-    font-weight: 800;
-    font-size: 14px;
-    box-shadow: 0 0 12px rgba(234, 179, 8, 0.35);
-}
-
-/* Массивная золотая рамка вокруг поля */
-.olympus-frame {
-    padding: 6px;
-    border-radius: 16px;
-    background: linear-gradient(135deg, #fef08a 0%, #ca8a04 35%, #854d0e 65%, #eab308 100%);
-    box-shadow: 0 0 25px rgba(234, 179, 8, 0.3), inset 0 0 8px rgba(0, 0, 0, 0.6);
-    margin-bottom: 12px;
-}
-
-.olympus-grid {
-    display: grid;
-    grid-template-columns: repeat(6, 1fr);
-    gap: 5px;
-    background: linear-gradient(180deg, rgba(30, 27, 75, 0.92) 0%, rgba(15, 23, 42, 0.96) 100%);
-    padding: 8px;
-    border-radius: 11px;
-    box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.85);
-}
-
-/* Ячейки с драгоценностями */
-.slot-cell {
-    aspect-ratio: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 24px;
-    background: radial-gradient(circle, rgba(255, 255, 255, 0.07) 0%, rgba(0, 0, 0, 0.25) 100%);
-    border-radius: 8px;
-    border: 1px solid rgba(255, 255, 255, 0.05);
-    text-shadow: 0 0 10px rgba(255, 255, 255, 0.4);
-    transition: transform 0.15s ease;
-}
-
-.slot-cell.high-cell {
-    background: radial-gradient(circle, rgba(234, 179, 8, 0.18) 0%, rgba(0, 0, 0, 0.35) 100%);
-    border-color: rgba(234, 179, 8, 0.35);
-    text-shadow: 0 0 12px rgba(250, 204, 21, 0.7);
-}
-
-.slot-cell.scatter-cell {
-    background: radial-gradient(circle, rgba(250, 204, 21, 0.4) 0%, rgba(161, 98, 7, 0.6) 100%);
-    border: 1px solid #fef08a;
-    box-shadow: 0 0 14px rgba(250, 204, 21, 0.8);
-    animation: scatterPulse 1.2s infinite alternate;
-}
-
-@keyframes scatterPulse {
-    0% { transform: scale(1); }
-    100% { transform: scale(1.06); }
-}
-
-/* Плашка статуса ("Удачи!") */
-.olympus-status {
-    background: linear-gradient(90deg, rgba(30, 27, 75, 0.9) 0%, rgba(49, 46, 129, 0.95) 50%, rgba(30, 27, 75, 0.9) 100%);
-    border: 1px solid rgba(139, 92, 246, 0.35);
-    border-radius: 12px;
-    padding: 10px 12px;
-    text-align: center;
-    font-weight: 700;
-    font-size: 14px;
-    color: #fff;
-    margin-bottom: 12px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
-}
-
-/* Нижняя панель управления */
-.olympus-controls {
-    background: rgba(15, 23, 42, 0.75);
-    backdrop-filter: blur(8px);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 16px;
-    padding: 12px;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-}
-
-/* Бордовая кнопка покупки бонуски */
-.olympus-bonus-btn {
-    width: 100%;
-    padding: 12px;
-    border-radius: 12px;
-    border: 1px solid rgba(248, 113, 113, 0.4);
-    background: linear-gradient(180deg, #991b1b 0%, #450a0a 100%);
-    color: #fff;
-    font-weight: 800;
-    font-size: 14px;
-    cursor: pointer;
-    box-shadow: 0 4px 15px rgba(153, 27, 27, 0.4);
-    transition: transform 0.1s ease, filter 0.15s ease;
-}
-
-.olympus-bonus-btn:active {
-    transform: scale(0.98);
-    filter: brightness(1.1);
-}
-
-.olympus-bottom-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-}
-
-.olympus-bet-box {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-}
-
-.bet-label {
-    font-size: 10px;
-    color: #94a3b8;
-    font-weight: 700;
-    letter-spacing: 0.5px;
-    text-align: center;
-}
-
-.bet-input-wrap input {
-    width: 100%;
-    background: rgba(2, 6, 23, 0.8);
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    border-radius: 10px;
-    padding: 10px;
-    color: #fff;
-    font-size: 16px;
-    font-weight: 800;
-    text-align: center;
-    outline: none;
-    box-sizing: border-box;
-}
-
-/* Большая круглая золотая кнопка SPIN */
-.olympus-spin-btn {
-    width: 76px;
-    height: 76px;
-    border-radius: 50%;
-    border: 3px solid #fef08a;
-    background: radial-gradient(circle at 30% 30%, #fde047 0%, #ca8a04 65%, #713f12 100%);
-    color: #1e1b4b;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    box-shadow: 0 0 20px rgba(234, 179, 8, 0.5), inset 0 2px 5px rgba(255, 255, 255, 0.6);
-    flex-shrink: 0;
-    transition: transform 0.1s ease;
-}
-
-.olympus-spin-btn:active {
-    transform: scale(0.93);
-}
-
-.olympus-spin-btn:disabled,
-.olympus-bonus-btn:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-}
-
-.spin-icon {
-    font-size: 24px;
-    font-weight: 900;
-    line-height: 1;
-}
-
-.spin-text {
-    font-size: 11px;
-    font-weight: 900;
-    letter-spacing: 1px;
-}
-/* Карточка баланса */
-.header-card {
-    background: linear-gradient(135deg, #1e1b4b 0%, #0f172a 100%);
-    border: 1px solid rgba(234, 179, 8, 0.3);
-    border-radius: 16px;
-    padding: 16px;
-    text-align: center;
-    margin-bottom: 12px;
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
-}
-
-.balance-label {
-    font-size: 12px;
-    color: #94a3b8;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    margin-bottom: 4px;
-}
-
-.balance-value {
-    font-size: 22px;
-    font-weight: 900;
-    color: #fef08a;
-    margin-bottom: 12px;
-    text-shadow: 0 0 10px rgba(234, 179, 8, 0.4);
-}
-
-/* Кнопки кликера и улучшений */
-.clicker-actions {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-
-.btn {
-    width: 100%;
-    padding: 12px;
-    border-radius: 12px;
-    font-weight: 800;
-    font-size: 14px;
-    cursor: pointer;
-    border: none;
-    transition: transform 0.1s ease, filter 0.15s ease;
-}
-
-.btn:active {
-    transform: scale(0.98);
-}
-
-.btn-primary {
-    background: linear-gradient(135deg, #ca8a04 0%, #a16207 100%);
-    color: #fff;
-    border: 1px solid #fef08a;
-    box-shadow: 0 4px 12px rgba(202, 138, 4, 0.4);
-}
-
-.btn-secondary {
-    background: rgba(30, 41, 59, 0.9);
-    color: #cbd5e1;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-/* Блок ставки */
-.bet-card {
-    background: rgba(15, 23, 42, 0.85);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 16px;
-    padding: 12px 16px;
-    margin-bottom: 12px;
-}
-
-.bet-header {
-    font-size: 11px;
-    color: #94a3b8;
-    font-weight: 700;
-    margin-bottom: 6px;
-    text-align: center;
-}
-
-.bet-input {
-    width: 100%;
-    background: rgba(2, 6, 23, 0.9);
-    border: 1px solid rgba(234, 179, 8, 0.3);
-    border-radius: 10px;
-    padding: 10px;
-    color: #fff;
-    font-size: 16px;
-    font-weight: 800;
-    text-align: center;
-    outline: none;
-    box-sizing: border-box;
-    margin-bottom: 8px;
-}
-
-.quick-bets {
-    display: flex;
-    gap: 6px;
-}
-
-.quick-bets .prediction-option {
-    flex: 1;
-    background: rgba(30, 41, 59, 0.8);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 8px;
-    padding: 8px;
-    color: #cbd5e1;
-    font-weight: 700;
-    font-size: 12px;
-    cursor: pointer;
-    text-align: center;
-}
-
-.quick-bets .prediction-option.selected {
-    background: #ca8a04;
-    color: #fff;
-    border-color: #fef08a;
-}
-/* Контейнер рулетки */
-.wheel-frame {
-    position: relative;
-    width: 280px;
-    height: 280px;
-    max-width: 100%;
-    aspect-ratio: 1 / 1;
-    margin: 0 auto 16px auto;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #fef08a 0%, #ca8a04 50%, #854d0e 100%);
-    padding: 8px;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6), 0 0 20px rgba(234, 179, 8, 0.4);
-    box-sizing: border-box;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-/* Само колесо */
-.wheel {
-    width: 100%;
-    height: 100%;
-    border-radius: 50%;
-    position: relative;
-    overflow: hidden;
-    box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.8);
-    transition: transform 0.1s cubic-bezier(0.15, 0.85, 0.35, 1);
-}
-
-/* Указатель сверху колеса */
-.wheel-frame::after {
-    content: '';
-    position: absolute;
-    top: 2px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 0;
-    height: 0;
-    border-left: 8px solid transparent;
-    border-right: 8px solid transparent;
-    border-top: 14px solid #fff;
-    z-index: 10;
-    filter: drop-shadow(0 2px 3px rgba(0,0,0,0.8));
-}
-/* Контейнер сцены для монетки */
-.coin-stage {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    perspective: 1000px;
-    margin: 20px 0;
-    height: 100px;
-}
-
-/* Сама монетка */
-.coin {
-    width: 90px;
-    height: 90px;
-    position: relative;
-    transform-style: preserve-3d;
-    transition: transform 2s cubic-bezier(0.15, 0.85, 0.35, 1);
-    border-radius: 50%;
-    box-shadow: 0 0 20px rgba(234, 179, 8, 0.4);
-}
-
-/* Стороны монеты */
-.coin-face {
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 900;
-    font-size: 14px;
-    backface-visibility: hidden;
-    border: 3px solid #fef08a;
-    box-sizing: border-box;
-    text-shadow: 0 1px 2px rgba(0,0,0,0.6);
-}
-
-.coin-heads {
-    background: linear-gradient(135deg, #fde047 0%, #ca8a04 100%);
-    color: #1e1b4b;
-}
-
-.coin-tails {
-    background: linear-gradient(135deg, #cbd5e1 0%, #475569 100%);
-    color: #fff;
-    transform: rotateY(180deg);
-}
-/* Греческий орнамент (меандр) на золотой рамке */
-.olympus-frame {
-    background-image: 
-        repeating-linear-gradient(90deg, rgba(113, 63, 18, 0.35) 0px, rgba(113, 63, 18, 0.35) 4px, transparent 4px, transparent 10px),
-        linear-gradient(135deg, #fef08a 0%, #ca8a04 35%, #854d0e 65%, #eab308 100%);
-    padding: 8px;
-    border: 1px solid #fef08a;
-}
-
-/* Глубокий закатный фон Олимпа с облаками */
-.olympus-theme {
-    background: 
-        radial-gradient(circle at 80% 10%, rgba(251, 146, 60, 0.25) 0%, transparent 45%),
-        radial-gradient(circle at 20% 80%, rgba(168, 85, 247, 0.25) 0%, transparent 50%),
-        linear-gradient(180deg, #2e1065 0%, #4c1d95 45%, #1e1b4b 100%);
-}
-
-/* Анимация падения каждого символа сверху */
-@keyframes symbolDrop {
-    0% {
-        transform: translateY(-35px) scale(0.85);
-        opacity: 0;
-    }
-    75% {
-        transform: translateY(3px) scale(1.04);
-        opacity: 1;
-    }
-    100% {
-        transform: translateY(0) scale(1);
-        opacity: 1;
-    }
-}
-
-.slot-cell.animate-drop {
-    animation: symbolDrop 0.28s cubic-bezier(0.22, 1, 0.36, 1) backwards;
-}
-
-/* Вспышка рамки при выпадении множителя Зевса */
-@keyframes zeusFlash {
-    0%, 100% { box-shadow: 0 0 25px rgba(234, 179, 8, 0.3); }
-    40% { box-shadow: 0 0 60px #fef08a, inset 0 0 35px #fde047; filter: brightness(1.35); }
-}
-
-.olympus-frame.zeus-flash {
-    animation: zeusFlash 0.6s ease-out;
-}
-/* Тема Aviamasters */
-.aviamaster-theme {
-    background: linear-gradient(180deg, #0f172a 0%, #1e1b4b 50%, #312e81 100%);
-    border: 1px solid rgba(56, 189, 248, 0.3);
-}
-
-.aviamaster-stage {
-    position: relative;
-    height: 220px;
-    background: radial-gradient(circle at center, rgba(56, 189, 248, 0.15) 0%, rgba(15, 23, 42, 0.8) 100%);
-    border-radius: 14px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    margin-bottom: 12px;
-    overflow: hidden;
-    border: 1px solid rgba(255, 255, 255, 0.05);
-}
-
-.avia-multiplier {
-    font-size: 36px;
-    font-weight: 900;
-    color: #38bdf8;
-    text-shadow: 0 0 15px rgba(56, 189, 248, 0.5);
-    margin-bottom: 10px;
-}
-
-.plane-container {
-    font-size: 42px;
-    transition: transform 0.1s linear;
-    animation: floatPlane 2s ease-in-out infinite alternate;
-}
-
-@keyframes floatPlane {
-    0% { transform: translateY(-5px) rotate(-5deg); }
-    100% { transform: translateY(5px) rotate(5deg); }
-}
-/* Стили для Блекджека */
-.blackjack-theme {
-    background: linear-gradient(135deg, #064e3b 0%, #022c22 100%);
-    border: 1px solid rgba(52, 211, 153, 0.3);
-}
-
-.bj-table {
-    background: rgba(0, 0, 0, 0.3);
-    border-radius: 14px;
-    padding: 15px;
-    margin: 15px 0;
-    border: 1px solid rgba(255, 255, 255, 0.05);
-}
-
-.bj-section {
-    margin: 10px 0;
-}
-
-.bj-label {
-    font-size: 12px;
-    color: #34d399;
-    font-weight: bold;
-    margin-bottom: 6px;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-.bj-cards {
-    font-size: 20px;
-    letter-spacing: 6px;
-    min-height: 35px;
-    font-weight: bold;
-}
-
-.bj-action-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
-    gap: 10px;
-}
-/* --- СТИЛИ ДЛЯ НОВЫХ И УЛУЧШЕННЫХ КНОПОК И ИГР --- */
-
-/* Универсальная красивая кнопка (для Aviamasters и Промо) */
-.aviamaster-theme .btn, 
-#game-promo .btn {
-    background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
-    color: #ffffff;
-    font-weight: bold;
-    border: none;
-    border-radius: 12px;
-    padding: 14px;
-    box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
-    transition: all 0.2s ease;
-    cursor: pointer;
-}
-
-.aviamaster-theme .btn:hover, 
-#game-promo .btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(59, 130, 246, 0.6);
-}
-
-.aviamaster-theme .btn:active, 
-#game-promo .btn:active {
-    transform: translateY(0);
-}
-
-/* Стили для Блекджека */
-.blackjack-theme {
-    background: linear-gradient(135deg, #064e3b 0%, #022c22 100%);
-    border: 1px solid rgba(52, 211, 153, 0.3);
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
-    border-radius: 16px;
-    padding: 16px;
-}
-
-.bj-table {
-    background: rgba(0, 0, 0, 0.35);
-    border-radius: 14px;
-    padding: 16px;
-    margin: 15px 0;
-    border: 1px solid rgba(52, 211, 153, 0.2);
-}
-
-.bj-section {
-    margin: 12px 0;
-}
-
-.bj-label {
-    font-size: 11px;
-    color: #34d399;
-    font-weight: 700;
-    margin-bottom: 6px;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-}
-
-.bj-cards {
-    font-size: 22px;
-    letter-spacing: 8px;
-    min-height: 38px;
-    font-weight: bold;
-    color: #ffffff;
-}
-
-/* Сетка кнопок действий в Блекджеке (Ещё, Удвоить, Хватит) */
-.bj-action-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
-    gap: 8px;
-    margin-top: 12px;
-}
-
-.bj-action-grid button {
-    padding: 12px 8px;
-    font-size: 13px;
-    font-weight: bold;
-    border-radius: 10px;
-    border: none;
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-/* Кнопка "Ещё" (Hit) */
-#bjHitButton {
-    background: rgba(59, 130, 246, 0.2);
-    color: #60a5fa;
-    border: 1px solid rgba(59, 130, 246, 0.4);
-}
-#bjHitButton:hover {
-    background: rgba(59, 130, 246, 0.3);
-}
-
-/* Кнопка "Удвоить" (Double) */
-#bjDoubleButton {
-    background: rgba(245, 158, 11, 0.2);
-    color: #fbbf24;
-    border: 1px solid rgba(245, 158, 11, 0.4);
-}
-#bjDoubleButton:hover:not(:disabled) {
-    background: rgba(245, 158, 11, 0.3);
-}
-#bjDoubleButton:disabled {
-    opacity: 0.4;
-    cursor: not-allowed;
-}
-
-/* Кнопка "Хватит" (Stand) */
-#bjStandButton {
-    background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);
-    color: #ffffff;
-    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
-}
-#bjStandButton:hover {
-    box-shadow: 0 6px 16px rgba(239, 68, 68, 0.6);
-}
-
-/* Главная кнопка раздачи карт */
-#bjDealButton {
-    background: linear-gradient(135deg, #10b981 0%, #047857 100%);
-    color: #ffffff;
-    font-weight: bold;
-    border-radius: 12px;
-    padding: 14px;
-    box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
-    transition: all 0.2s ease;
-}
-#bjDealButton:hover {
-    box-shadow: 0 6px 20px rgba(16, 185, 129, 0.6);
-}
-/* --- КРАСИВЫЕ КНОПКИ ДЛЯ ВСЕХ ИГР И ПРОМОКОДОВ --- */
-
-/* 1. Главные кнопки действий (.btn) */
-.btn {
-    background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
-    color: #ffffff;
-    font-weight: 700;
-    border: none;
-    border-radius: 12px;
-    padding: 14px 20px;
-    box-shadow: 0 4px 15px rgba(59, 130, 246, 0.35);
-    transition: all 0.2s ease;
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-}
-
-.btn:hover:not(:disabled) {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(59, 130, 246, 0.55);
-    filter: brightness(1.1);
-}
-
-.btn:active:not(:disabled) {
-    transform: translateY(1px);
-    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
-}
-
-.btn:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-}
-
-/* 2. Кнопки переключения вкладок (.tab-button) */
-.tab-button {
-    background: rgba(255, 255, 255, 0.06);
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    color: #94a3b8;
-    padding: 10px 14px;
-    border-radius: 10px;
-    font-weight: 600;
-    font-size: 13px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    white-space: nowrap;
-}
-
-.tab-button:hover {
-    background: rgba(255, 255, 255, 0.12);
-    color: #ffffff;
-    border-color: rgba(255, 255, 255, 0.25);
-}
-
-.tab-button.active {
-    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-    color: #ffffff;
-    border-color: rgba(59, 130, 246, 0.6);
-    box-shadow: 0 4px 14px rgba(59, 130, 246, 0.4);
-}
-
-/* 3. Кнопки прогнозов, ставок и монетки (.prediction-option) */
-.prediction-option {
-    background: rgba(255, 255, 255, 0.06);
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    color: #cbd5e1;
-    padding: 12px;
-    border-radius: 10px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.prediction-option:hover {
-    background: rgba(255, 255, 255, 0.12);
-    border-color: rgba(255, 255, 255, 0.25);
-    color: #ffffff;
-}
-
-.prediction-option.selected {
-    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-    color: #ffffff;
-    border-color: #34d399;
-    box-shadow: 0 0 12px rgba(16, 185, 129, 0.45);
-}
-
-/* 4. Кнопка активации промокода (#promoButton) */
-#promoButton {
-    background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%);
-    box-shadow: 0 4px 15px rgba(139, 92, 246, 0.35);
-    margin-top: 10px;
-}
-#promoButton:hover:not(:disabled) {
-    box-shadow: 0 6px 20px rgba(139, 92, 246, 0.55);
-}
-
-/* 5. Кнопка полета в Aviamasters (#aviaButton) */
-#aviaButton {
-    background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
-    box-shadow: 0 4px 15px rgba(14, 165, 233, 0.35);
-    width: 100%;
-    margin-top: 15px;
-}
-#aviaButton:hover:not(:disabled) {
-    box-shadow: 0 6px 20px rgba(14, 165, 233, 0.55);
-}
-/* --- ПЕРЕКЛЮЧЕНИЕ НА ЖЁЛТО-ЗОЛОТУЮ ПАЛИТРУ --- */
-
-/* Главные кнопки (.btn) — теперь жёлто-золотые */
-.btn {
-    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important;
-    color: #000000 !important; /* Тёмный текст для контраста */
-    box-shadow: 0 4px 15px rgba(245, 158, 11, 0.4) !important;
-}
-.btn:hover:not(:disabled) {
-    box-shadow: 0 6px 20px rgba(245, 158, 11, 0.6) !important;
-}
-
-/* Активные вкладки и выбранные пункты */
-.tab-button.active, 
-.prediction-option.selected {
-    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important;
-    color: #000000 !important;
-    border-color: #fbbf24 !important;
-    box-shadow: 0 4px 14px rgba(245, 158, 11, 0.4) !important;
-}
-
-/* Кнопка запуска Aviamasters */
-#aviaButton {
-    background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%) !important;
-    color: #000000 !important;
-    box-shadow: 0 4px 15px rgba(251, 191, 36, 0.4) !important;
-}
-
-/* Кнопка промокода */
-#promoButton {
-    background: linear-gradient(135deg, #facc15 0%, #eab308 100%) !important;
-    color: #000000 !important;
-    box-shadow: 0 4px 15px rgba(250, 204, 21, 0.4) !important;
-}
-/* --- 3D РЕАЛИСТИЧНЫЙ СЛОТ GATES OF OLYMPUS --- */
-
-/* 1. Глобальный 3D контейнер слота */
-.olympus-theme {
-    background: radial-gradient(circle at center, #1e1b4b 0%, #09090b 100%) !important;
-    border: 2px solid #fbbf24;
-    box-shadow: inset 0 0 35px rgba(251, 191, 36, 0.25), 0 20px 40px rgba(0, 0, 0, 0.85);
-    border-radius: 20px;
-    perspective: 1200px; /* Включаем 3D-пространство */
-    transform-style: preserve-3d;
-}
-
-/* 2. Объемная мраморно-золотая рамка с наклоном */
-.olympus-frame {
-    background: linear-gradient(135deg, rgba(15, 15, 25, 0.95), rgba(5, 5, 10, 0.98));
-    border: 4px solid #f59e0b;
-    box-shadow: 
-        0 12px 35px rgba(0, 0, 0, 0.8), 
-        inset 0 0 20px rgba(245, 158, 11, 0.45),
-        0 0 15px rgba(251, 191, 36, 0.3);
-    border-radius: 16px;
-    padding: 14px;
-    transform: rotateX(5deg); /* Легкий 3D-наклон игрового поля вперед */
-    transform-style: preserve-3d;
-    transition: transform 0.3s ease;
-}
-
-/* 3. Сетка с сохранением 3D глубины */
-.olympus-grid {
-    display: grid;
-    grid-template-columns: repeat(6, 1fr);
-    gap: 8px;
-    transform-style: preserve-3d;
-}
-
-/* 4. Реалистичные 3D фишки-символы с глянцем */
-.slot-cell {
-    background: linear-gradient(145deg, rgba(255, 255, 255, 0.1), rgba(0, 0, 0, 0.5));
-    border: 1px solid rgba(251, 191, 36, 0.35);
-    border-radius: 14px;
-    height: 58px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 28px;
-    box-shadow: 
-        inset 0 3px 6px rgba(255, 255, 255, 0.2), 
-        inset 0 -3px 6px rgba(0, 0, 0, 0.6),
-        0 6px 12px rgba(0, 0, 0, 0.5);
-    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    transform: translateZ(0);
-}
-
-/* 5. 3D Анимация падения и кувырка при спине */
-.slot-cell.animate-drop {
-    animation: drop3D 0.55s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
-}
-
-@keyframes drop3D {
-    0% {
-        transform: translateY(-90px) rotateX(95deg) scale(0.4);
-        opacity: 0;
-    }
-    60% {
-        transform: translateY(12px) rotateX(-18deg) scale(1.06);
-        opacity: 1;
-    }
-    100% {
-        transform: translateY(0) rotateX(0deg) scale(1);
-        opacity: 1;
-    }
-}
-
-/* 6. Редкие элементы (Скаттеры и Премиум) */
-.scatter-cell {
-    background: radial-gradient(circle, rgba(239, 68, 68, 0.45) 0%, rgba(127, 29, 29, 0.85) 100%) !important;
-    border-color: #ef4444 !important;
-    box-shadow: 0 0 20px rgba(239, 68, 68, 0.8), inset 0 0 12px rgba(255, 255, 255, 0.4) !important;
-    animation: pulseScatter 1.4s infinite alternate;
-}
-
-@keyframes pulseScatter {
-    0% { transform: scale(1) translateZ(6px); }
-    100% { transform: scale(1.1) translateZ(18px); }
-}
-
-.high-cell {
-    border-color: #fbbf24 !important;
-    box-shadow: 0 0 12px rgba(251, 191, 36, 0.6), inset 0 0 10px rgba(251, 191, 36, 0.5) !important;
-}
-
-/* 7. Эпическая молния/вспышка Зевса с 3D подсветкой */
-.zeus-flash {
-    animation: zeusLighting 0.65s ease;
-}
-
-@keyframes zeusLighting {
-    0% { filter: brightness(1); box-shadow: 0 12px 35px rgba(0,0,0,0.8); }
-    50% { filter: brightness(1.9) drop-shadow(0 0 30px #fbbf24); box-shadow: 0 0 50px #fbbf24, inset 0 0 30px #fbbf24; }
-    100% { filter: brightness(1); box-shadow: 0 12px 35px rgba(0,0,0,0.8); }
-}
-/* --- 3D РЕАЛИСТИЧНЫЙ AVIAMASTERS --- */
-
-/* 1. Глобальный 3D-контейнер игры */
-.aviamaster-theme {
-    background: radial-gradient(circle at center, #0c1b33 0%, #030712 100%) !important;
-    border: 2px solid #0ea5e9;
-    box-shadow: inset 0 0 35px rgba(14, 165, 233, 0.25), 0 20px 40px rgba(0, 0, 0, 0.85);
-    border-radius: 20px;
-    perspective: 1000px;
-}
-
-/* 2. Объемная летная сцена с перспективой */
-.aviamaster-stage {
-    position: relative;
-    background: linear-gradient(180deg, rgba(2, 6, 23, 0.9) 0%, rgba(15, 23, 42, 0.95) 100%);
-    border: 3px solid #38bdf8;
-    box-shadow: 
-        inset 0 0 30px rgba(14, 165, 233, 0.3),
-        0 10px 25px rgba(0, 0, 0, 0.7);
-    border-radius: 16px;
-    height: 180px;
-    overflow: hidden;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transform-style: preserve-3d;
-}
-
-/* 3. Эффект движения неба / облаков на фоне */
-.aviamaster-stage::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background-image: 
-        radial-gradient(circle, rgba(255, 255, 255, 0.15) 1px, transparent 1px),
-        radial-gradient(circle, rgba(56, 189, 248, 0.1) 2px, transparent 2px);
-    background-size: 40px 40px, 80px 80px;
-    background-position: 0 0, 20px 20px;
-    animation: flightClouds 4s linear infinite;
-    opacity: 0.6;
-}
-
-@keyframes flightClouds {
-    0% { background-position: 0 0, 0 0; }
-    100% { background-position: -80px 0, -160px 0; }
-}
-
-/* 4. 3D Контейнер самолета с глубокой тенью и наклоном */
-.plane-container {
-    position: relative;
-    z-index: 3;
-    transition: transform 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    transform-style: preserve-3d;
-}
-
-/* 5. Реалистичная иконка самолета с объемным свечением */
-.plane-icon {
-    font-size: 46px;
-    display: inline-block;
-    filter: drop-shadow(0 8px 12px rgba(14, 165, 233, 0.6)) drop-shadow(0 0 20px rgba(56, 189, 248, 0.4));
-    animation: planeFloat 2s ease-in-out infinite alternate;
-}
-
-@keyframes planeFloat {
-    0% { transform: translateY(-4px) rotate(-3deg) scale(0.98); }
-    100% { transform: translateY(6px) rotate(4deg) scale(1.02); }
-}
-
-/* 6. Крупный 3D-множитель по центру полета */
-.avia-multiplier {
-    position: absolute;
-    top: 15px;
-    left: 50%;
-    transform: translateX(-50%) translateZ(30px);
-    font-size: 36px;
-    font-weight: 900;
-    color: #38bdf8;
-    text-shadow: 0 0 20px rgba(56, 189, 248, 0.8), 0 4px 8px rgba(0, 0, 0, 0.9);
-    letter-spacing: 2px;
-    z-index: 4;
-}
-
-/* 7. Статус полета и кнопка запуска в стиле киберпанк/неон */
-#aviaButton {
-    background: linear-gradient(135deg, #0ea5e9 0%, #0369a1 100%) !important;
-    color: #ffffff !important;
-    border: 1px solid #7dd3fc !important;
-    box-shadow: 0 6px 20px rgba(14, 165, 233, 0.45) !important;
-    font-size: 16px;
-    letter-spacing: 1px;
-    margin-top: 15px;
-    width: 100%;
-}
-
-#aviaButton:hover:not(:disabled) {
-    box-shadow: 0 8px 25px rgba(14, 165, 233, 0.7) !important;
-    transform: translateY(-2px);
-}
-/* --- 3D РЕАЛИСТИЧНЫЙ БЛЕКДЖЕК --- */
-
-/* 1. Глобальный 3D-контейнер блекджека */
-.blackjack-theme {
-    background: radial-gradient(circle at center, #064e3b 0%, #022c22 100%) !important;
-    border: 2px solid #34d399;
-    box-shadow: inset 0 0 40px rgba(52, 211, 153, 0.2), 0 20px 40px rgba(0, 0, 0, 0.85);
-    border-radius: 20px;
-    perspective: 1200px;
-}
-
-/* 2. Стол для блекджека с эффектом сукна и перспективы */
-.bj-table {
-    background: linear-gradient(135deg, rgba(4, 47, 46, 0.95), rgba(2, 44, 34, 0.98));
-    border: 3px solid #10b981;
-    box-shadow: 
-        inset 0 0 30px rgba(16, 185, 129, 0.35),
-        0 12px 30px rgba(0, 0, 0, 0.8);
-    border-radius: 16px;
-    padding: 16px;
-    margin: 12px 0;
-    transform: rotateX(3deg);
-    transform-style: preserve-3d;
-}
-
-/* 3. Секции дилера и игрока */
-.bj-section {
-    background: rgba(0, 0, 0, 0.35);
-    border: 1px solid rgba(52, 211, 153, 0.25);
-    border-radius: 12px;
-    padding: 12px;
-    margin-bottom: 10px;
-    box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.6);
-}
-
-.bj-label {
-    font-size: 13px;
-    font-weight: 700;
-    color: #6ee7b7;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    margin-bottom: 6px;
-    display: flex;
-    justify-content: space-between;
-}
-
-/* 4. Объемные 3D-карты */
-.bj-cards {
-    font-size: 24px;
-    font-weight: 900;
-    letter-spacing: 6px;
-    min-height: 40px;
-    display: flex;
-    align-items: center;
-    color: #ffffff;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.9);
-    animation: dealCard 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    transform-style: preserve-3d;
-}
-
-@keyframes dealCard {
-    0% {
-        transform: translateY(-30px) rotateX(45deg) scale(0.8);
-        opacity: 0;
-    }
-    100% {
-        transform: translateY(0) rotateX(0deg) scale(1);
-        opacity: 1;
-    }
-}
-
-/* 5. Панель управления и сетка кнопок */
-.bj-controls {
-    margin-top: 15px;
-}
-
-.bj-action-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 8px;
-}
-
-/* Стилизация кнопок действий в блекджеке */
-#bjDealButton {
-    background: linear-gradient(135deg, #10b981 0%, #047857 100%) !important;
-    color: #ffffff !important;
-    box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4) !important;
-}
-
-#bjDealButton:hover:not(:disabled) {
-    box-shadow: 0 6px 20px rgba(16, 185, 129, 0.6) !important;
-}
-
-#bjHitButton {
-    background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%) !important;
-    color: #ffffff !important;
-}
-
-#bjDoubleButton {
-    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important;
-    color: #000000 !important;
-    font-weight: 800;
-}
-
-#bjStandButton {
-    background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%) !important;
-    color: #ffffff !important;
-}
-/* --- СТИЛИ ДЛЯ НАСТРОЕК ТЕМЫ --- */
-.color-picker-grid {
-    display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    gap: 12px;
-    margin-top: 15px;
-    padding: 10px;
-    background: rgba(0, 0, 0, 0.3);
-    border-radius: 12px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.color-btn {
-    width: 100%;
-    height: 44px;
-    border-radius: 10px;
-    border: 2px solid rgba(255, 255, 255, 0.3);
-    cursor: pointer;
-    transition: all 0.2s ease;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
-}
-
-.color-btn:hover {
-    transform: scale(1.1);
-    border-color: #ffffff;
-    box-shadow: 0 0 15px currentColor;
-}
-
-.color-btn.active-color {
-    border-color: #ffffff;
-    transform: scale(1.05);
-    box-shadow: 0 0 20px currentColor, inset 0 0 8px rgba(255, 255, 255, 0.8);
-}
-
-
-
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>GCoin</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app">
+        <!-- Баланс и кликер -->
+        <header class="card header-card">
+            <div class="balance-label">Твой баланс</div>
+            <div id="balance" class="balance-value">0,0000000000 байтов</div>
+            <div class="clicker-actions">
+                <button id="earnButton" class="btn btn-primary">+0,0000000005</button>
+                <button id="upgradeButton" class="btn btn-secondary">Улучшение — 0,0000010240 байтов</button>
+            </div>
+        </header>
+
+        <!-- Переключение игр -->
+        <nav class="tabs">
+            <button class="tab-button active" data-game="slot">⚡ Слоты</button>
+            <button class="tab-button" data-game="roulette">🎡 Рулетка</button>
+            <button class="tab-button" data-game="coin">🪙 Монетка</button>
+            <button class="tab-button" data-game="aviamaster">✈️ Aviamasters</button>
+            <button class="tab-button" data-game="blackjack">🃏 Блекджек</button>
+            <button class="tab-button" data-game="transfer">💸 Перевод</button>
+            <button class="tab-button" data-game="promo">🎁 Промо</button>
+            <button class="tab-button" data-game="settings">⚙️ Настройки</button>
+        </nav>
+
+        <!-- Общая панель ставки -->
+        <section class="card bet-card">
+            <div class="bet-header">Сумма ставки (байты)</div>
+            <input type="text" id="betInput" class="bet-input" placeholder="Введите ставку (мин. 1)" inputmode="decimal">
+            <div class="quick-bets">
+                <button class="prediction-option" data-fraction="0.25">25%</button>
+                <button class="prediction-option" data-fraction="0.5">50%</button>
+                <button class="prediction-option" data-fraction="1">Всё</button>
+            </div>
+        </section>
+
+        <!-- 1. СЛОТЫ (Gates of Olympus) -->
+        <div id="game-slot" class="game-view olympus-theme">
+            <div class="olympus-header">
+                <div class="olympus-logo">
+                    <span class="logo-small">GATES OF</span>
+                    <span class="logo-main">OLYMPUS</span>
+                </div>
+                <div id="zeusMultiplierBadge" class="zeus-badge">⚡ ×1</div>
+            </div>
+
+            <div class="olympus-frame">
+                <div id="slotGrid" class="olympus-grid"></div>
+            </div>
+
+            <div id="slotStatus" class="olympus-status">Удачи!</div>
+
+            <div class="olympus-controls">
+                <button id="buyBonusButton" class="olympus-bonus-btn">
+                    🎁 КУПИТЬ БОНУСКУ (×100)
+                </button>
+                <div class="olympus-bottom-row" style="justify-content: center;">
+                    <button id="slotButton" class="olympus-spin-btn">
+                        <span class="spin-icon">↻</span>
+                        <span class="spin-text">SPIN</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. РУЛЕТКА -->
+        <div id="game-roulette" class="game-view card hidden">
+            <div class="wheel-frame">
+                <div id="wheel" class="wheel"></div>
+                <div id="ball" class="ball"></div>
+            </div>
+
+            <div class="roulette-info">
+                <div id="rouletteResult" class="roulette-result">?</div>
+                <div id="rouletteMessage" class="roulette-message">Нажми, чтобы запустить колесо</div>
+            </div>
+
+            <div id="predictionStatus" class="status-text">Выбери прогноз</div>
+            <div class="predictions-grid">
+                <button class="prediction-option" data-choice="red">Красное ×1.9</button>
+                <button class="prediction-option" data-choice="black">Чёрное ×1.9</button>
+                <button class="prediction-option" data-choice="even">Чётное ×1.9</button>
+                <button class="prediction-option" data-choice="odd">Нечётное ×1.9</button>
+                <button class="prediction-option" data-choice="zero">Ноль ×36</button>
+            </div>
+
+            <button id="spinButton" class="btn btn-primary full-width">Крутить колесо</button>
+            <div id="rouletteHistory" class="roulette-history"></div>
+        </div>
+
+        <!-- 3. МОНЕТКА -->
+        <div id="game-coin" class="game-view card hidden">
+            <div class="coin-stage">
+                <div id="coin" class="coin">
+                    <div class="coin-face coin-heads">ОРЁЛ</div>
+                    <div class="coin-face coin-tails">РЕШКА</div>
+                </div>
+            </div>
+
+            <div id="coinStatus" class="status-text">Выбери сторону и сумму ставки</div>
+            <div class="predictions-grid">
+                <button class="prediction-option" data-coin="heads">Орёл ×1.9</button>
+                <button class="prediction-option" data-coin="tails">Решка ×1.9</button>
+            </div>
+
+            <button id="coinButton" class="btn btn-primary full-width">Подбросить монетку</button>
+        </div>
+
+        <!-- 4. AVIAMASTERS -->
+        <div id="game-aviamaster" class="game-view card hidden aviamaster-theme">
+            <div class="aviamaster-stage">
+                <div id="aviaMultiplier" class="avia-multiplier">×1.00</div>
+                <div id="planeContainer" class="plane-container">
+                    <span class="plane-icon">✈️</span>
+                </div>
+            </div>
+            <div id="aviaStatus" class="status-text">Сделай ставку и взлетай!</div>
+            <button id="aviaButton" class="btn btn-primary">Запустить полет</button>
+        </div>
+
+        <!-- 5. БЛЕКДЖЕК -->
+        <div id="game-blackjack" class="game-view card hidden blackjack-theme">
+            <h2>Блекджек</h2>
+            <p>Обыграй дилера, набрав 21 очко (или ближе к ним)</p>
+
+            <div class="bj-table">
+                <div class="bj-section">
+                    <div class="bj-label">Дилер (<span id="dealerScore">0</span>)</div>
+                    <div id="dealerCards" class="bj-cards">🂠 🂠</div>
+                </div>
+
+                <div id="bjStatus" class="status-text">Сделай ставку и начни игру</div>
+
+                <div class="bj-section">
+                    <div class="bj-label">Игрок (<span id="playerScore">0</span>)</div>
+                    <div id="playerCards" class="bj-cards">🂠 🂠</div>
+                </div>
+            </div>
+
+            <div class="bj-controls">
+                <button id="bjDealButton" class="btn btn-primary full-width">Раздать карты</button>
+                <div id="bjActionButtons" class="bj-action-grid hidden">
+                    <button id="bjHitButton" class="btn btn-secondary">Ещё</button>
+                    <button id="bjDoubleButton" class="btn btn-secondary">Удвоить</button>
+                    <button id="bjStandButton" class="btn btn-primary">Хватит</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ПЕРЕВОДЫ -->
+        <div id="game-transfer" class="game-view card hidden">
+            <h3>Перевод байтов игроку</h3>
+            <p>Отправь средства любому пользователю по его Telegram Username</p>
+            
+            <div class="bj-section" style="margin-top: 15px;">
+                <div class="bj-label">Telegram Username получателя</div>
+                <input type="text" id="transferTargetInput" class="bet-input" placeholder="Введите @username" inputmode="text">
+            </div>
+
+            <div class="bj-section">
+                <div class="bj-label">Сумма перевода (байты)</div>
+                <input type="text" id="transferAmountInput" class="bet-input" placeholder="Сумма (мин. 1)" inputmode="decimal">
+            </div>
+
+            <button id="transferButton" class="btn btn-primary full-width" style="margin-top: 10px;">Перевести средства</button>
+            <div id="transferStatus" class="status-text" style="margin-top: 10px;"></div>
+        </div>
+
+        <!-- 6. ПРОМОКОДЫ -->
+        <div id="game-promo" class="game-view card hidden">
+            <h3>Активация промокода</h3>
+            <input type="text" id="promoInput" class="bet-input" placeholder="Введите промокод">
+            <button id="promoButton" class="btn btn-primary full-width">Активировать</button>
+            <div id="promoStatus" class="status-text"></div>
+        </div>
+
+        <!-- 7. НАСТРОЙКИ ТЕМЫ -->
+        <div id="game-settings" class="game-view card hidden">
+            <h3>🎨 Настройки темы</h3>
+            <p>Выбери любимый цвет интерфейса для своего казино:</p>
+            
+            <div class="color-picker-grid">
+                <button class="color-btn" data-color="#3b82f6" style="background: #3b82f6;" title="Синий неон"></button>
+                <button class="color-btn" data-color="#8b5cf6" style="background: #8b5cf6;" title="Фиолетовый космос"></button>
+                <button class="color-btn" data-color="#10b981" style="background: #10b981;" title="Изумрудный зелёный"></button>
+                <button class="color-btn" data-color="#f59e0b" style="background: #f59e0b;" title="Золотое солнце"></button>
+                <button class="color-btn" data-color="#ef4444" style="background: #ef4444;" title="Киберпанк красный"></button>
+                <button class="color-btn" data-color="#ec4899" style="background: #ec4899;" title="Неоновый розовый"></button>
+                <button class="color-btn" data-color="#06b6d4" style="background: #06b6d4;" title="Бирюзовый океан"></button>
+                <button class="color-btn" data-color="#84cc16" style="background: #84cc16;" title="Лаймовый свежий"></button>
+                <button class="color-btn" data-color="#6366f1" style="background: #6366f1;" title="Индиго глубокий"></button>
+                <button class="color-btn" data-color="#a855f7" style="background: #a855f7;" title="Пурпурный маг"></button>
+            </div>
+            
+            <div id="settingsStatus" class="status-text" style="margin-top: 15px;">Текущая тема применена</div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
