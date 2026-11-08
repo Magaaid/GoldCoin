@@ -1,4 +1,3 @@
-
 const tg = window.Telegram.WebApp;
 
 tg.ready();
@@ -31,7 +30,7 @@ function updateUI() {
         "Улучшение — " + formatCoins(state.upgrade_cost) + " коинов";
 }
 
-async function api(action = null, count = null) {
+async function api(action = null, extra = {}) {
     const options = {
         method: action ? "POST" : "GET",
         headers: {
@@ -41,7 +40,7 @@ async function api(action = null, count = null) {
 
     if (action) {
         options.headers["Content-Type"] = "application/json";
-        options.body = JSON.stringify({ action, count });
+        options.body = JSON.stringify({ action, ...extra });
     }
 
     const response = await fetch("/api/state", options);
@@ -79,7 +78,7 @@ async function flushQueue() {
     flushPromise = (async () => {
         while (pendingClicks > 0) {
             const count = Math.min(pendingClicks, 1000);
-            const result = await api("earn_batch", count);
+            const result = await api("earn_batch", { count });
 
             pendingClicks -= count;
             state = result;
@@ -95,7 +94,7 @@ async function flushQueue() {
 }
 
 function earn() {
-    if (!state || upgrading) return;
+    if (!state || upgrading || spinning) return;
 
     pendingClicks++;
     updateUI();
@@ -103,7 +102,7 @@ function earn() {
 }
 
 async function upgrade() {
-    if (!state || upgrading) return;
+    if (!state || upgrading || spinning) return;
 
     upgrading = true;
     upgradeButton.disabled = true;
@@ -120,7 +119,7 @@ async function upgrade() {
     }
 }
 
-// РУЛЕТКА — БЕСПЛАТНЫЙ ГЕНЕРАТОР РЕЗУЛЬТАТА
+// РУЛЕТКА
 
 const numbers = [
     0, 32, 15, 19, 4, 21, 2, 25, 17,
@@ -290,17 +289,8 @@ function showResult(number) {
     renderHistory();
 }
 
-function spin() {
-    if (spinning || !wheel || !ball) return;
-
-    spinning = true;
-    spinButton.disabled = true;
-
-    resultElement.textContent = "?";
-    messageElement.textContent = "Колесо вращается...";
-
-    const index = Math.floor(Math.random() * numbers.length);
-    const number = numbers[index];
+function animateSpin(number, onDone) {
+    const index = numbers.indexOf(number);
 
     const duration = 6500;
     const startTime = performance.now();
@@ -349,14 +339,76 @@ function spin() {
             // Верхний указатель и выбранный сектор совпадают.
             setBallPosition(0, 97);
 
-            showResult(number);
-
-            spinning = false;
-            spinButton.disabled = false;
-       checkPrediction(number); }
+            onDone();
+        }
     }
 
     requestAnimationFrame(frame);
+}
+
+async function spin() {
+    if (spinning || upgrading || !wheel || !ball || !state) return;
+
+    if (!selectedPrediction) {
+        tg.showAlert("Сначала выбери прогноз");
+        return;
+    }
+
+    if (!selectedBet) {
+        tg.showAlert("Выбери размер ставки");
+        return;
+    }
+
+    spinning = true;
+    spinButton.disabled = true;
+
+    resultElement.textContent = "?";
+    messageElement.textContent = "Колесо вращается...";
+
+    let result;
+
+    try {
+        // Сначала сохраняем накликанное, потом крутим на сервере
+        await flushQueue();
+
+        result = await api("spin", {
+            choice: selectedPrediction,
+            percent: selectedBet
+        });
+    } catch (error) {
+        tg.showAlert(error.message);
+        messageElement.textContent = "Нажми, чтобы запустить колесо";
+        spinning = false;
+        spinButton.disabled = false;
+        return;
+    }
+
+    const balanceBefore = state.balance;
+    const choiceName = predictionNames[selectedPrediction];
+
+    animateSpin(result.number, () => {
+        // Баланс обновляем только после анимации
+        state = {
+            balance: result.balance,
+            income: result.income,
+            upgrade_cost: result.upgrade_cost
+        };
+        updateUI();
+
+        showResult(result.number);
+
+        const delta = Math.abs(result.balance - balanceBefore);
+
+        predictionStatus.textContent = result.win
+            ? `Победа! ${choiceName}. Выпало ${result.number}. +${formatCoins(delta)} коинов`
+            : `Проигрыш. ${choiceName}. Выпало ${result.number}. −${formatCoins(delta)} коинов`;
+
+        selectedPrediction = null;
+        predictionButtons.forEach(item => item.classList.remove("selected"));
+
+        spinning = false;
+        spinButton.disabled = false;
+    });
 }
 
 createWheel();
@@ -382,15 +434,20 @@ earnButton.addEventListener("click", earn);
 upgradeButton.addEventListener("click", upgrade);
 
 loadGame();
-// СИСТЕМА ПРОГНОЗОВ
+
+// СИСТЕМА ПРОГНОЗОВ И СТАВОК
 
 let selectedPrediction = null;
+let selectedBet = null;
 
 const predictionStatus =
     document.getElementById("predictionStatus");
 
-const predictionOptions =
-    document.querySelectorAll(".prediction-option");
+const predictionButtons =
+    document.querySelectorAll(".prediction-option[data-choice]");
+
+const betButtons =
+    document.querySelectorAll(".prediction-option[data-bet]");
 
 const predictionMultipliers = {
     red: 1.9,
@@ -400,62 +457,57 @@ const predictionMultipliers = {
     zero: 36
 };
 
-predictionOptions.forEach(button => {
+const predictionNames = {
+    red: "Красное",
+    black: "Чёрное",
+    even: "Чётное",
+    odd: "Нечётное",
+    zero: "Ноль"
+};
+
+function updateSelectionStatus() {
+    if (!selectedPrediction) {
+        predictionStatus.textContent = "Прогноз не выбран";
+        return;
+    }
+
+    let text =
+        "Прогноз: " + predictionNames[selectedPrediction] +
+        " ×" + predictionMultipliers[selectedPrediction];
+
+    if (selectedBet) {
+        text += " · ставка " + selectedBet + "% баланса";
+    }
+
+    predictionStatus.textContent = text;
+}
+
+predictionButtons.forEach(button => {
     button.addEventListener("click", () => {
-        predictionOptions.forEach(item => {
+        if (spinning) return;
+
+        predictionButtons.forEach(item => {
             item.classList.remove("selected");
         });
 
         button.classList.add("selected");
-
         selectedPrediction = button.dataset.choice;
 
-        predictionStatus.textContent =
-            "Выбран прогноз: " +
-            button.childNodes[0].textContent.trim() +
-            " — ×" +
-            predictionMultipliers[selectedPrediction];
+        updateSelectionStatus();
     });
 });
 
-function checkPrediction(number) {
-    if (!selectedPrediction) {
-        predictionStatus.textContent =
-            "Прогноз не выбран";
-        return;
-    }
+betButtons.forEach(button => {
+    button.addEventListener("click", () => {
+        if (spinning) return;
 
-    let correct = false;
+        betButtons.forEach(item => {
+            item.classList.remove("selected");
+        });
 
-    if (selectedPrediction === "zero") {
-        correct = number === 0;
-    }
+        button.classList.add("selected");
+        selectedBet = Number(button.dataset.bet);
 
-    if (selectedPrediction === "red") {
-        correct = redNumbers.includes(number);
-    }
-
-    if (selectedPrediction === "black") {
-        correct =
-            number !== 0 &&
-            !redNumbers.includes(number);
-    }
-
-    if (selectedPrediction === "even") {
-        correct = number !== 0 && number % 2 === 0;
-    }
-
-    if (selectedPrediction === "odd") {
-        correct = number % 2 === 1;
-    }
-
-    predictionStatus.textContent = correct
-        ? "Прогноз совпал! Выпало: " + number
-        : "Прогноз не совпал. Выпало: " + number;
-
-    selectedPrediction = null;
-
-    predictionOptions.forEach(item => {
-        item.classList.remove("selected");
+        updateSelectionStatus();
     });
-}
+});
