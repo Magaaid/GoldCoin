@@ -314,3 +314,96 @@ input {
     gap: 10px;
     margin-top: 10px;
 }
+.game-tabs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 22px;
+}
+
+.tab-button {
+    background: #252d3e;
+    color: #aab1c0;
+    border: 1px solid #3b455a;
+    padding: 15px 8px;
+}
+
+.tab-button.active {
+    background: #f5c542;
+    color: #171717;
+    border-color: #f5c542;
+}
+
+.hidden {
+    display: none;
+}
+
+.bet-card,
+.coin-card {
+    background: #1c2230;
+    border: 1px solid #30394c;
+    border-radius: 20px;
+    padding: 24px;
+    margin-bottom: 22px;
+}
+
+.bet-card h2,
+.coin-card h2 {
+    color: #f5c542;
+    font-size: 26px;
+    margin-top: 0;
+}
+
+.bet-card p,
+.coin-card p {
+    color: #aeb7c9;
+}
+
+.coin-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-top: 18px;
+}
+
+.coin-stage {
+    perspective: 600px;
+    height: 130px;
+    display: grid;
+    place-items: center;
+    margin: 22px 0;
+}
+
+.coin {
+    position: relative;
+    width: 110px;
+    height: 110px;
+    transform-style: preserve-3d;
+    transition: transform 2s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+.coin-face {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    font-weight: bold;
+    font-size: 20px;
+    color: #171717;
+    background: radial-gradient(circle at 30% 30%, #ffe19a, #d6a83e);
+    border: 5px solid #b68b35;
+    box-shadow: 0 0 20px #0008;
+}
+
+.coin-face.back {
+    transform: rotateY(180deg);
+}
+
+#coinStatus {
+    min-height: 40px;
+    font-weight: bold;
+    color: white;
+}
