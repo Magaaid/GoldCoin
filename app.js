@@ -142,6 +142,7 @@ const historyElement = document.getElementById("rouletteHistory");
 
 const SEGMENT = 360 / numbers.length;
 
+// true, пока идёт любая игра (рулетка или монетка)
 let spinning = false;
 let wheelRotation = 0;
 let history = [];
@@ -438,21 +439,54 @@ upgradeButton.addEventListener("click", upgrade);
 
 loadGame();
 
-// СИСТЕМА ПРОГНОЗОВ И СТАВОК
+// ОБЩАЯ СТАВКА
+
+let betAll = false;
+
+const betInput = document.getElementById("betInput");
+
+const quickButtons =
+    document.querySelectorAll(".prediction-option[data-fraction]");
+
+// Введённые коины -> внутренние единицы баланса
+function parseBet() {
+    const raw = betInput.value.trim().replace(",", ".");
+    const coins = Number(raw);
+
+    if (!raw || !Number.isFinite(coins) || coins <= 0) return null;
+
+    return Math.round(coins * 1000000000);
+}
+
+// Ручной ввод сбрасывает режим «Всё»
+betInput.addEventListener("input", () => {
+    betAll = false;
+    quickButtons.forEach(item => item.classList.remove("selected"));
+});
+
+quickButtons.forEach(button => {
+    button.addEventListener("click", () => {
+        if (spinning || !state) return;
+
+        const fraction = Number(button.dataset.fraction);
+
+        quickButtons.forEach(item => item.classList.remove("selected"));
+        button.classList.add("selected");
+
+        betAll = fraction === 1;
+        betInput.value = formatCoins(Math.floor(state.balance * fraction));
+    });
+});
+
+// СИСТЕМА ПРОГНОЗОВ (РУЛЕТКА)
 
 let selectedPrediction = null;
-let betAll = false;
 
 const predictionStatus =
     document.getElementById("predictionStatus");
 
 const predictionButtons =
     document.querySelectorAll(".prediction-option[data-choice]");
-
-const quickButtons =
-    document.querySelectorAll(".prediction-option[data-fraction]");
-
-const betInput = document.getElementById("betInput");
 
 const predictionMultipliers = {
     red: 1.9,
@@ -469,16 +503,6 @@ const predictionNames = {
     odd: "Нечётное",
     zero: "Ноль"
 };
-
-// Введённые коины -> внутренние единицы баланса
-function parseBet() {
-    const raw = betInput.value.trim().replace(",", ".");
-    const coins = Number(raw);
-
-    if (!raw || !Number.isFinite(coins) || coins <= 0) return null;
-
-    return Math.round(coins * 1000000000);
-}
 
 function updateSelectionStatus() {
     if (!selectedPrediction) {
@@ -506,22 +530,132 @@ predictionButtons.forEach(button => {
     });
 });
 
-// Ручной ввод сбрасывает режим «Всё»
-betInput.addEventListener("input", () => {
-    betAll = false;
-    quickButtons.forEach(item => item.classList.remove("selected"));
+// МОНЕТКА
+
+let selectedCoin = null;
+let coinRotation = 0;
+
+const coinElement = document.getElementById("coin");
+const coinButton = document.getElementById("coinButton");
+const coinStatus = document.getElementById("coinStatus");
+
+const coinChoiceButtons =
+    document.querySelectorAll(".prediction-option[data-coin]");
+
+const coinNames = {
+    heads: "Орёл",
+    tails: "Решка"
+};
+
+coinChoiceButtons.forEach(button => {
+    button.addEventListener("click", () => {
+        if (spinning) return;
+
+        coinChoiceButtons.forEach(item => item.classList.remove("selected"));
+
+        button.classList.add("selected");
+        selectedCoin = button.dataset.coin;
+
+        coinStatus.textContent =
+            "Выбрано: " + coinNames[selectedCoin] + " ×1.9";
+    });
 });
 
-quickButtons.forEach(button => {
+function animateCoin(side, onDone) {
+    // Орёл — 0°, решка — 180° (по модулю 360)
+    const needed = side === "heads" ? 0 : 180;
+    const current = normalizeAngle(coinRotation);
+    const extra = normalizeAngle(needed - current);
+
+    coinRotation = coinRotation + 360 * 5 + extra;
+
+    coinElement.style.transform = `rotateY(${coinRotation}deg)`;
+
+    setTimeout(onDone, 2100);
+}
+
+async function flipCoin() {
+    if (spinning || upgrading || !state) return;
+
+    if (!selectedCoin) {
+        tg.showAlert("Сначала выбери орла или решку");
+        return;
+    }
+
+    const amount = parseBet();
+
+    if (!betAll && !amount) {
+        tg.showAlert("Введи сумму ставки");
+        return;
+    }
+
+    spinning = true;
+    coinButton.disabled = true;
+    coinStatus.textContent = "Монета в воздухе...";
+
+    let result;
+
+    try {
+        await flushQueue();
+
+        result = await api("coin", {
+            choice: selectedCoin,
+            amount: amount,
+            all: betAll
+        });
+    } catch (error) {
+        tg.showAlert(error.message);
+        coinStatus.textContent = "Выбери сторону и сумму ставки";
+        spinning = false;
+        coinButton.disabled = false;
+        return;
+    }
+
+    const balanceBefore = state.balance;
+    const choiceName = coinNames[selectedCoin];
+
+    animateCoin(result.side, () => {
+        state = {
+            balance: result.balance,
+            income: result.income,
+            upgrade_cost: result.upgrade_cost
+        };
+        updateUI();
+
+        const delta = Math.abs(result.balance - balanceBefore);
+        const sideName = coinNames[result.side];
+
+        coinStatus.textContent = result.win
+            ? `Победа! Выпал ${sideName}. +${formatCoins(delta)} коинов`
+            : `Проигрыш. Выпал ${sideName} (ты ставил на ${choiceName.toLowerCase()}). −${formatCoins(delta)} коинов`;
+
+        selectedCoin = null;
+        coinChoiceButtons.forEach(item => item.classList.remove("selected"));
+
+        spinning = false;
+        coinButton.disabled = false;
+    });
+}
+
+coinButton.addEventListener("click", flipCoin);
+
+// ВКЛАДКИ ИГР
+
+const tabButtons = document.querySelectorAll(".tab-button");
+const gameViews = document.querySelectorAll(".game-view");
+
+tabButtons.forEach(button => {
     button.addEventListener("click", () => {
-        if (spinning || !state) return;
+        if (spinning) return;
 
-        const fraction = Number(button.dataset.fraction);
+        tabButtons.forEach(item => item.classList.remove("active"));
+        button.classList.add("active");
 
-        quickButtons.forEach(item => item.classList.remove("selected"));
-        button.classList.add("selected");
-
-        betAll = fraction === 1;
-        betInput.value = formatCoins(Math.floor(state.balance * fraction));
+        gameViews.forEach(view => {
+            view.classList.toggle(
+                "hidden",
+                view.id !== "game-" + button.dataset.game
+            );
+        });
     });
 });
