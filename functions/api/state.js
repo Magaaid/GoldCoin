@@ -1,4 +1,4 @@
-function response(data, status = 200) {
+Function response(data, status = 200) {
     return new Response(JSON.stringify(data), {
         status,
         headers: {
@@ -44,7 +44,7 @@ async function verifyTelegram(initData, botToken) {
 
 async function authenticate(request, env) {
     const initData = request.headers.get("X-Telegram-Init-Data");
-    if (!env.BOT_TOKEN) return { user: { id: "test_user" } };
+    if (!env.BOT_TOKEN) return { user: { id: "test_user", username: "test_user" } };
 
     try {
         const user = await verifyTelegram(initData, env.BOT_TOKEN);
@@ -60,6 +60,7 @@ async function ensureTables(db) {
         await db.exec(`
             CREATE TABLE IF NOT EXISTS users (
                 telegram_id TEXT PRIMARY KEY,
+                username TEXT,
                 balance REAL DEFAULT 0,
                 income REAL DEFAULT 0.5,
                 upgrade_cost REAL DEFAULT 1024
@@ -74,21 +75,29 @@ async function ensureTables(db) {
                 PRIMARY KEY (telegram_id, code)
             );
         `);
+        // Добавляем колонку username для старых баз данных, если её ещё нет
+        await db.prepare(`ALTER TABLE users ADD COLUMN username TEXT`).run().catch(() => {});
+
         await db.prepare(`INSERT OR IGNORE INTO promos (code, reward) VALUES ('ZEUS', 10000000000000)`).run();
         await db.prepare(`INSERT OR IGNORE INTO promos (code, reward) VALUES ('BONUS', 5000000000000)`).run();
     } catch (e) {}
 }
 
-async function getUser(env, id) {
+async function getUser(env, authUser) {
     if (!env.DB) throw new Error("База данных D1 не привязана!");
     await ensureTables(env.DB);
 
-    const strId = String(id);
-    let user = await env.DB.prepare(`SELECT balance, income, upgrade_cost FROM users WHERE telegram_id = ?`).bind(strId).first();
+    const strId = String(authUser.id);
+    const username = authUser.username ? String(authUser.username).toLowerCase() : null;
+
+    let user = await env.DB.prepare(`SELECT balance, income, upgrade_cost, username FROM users WHERE telegram_id = ?`).bind(strId).first();
 
     if (!user) {
-        await env.DB.prepare(`INSERT INTO users (telegram_id, balance, income, upgrade_cost) VALUES (?, 0, 0.5, 1024)`).bind(strId).run();
-        user = { balance: 0, income: 0.5, upgrade_cost: 1024 };
+        await env.DB.prepare(`INSERT INTO users (telegram_id, username, balance, income, upgrade_cost) VALUES (?, ?, 0, 0.5, 1024)`).bind(strId, username).run();
+        user = { balance: 0, income: 0.5, upgrade_cost: 1024, username };
+    } else if (username && user.username !== username) {
+        // Обновляем юзернейм в базе, если он поменялся в Telegram
+        await env.DB.prepare(`UPDATE users SET username = ? WHERE telegram_id = ?`).bind(username, strId).run();
     }
     return user;
 }
@@ -117,12 +126,10 @@ function isWin(choice, number) {
     }
 }
 
-// СУЩЕСТВЕННО СНИЖЕННЫЕ ШАНСЫ НА МНОЖИТЕЛИ ЗЕВСА (высокая волатильность)
 function getRandomZeusMultiplier(isBonus = false) {
     const rand = Math.random();
     const chanceMultiplier = isBonus ? 1.2 : 1;
 
-    // 85% шансов, что в спинах вообще не будет множителя (пустой удар)
     if (rand < 0.85 / chanceMultiplier) return 0;
     if (rand < 0.93) return 2;
     if (rand < 0.97) return 5;
@@ -133,10 +140,9 @@ function getRandomZeusMultiplier(isBonus = false) {
     return 500;
 }
 
-// СТРОГИЙ ГЕНЕРАТОР СИМВОЛОВ (меньше совпадений от 8 штук)
 function getRandomSymbol() {
     const rand = Math.random();
-    if (rand < 0.01) return 10; // Скаттеры выпадают крайне редко
+    if (rand < 0.01) return 10;
     if (rand < 0.06) return 9;
     if (rand < 0.15) return 8;
     if (rand < 0.30) return 7;
@@ -165,7 +171,6 @@ function calculateSingleSpin(isBonus = false) {
     let baseWinMult = 0;
     for (const [sym, count] of Object.entries(counts)) {
         const s = Number(sym);
-        // Требуется строго от 8 символов, но коэффициенты уменьшены для жесткой дисперсии
         if (s !== 10 && count >= 8) {
             let mult = 0.25;
             if (s >= 9) mult = 6;
@@ -185,7 +190,7 @@ export async function onRequestGet({ request, env }) {
     try {
         const auth = await authenticate(request, env);
         if (auth.error) return response({ error: auth.error }, 401);
-        const user = await getUser(env, auth.user.id);
+        const user = await getUser(env, auth.user);
         return response(user);
     } catch (error) {
         return response({ error: error.message }, 500);
@@ -199,7 +204,7 @@ export async function onRequestPost({ request, env }) {
 
         const body = await request.json();
         const id = String(auth.user.id);
-        const currentUser = await getUser(env, id);
+        const currentUser = await getUser(env, auth.user);
 
         if (body.action === "earn_batch") {
             const count = Number(body.count);
@@ -207,7 +212,7 @@ export async function onRequestPost({ request, env }) {
                 return response({ error: "Invalid click count" }, 400);
             }
             await env.DB.prepare(`UPDATE users SET balance = balance + income * ? WHERE telegram_id = ?`).bind(count, id).run();
-            const updated = await getUser(env, id);
+            const updated = await getUser(env, auth.user);
             return response(updated);
 
         } else if (body.action === "upgrade") {
@@ -218,7 +223,7 @@ export async function onRequestPost({ request, env }) {
                 UPDATE users SET balance = balance - upgrade_cost, income = income * 2, upgrade_cost = upgrade_cost * 2
                 WHERE telegram_id = ?
             `).bind(id).run();
-            const updated = await getUser(env, id);
+            const updated = await getUser(env, auth.user);
             return response(updated);
 
         } else if (body.action === "spin") {
@@ -232,7 +237,7 @@ export async function onRequestPost({ request, env }) {
             const delta = win ? amount * (MULTIPLIERS[choice] - 1) : -amount;
 
             await env.DB.prepare(`UPDATE users SET balance = balance + ? WHERE telegram_id = ?`).bind(delta, id).run();
-            const updated = await getUser(env, id);
+            const updated = await getUser(env, auth.user);
             return response({ ...updated, number, win });
 
         } else if (body.action === "coin") {
@@ -246,7 +251,7 @@ export async function onRequestPost({ request, env }) {
             const delta = win ? amount * (COIN_MULTIPLIER - 1) : -amount;
 
             await env.DB.prepare(`UPDATE users SET balance = balance + ? WHERE telegram_id = ?`).bind(delta, id).run();
-            const updated = await getUser(env, id);
+            const updated = await getUser(env, auth.user);
             return response({ ...updated, side, win });
 
         } else if (body.action === "slot") {
@@ -279,7 +284,6 @@ export async function onRequestPost({ request, env }) {
                         finalMultiplier += spin.baseWin * Math.max(1, globalMultiplierAccumulator);
                     }
                 }
-                // Часто бонуска будет давать ноль или минимальный утешительный коэффициент
                 if (finalMultiplier < 0.5) finalMultiplier = 0;
             } else {
                 const spin = calculateSingleSpin(false);
@@ -295,7 +299,7 @@ export async function onRequestPost({ request, env }) {
             const delta = winAmount - totalCost;
 
             await env.DB.prepare(`UPDATE users SET balance = balance + ? WHERE telegram_id = ?`).bind(delta, id).run();
-            const updated = await getUser(env, id);
+            const updated = await getUser(env, auth.user);
 
             return response({
                 ...updated,
@@ -319,8 +323,61 @@ export async function onRequestPost({ request, env }) {
             await env.DB.prepare(`INSERT INTO used_promos (telegram_id, code) VALUES (?, ?)`).bind(id, code).run();
             await env.DB.prepare(`UPDATE users SET balance = balance + ? WHERE telegram_id = ?`).bind(promo.reward, id).run();
 
-            const updated = await getUser(env, id);
+            const updated = await getUser(env, auth.user);
             return response(updated);
+
+        // ==========================================
+        // ЛОГИКА ПЕРЕВОДОВ ПО ЮЗЕРНЕЙМУ
+        // ==========================================
+        } else if (body.action === "transfer") {
+            const { targetUsername, amount } = body;
+            const senderTelegramId = id;
+            const senderUsername = (auth.user.username || "").toLowerCase();
+
+            if (!targetUsername || !amount || amount <= 0) {
+                return response({ error: "Неверные данные для перевода" }, 400);
+            }
+
+            if (senderUsername && senderUsername === targetUsername.toLowerCase()) {
+                return response({ error: "Нельзя переводить средства самому себе" }, 400);
+            }
+
+            try {
+                // 1. Ищем получателя в базе по юзернейму
+                const recipient = await env.DB.prepare("SELECT telegram_id FROM users WHERE LOWER(username) = ?")
+                    .bind(targetUsername.toLowerCase())
+                    .first();
+
+                if (!recipient) {
+                    return response({ error: "Игрок с таким юзернеймом не найден в базе (он должен хотя бы раз открыть игру)" }, 400);
+                }
+
+                const recipientTelegramId = recipient.telegram_id;
+
+                if (String(senderTelegramId) === String(recipientTelegramId)) {
+                    return response({ error: "Нельзя переводить средства самому себе" }, 400);
+                }
+
+                // 2. Выполняем атомарный перевод средств через транзакцию D1
+                await env.DB.batch([
+                    env.DB.prepare("UPDATE users SET balance = balance - ? WHERE telegram_id = ? AND balance >= ?")
+                        .bind(amount, senderTelegramId, amount),
+                    env.DB.prepare("UPDATE users SET balance = balance + ? WHERE telegram_id = ?")
+                        .bind(amount, recipientTelegramId)
+                ]);
+
+                // 3. Получаем свежий баланс отправителя
+                const updatedSender = await getUser(env, auth.user);
+
+                return response({
+                    balance: updatedSender.balance,
+                    income: updatedSender.income,
+                    upgrade_cost: updatedSender.upgrade_cost
+                });
+
+            } catch (err) {
+                return response({ error: "Ошибка перевода (недостаточно средств или сбой базы данных)" }, 400);
+            }
 
         } else {
             return response({ error: "Unknown action" }, 400);
