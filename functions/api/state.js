@@ -1,4 +1,3 @@
-
 function response(data, status = 200) {
     return new Response(JSON.stringify(data), {
         status,
@@ -113,6 +112,47 @@ async function getUser(env, id) {
     `).bind(String(id)).first();
 }
 
+// ---------- РУЛЕТКА (всё считается на сервере) ----------
+
+const RED_NUMBERS = [
+    1, 3, 5, 7, 9, 12, 14, 16, 18,
+    19, 21, 23, 25, 27, 30, 32, 34, 36
+];
+
+const MULTIPLIERS = {
+    red: 1.9,
+    black: 1.9,
+    even: 1.9,
+    odd: 1.9,
+    zero: 36
+};
+
+// Ставка — доля от текущего баланса
+const ALLOWED_PERCENTS = [10, 25, 50, 100];
+
+// Честное случайное число 0..36 без перекоса
+function randomRouletteNumber() {
+    const buf = new Uint32Array(1);
+    const limit = Math.floor(0x100000000 / 37) * 37;
+
+    do {
+        crypto.getRandomValues(buf);
+    } while (buf[0] >= limit);
+
+    return buf[0] % 37;
+}
+
+function isWin(choice, number) {
+    switch (choice) {
+        case "zero": return number === 0;
+        case "red": return RED_NUMBERS.includes(number);
+        case "black": return number !== 0 && !RED_NUMBERS.includes(number);
+        case "even": return number !== 0 && number % 2 === 0;
+        case "odd": return number % 2 === 1;
+        default: return false;
+    }
+}
+
 export async function onRequestGet({ request, env }) {
     try {
         if (!env.DB) {
@@ -182,6 +222,51 @@ export async function onRequestPost({ request, env }) {
             if (result.meta.changes === 0) {
                 return response({ error: "Недостаточно коинов" }, 400);
             }
+
+        } else if (body.action === "spin") {
+            const choice = String(body.choice);
+            const percent = Number(body.percent);
+
+            if (!(choice in MULTIPLIERS)) {
+                return response({ error: "Неизвестный прогноз" }, 400);
+            }
+
+            if (!ALLOWED_PERCENTS.includes(percent)) {
+                return response({ error: "Неверная ставка" }, 400);
+            }
+
+            const fraction = percent / 100;
+            const multiplier = MULTIPLIERS[choice];
+
+            const number = randomRouletteNumber();
+            const win = isWin(choice, number);
+
+            // Одна атомарная операция:
+            // выигрыш  -> баланс + ставка * (множитель - 1)
+            // проигрыш -> баланс - ставка
+            const result = await env.DB.prepare(`
+                UPDATE users
+                SET balance = balance + CASE
+                    WHEN ? = 1 THEN balance * ? * ?
+                    ELSE -balance * ?
+                END
+                WHERE telegram_id = ?
+                AND balance > 0
+            `).bind(
+                win ? 1 : 0,
+                fraction,
+                multiplier - 1,
+                fraction,
+                id
+            ).run();
+
+            if (result.meta.changes === 0) {
+                return response({ error: "Недостаточно коинов" }, 400);
+            }
+
+            const user = await getUser(env, id);
+
+            return response({ ...user, number, win });
 
         } else {
             return response({ error: "Unknown action" }, 400);
