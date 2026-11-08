@@ -1,4 +1,3 @@
-
 * {
     box-sizing: border-box;
     -webkit-tap-highlight-color: transparent;
@@ -12,6 +11,7 @@ body {
     color: white;
     font-family: Arial, sans-serif;
     touch-action: manipulation;
+    padding: 12px;
 }
 
 .app {
@@ -224,6 +224,7 @@ button:active {
     gap: 8px;
     color: #aab1c0;
 }
+
 .prediction-card {
     margin-top: 25px;
     padding: 20px;
@@ -286,6 +287,7 @@ button:active {
     font-weight: bold;
     color: white;
 }
+
 input {
     user-select: text;
     -webkit-user-select: text;
@@ -314,10 +316,11 @@ input {
     gap: 10px;
     margin-top: 10px;
 }
+
 .game-tabs {
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
     margin-bottom: 22px;
 }
 
@@ -325,7 +328,8 @@ input {
     background: #252d3e;
     color: #aab1c0;
     border: 1px solid #3b455a;
-    padding: 15px 8px;
+    padding: 12px 6px;
+    font-size: 13px;
 }
 
 .tab-button.active {
@@ -407,72 +411,8 @@ input {
     font-weight: bold;
     color: white;
 }
-/* Стили для вкладок (теперь 3 штуки в ряд) */
-.game-tabs {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 10px;
-    margin-bottom: 22px;
-}
 
-/* Стили для сетки слотов (Gates of Olympus) */
-.slot-grid {
-    display: grid;
-    grid-template-columns: repeat(6, 1fr);
-    gap: 8px;
-    background: #10131c;
-    padding: 12px;
-    border-radius: 16px;
-    border: 1px solid #30394c;
-    margin: 20px 0;
-}
-
-.slot-cell {
-    aspect-ratio: 1;
-    background: #252d3e;
-    border: 1px solid #3b455a;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 24px;
-    border-radius: 10px;
-    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
-    transition: transform 0.2s ease;
-}
-
-.slot-cell:hover {
-    transform: scale(1.05);
-}
-
-#slotStatus {
-    min-height: 40px;
-    font-weight: bold;
-    color: white;
-    margin: 15px 0;
-    font-size: 15px;
-}
-/* Стили слотов Gates of Olympus с бонуской */
-.slot-card-main {
-    background: linear-gradient(135deg, #1c2230 0%, #2a1f10 100%);
-    border: 1px solid #d6a83e;
-}
-
-.slot-header-flex {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.zeus-badge {
-    background: #f5c542;
-    color: #171717;
-    font-weight: bold;
-    padding: 6px 12px;
-    border-radius: 8px;
-    font-size: 14px;
-    box-shadow: 0 0 10px rgba(245, 197, 66, 0.5);
-}
-
+/* Стили сетки слотов (Gates of Olympus) */
 .slot-grid {
     display: grid;
     grid-template-columns: repeat(6, 1fr);
@@ -514,6 +454,35 @@ input {
     100% { transform: scale(1.08); box-shadow: 0 0 12px #ff525b; }
 }
 
+#slotStatus {
+    min-height: 40px;
+    font-weight: bold;
+    color: white;
+    margin: 15px 0;
+    font-size: 15px;
+}
+
+.slot-card-main {
+    background: linear-gradient(135deg, #1c2230 0%, #2a1f10 100%);
+    border: 1px solid #d6a83e;
+}
+
+.slot-header-flex {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.zeus-badge {
+    background: #f5c542;
+    color: #171717;
+    font-weight: bold;
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 14px;
+    box-shadow: 0 0 10px rgba(245, 197, 66, 0.5);
+}
+
 .slot-buttons-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -534,6 +503,7 @@ input {
     opacity: 0.5;
     cursor: not-allowed;
 }
+
 /* Стили для блока промокодов */
 .promo-card {
     background: #191e2b;
@@ -557,7 +527,8 @@ input {
     font-weight: bold;
     min-height: 20px;
 }
-/* Общий фон экрана слотов в стиле Олимпа */
+
+/* Тема Олимпа и анимация каскада */
 .olympus-theme {
     background: radial-gradient(circle at 50% 20%, #4c1d95 0%, #2e1065 45%, #0f172a 100%);
     border-radius: 20px;
@@ -568,447 +539,16 @@ input {
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
 }
 
-/* Шапка с логотипом и множителем */
-.olympus-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 12px;
-}
-
-.olympus-logo {
-    display: flex;
-    flex-direction: column;
-    line-height: 1;
-}
-
-.logo-small {
-    font-size: 10px;
-    letter-spacing: 2px;
-    color: #fde047;
-    font-weight: 700;
-}
-
-.logo-main {
-    font-size: 22px;
-    font-weight: 900;
-    letter-spacing: 1px;
-    background: linear-gradient(180deg, #fef08a 0%, #eab308 60%, #a16207 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.8));
-}
-
-.zeus-badge {
-    background: rgba(15, 23, 42, 0.85);
-    border: 1.5px solid #eab308;
-    color: #fde047;
-    padding: 6px 14px;
-    border-radius: 20px;
-    font-weight: 800;
-    font-size: 14px;
-    box-shadow: 0 0 12px rgba(234, 179, 8, 0.35);
-}
-
-/* Массивная золотая рамка вокруг поля */
-.olympus-frame {
-    padding: 6px;
-    border-radius: 16px;
-    background: linear-gradient(135deg, #fef08a 0%, #ca8a04 35%, #854d0e 65%, #eab308 100%);
-    box-shadow: 0 0 25px rgba(234, 179, 8, 0.3), inset 0 0 8px rgba(0, 0, 0, 0.6);
-    margin-bottom: 12px;
-}
-
-.olympus-grid {
-    display: grid;
-    grid-template-columns: repeat(6, 1fr);
-    gap: 5px;
-    background: linear-gradient(180deg, rgba(30, 27, 75, 0.92) 0%, rgba(15, 23, 42, 0.96) 100%);
-    padding: 8px;
-    border-radius: 11px;
-    box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.85);
-}
-
-/* Ячейки с драгоценностями */
-.slot-cell {
-    aspect-ratio: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 24px;
-    background: radial-gradient(circle, rgba(255, 255, 255, 0.07) 0%, rgba(0, 0, 0, 0.25) 100%);
-    border-radius: 8px;
-    border: 1px solid rgba(255, 255, 255, 0.05);
-    text-shadow: 0 0 10px rgba(255, 255, 255, 0.4);
-    transition: transform 0.15s ease;
-}
-
-.slot-cell.high-cell {
-    background: radial-gradient(circle, rgba(234, 179, 8, 0.18) 0%, rgba(0, 0, 0, 0.35) 100%);
-    border-color: rgba(234, 179, 8, 0.35);
-    text-shadow: 0 0 12px rgba(250, 204, 21, 0.7);
-}
-
-.slot-cell.scatter-cell {
-    background: radial-gradient(circle, rgba(250, 204, 21, 0.4) 0%, rgba(161, 98, 7, 0.6) 100%);
-    border: 1px solid #fef08a;
-    box-shadow: 0 0 14px rgba(250, 204, 21, 0.8);
-    animation: scatterPulse 1.2s infinite alternate;
-}
-
-@keyframes scatterPulse {
-    0% { transform: scale(1); }
-    100% { transform: scale(1.06); }
-}
-
-/* Плашка статуса ("Удачи!") */
-.olympus-status {
-    background: linear-gradient(90deg, rgba(30, 27, 75, 0.9) 0%, rgba(49, 46, 129, 0.95) 50%, rgba(30, 27, 75, 0.9) 100%);
-    border: 1px solid rgba(139, 92, 246, 0.35);
-    border-radius: 12px;
-    padding: 10px 12px;
-    text-align: center;
-    font-weight: 700;
-    font-size: 14px;
-    color: #fff;
-    margin-bottom: 12px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
-}
-
-/* Нижняя панель управления */
-.olympus-controls {
-    background: rgba(15, 23, 42, 0.75);
-    backdrop-filter: blur(8px);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 16px;
-    padding: 12px;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-}
-
-/* Бордовая кнопка покупки бонуски */
-.olympus-bonus-btn {
-    width: 100%;
-    padding: 12px;
-    border-radius: 12px;
-    border: 1px solid rgba(248, 113, 113, 0.4);
-    background: linear-gradient(180deg, #991b1b 0%, #450a0a 100%);
-    color: #fff;
-    font-weight: 800;
-    font-size: 14px;
-    cursor: pointer;
-    box-shadow: 0 4px 15px rgba(153, 27, 27, 0.4);
-    transition: transform 0.1s ease, filter 0.15s ease;
-}
-
-.olympus-bonus-btn:active {
-    transform: scale(0.98);
-    filter: brightness(1.1);
-}
-
-.olympus-bottom-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-}
-
-.olympus-bet-box {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-}
-
-.bet-label {
-    font-size: 10px;
-    color: #94a3b8;
-    font-weight: 700;
-    letter-spacing: 0.5px;
-    text-align: center;
-}
-
-.bet-input-wrap input {
-    width: 100%;
-    background: rgba(2, 6, 23, 0.8);
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    border-radius: 10px;
-    padding: 10px;
-    color: #fff;
-    font-size: 16px;
-    font-weight: 800;
-    text-align: center;
-    outline: none;
-    box-sizing: border-box;
-}
-
-/* Большая круглая золотая кнопка SPIN */
-.olympus-spin-btn {
-    width: 76px;
-    height: 76px;
-    border-radius: 50%;
-    border: 3px solid #fef08a;
-    background: radial-gradient(circle at 30% 30%, #fde047 0%, #ca8a04 65%, #713f12 100%);
-    color: #1e1b4b;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    box-shadow: 0 0 20px rgba(234, 179, 8, 0.5), inset 0 2px 5px rgba(255, 255, 255, 0.6);
-    flex-shrink: 0;
-    transition: transform 0.1s ease;
-}
-
-.olympus-spin-btn:active {
-    transform: scale(0.93);
-}
-
-.olympus-spin-btn:disabled,
-.olympus-bonus-btn:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-}
-
-.spin-icon {
-    font-size: 24px;
-    font-weight: 900;
-    line-height: 1;
-}
-
-.spin-text {
-    font-size: 11px;
-    font-weight: 900;
-    letter-spacing: 1px;
-}
-/* Карточка баланса */
-.header-card {
-    background: linear-gradient(135deg, #1e1b4b 0%, #0f172a 100%);
-    border: 1px solid rgba(234, 179, 8, 0.3);
-    border-radius: 16px;
-    padding: 16px;
-    text-align: center;
-    margin-bottom: 12px;
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
-}
-
-.balance-label {
-    font-size: 12px;
-    color: #94a3b8;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    margin-bottom: 4px;
-}
-
-.balance-value {
-    font-size: 22px;
-    font-weight: 900;
-    color: #fef08a;
-    margin-bottom: 12px;
-    text-shadow: 0 0 10px rgba(234, 179, 8, 0.4);
-}
-
-/* Кнопки кликера и улучшений */
-.clicker-actions {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-
-.btn {
-    width: 100%;
-    padding: 12px;
-    border-radius: 12px;
-    font-weight: 800;
-    font-size: 14px;
-    cursor: pointer;
-    border: none;
-    transition: transform 0.1s ease, filter 0.15s ease;
-}
-
-.btn:active {
-    transform: scale(0.98);
-}
-
-.btn-primary {
-    background: linear-gradient(135deg, #ca8a04 0%, #a16207 100%);
-    color: #fff;
-    border: 1px solid #fef08a;
-    box-shadow: 0 4px 12px rgba(202, 138, 4, 0.4);
-}
-
-.btn-secondary {
-    background: rgba(30, 41, 59, 0.9);
-    color: #cbd5e1;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-/* Блок ставки */
-.bet-card {
-    background: rgba(15, 23, 42, 0.85);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 16px;
-    padding: 12px 16px;
-    margin-bottom: 12px;
-}
-
-.bet-header {
-    font-size: 11px;
-    color: #94a3b8;
-    font-weight: 700;
-    margin-bottom: 6px;
-    text-align: center;
-}
-
-.bet-input {
-    width: 100%;
-    background: rgba(2, 6, 23, 0.9);
-    border: 1px solid rgba(234, 179, 8, 0.3);
-    border-radius: 10px;
-    padding: 10px;
-    color: #fff;
-    font-size: 16px;
-    font-weight: 800;
-    text-align: center;
-    outline: none;
-    box-sizing: border-box;
-    margin-bottom: 8px;
-}
-
-.quick-bets {
-    display: flex;
-    gap: 6px;
-}
-
-.quick-bets .prediction-option {
-    flex: 1;
-    background: rgba(30, 41, 59, 0.8);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 8px;
-    padding: 8px;
-    color: #cbd5e1;
-    font-weight: 700;
-    font-size: 12px;
-    cursor: pointer;
-    text-align: center;
-}
-
-.quick-bets .prediction-option.selected {
-    background: #ca8a04;
-    color: #fff;
-    border-color: #fef08a;
-}
-/* Контейнер рулетки */
-.wheel-frame {
-    position: relative;
-    width: 280px;
-    height: 280px;
-    max-width: 100%;
-    aspect-ratio: 1 / 1;
-    margin: 0 auto 16px auto;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #fef08a 0%, #ca8a04 50%, #854d0e 100%);
-    padding: 8px;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6), 0 0 20px rgba(234, 179, 8, 0.4);
-    box-sizing: border-box;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-/* Само колесо */
-.wheel {
-    width: 100%;
-    height: 100%;
-    border-radius: 50%;
-    position: relative;
-    overflow: hidden;
-    box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.8);
-    transition: transform 0.1s cubic-bezier(0.15, 0.85, 0.35, 1);
-}
-
-/* Указатель сверху колеса */
-.wheel-frame::after {
-    content: '';
-    position: absolute;
-    top: 2px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 0;
-    height: 0;
-    border-left: 8px solid transparent;
-    border-right: 8px solid transparent;
-    border-top: 14px solid #fff;
-    z-index: 10;
-    filter: drop-shadow(0 2px 3px rgba(0,0,0,0.8));
-}
-/* Контейнер сцены для монетки */
-.coin-stage {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    perspective: 1000px;
-    margin: 20px 0;
-    height: 100px;
-}
-
-/* Сама монетка */
-.coin {
-    width: 90px;
-    height: 90px;
-    position: relative;
-    transform-style: preserve-3d;
-    transition: transform 2s cubic-bezier(0.15, 0.85, 0.35, 1);
-    border-radius: 50%;
-    box-shadow: 0 0 20px rgba(234, 179, 8, 0.4);
-}
-
-/* Стороны монеты */
-.coin-face {
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 900;
-    font-size: 14px;
-    backface-visibility: hidden;
-    border: 3px solid #fef08a;
-    box-sizing: border-box;
-    text-shadow: 0 1px 2px rgba(0,0,0,0.6);
-}
-
-.coin-heads {
-    background: linear-gradient(135deg, #fde047 0%, #ca8a04 100%);
-    color: #1e1b4b;
-}
-
-.coin-tails {
-    background: linear-gradient(135deg, #cbd5e1 0%, #475569 100%);
-    color: #fff;
-    transform: rotateY(180deg);
-}
-/* Греческий орнамент (меандр) на золотой рамке */
 .olympus-frame {
     background-image: 
         repeating-linear-gradient(90deg, rgba(113, 63, 18, 0.35) 0px, rgba(113, 63, 18, 0.35) 4px, transparent 4px, transparent 10px),
         linear-gradient(135deg, #fef08a 0%, #ca8a04 35%, #854d0e 65%, #eab308 100%);
     padding: 8px;
     border: 1px solid #fef08a;
+    border-radius: 16px;
+    margin-bottom: 12px;
 }
 
-/* Глубокий закатный фон Олимпа с облаками */
-.olympus-theme {
-    background: 
-        radial-gradient(circle at 80% 10%, rgba(251, 146, 60, 0.25) 0%, transparent 45%),
-        radial-gradient(circle at 20% 80%, rgba(168, 85, 247, 0.25) 0%, transparent 50%),
-        linear-gradient(180deg, #2e1065 0%, #4c1d95 45%, #1e1b4b 100%);
-}
-
-/* Анимация падения каждого символа сверху */
 @keyframes symbolDrop {
     0% {
         transform: translateY(-35px) scale(0.85);
@@ -1028,7 +568,6 @@ input {
     animation: symbolDrop 0.28s cubic-bezier(0.22, 1, 0.36, 1) backwards;
 }
 
-/* Вспышка рамки при выпадении множителя Зевса */
 @keyframes zeusFlash {
     0%, 100% { box-shadow: 0 0 25px rgba(234, 179, 8, 0.3); }
     40% { box-shadow: 0 0 60px #fef08a, inset 0 0 35px #fde047; filter: brightness(1.35); }
@@ -1036,4 +575,41 @@ input {
 
 .olympus-frame.zeus-flash {
     animation: zeusFlash 0.6s ease-out;
+}
+
+/* AVIAMASTERS СТИЛИ */
+.aviamaster-theme {
+    background: linear-gradient(180deg, #0f172a 0%, #1e1b4b 50%, #312e81 100%);
+    border: 1px solid rgba(56, 189, 248, 0.3);
+    border-radius: 20px;
+    padding: 20px;
+    margin-bottom: 22px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
+}
+
+.aviamaster-stage {
+    position: relative;
+    height: 180px;
+    background: radial-gradient(circle at center, rgba(56, 189, 248, 0.15) 0%, rgba(15, 23, 42, 0.8) 100%);
+    border-radius: 14px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 16px;
+    overflow: hidden;
+    border: 1px solid rgba(56, 189, 248, 0.2);
+}
+
+.avia-multiplier {
+    font-size: 38px;
+    font-weight: 900;
+    color: #38bdf8;
+    text-shadow: 0 0 15px rgba(56, 189, 248, 0.6);
+    margin-bottom: 8px;
+}
+
+.plane-container {
+    font-size: 42px;
+    transition: transform 0.1s linear;
 }
