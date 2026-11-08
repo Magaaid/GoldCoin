@@ -101,14 +101,12 @@ body {
 
 .tabs {
     display: flex;
+    flex-wrap: wrap; /* Разрешаем вкладкам переноситься на новую строку */
     gap: 6px;
-    overflow-x: auto;
     padding: 4px;
-    -webkit-overflow-scrolling: touch;
     flex-shrink: 0;
-    scrollbar-width: none;
+scrollbar-width: none;
 }
-
 .tabs::-webkit-scrollbar {
     display: none;
 }
