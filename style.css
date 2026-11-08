@@ -1,4 +1,6 @@
-
+:root {
+    --accent-color: #8b5cf6;
+}
 * {
     box-sizing: border-box;
     -webkit-tap-highlight-color: transparent;
@@ -1093,4 +1095,39 @@ input {
 .color-btn.active-color {
     border-color: white;
     transform: scale(1.15);
+}
+/* Применение выбранного цвета интерфейса */
+:root {
+    --accent-color: #8b5cf6;
+}
+
+.earn-button,
+.spin-button,
+.tab-button.active,
+.roulette-card h2,
+.roulette-card h3,
+.roulette-result,
+.balance,
+.balance-value,
+.bet-card h2,
+.coin-card h2,
+h1 {
+    color: var(--accent-color);
+}
+
+.earn-button,
+.spin-button,
+.tab-button.active,
+.btn-primary {
+    background: var(--accent-color);
+    border-color: var(--accent-color);
+}
+
+.bet-input:focus {
+    border-color: var(--accent-color);
+}
+
+.color-btn.active-color {
+    outline: 2px solid var(--accent-color);
+    outline-offset: 3px;
 }
