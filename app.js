@@ -1128,3 +1128,35 @@ colorButtons.forEach(button => {
 // Загружаем сохраненную тему при старте игры
 const savedTheme = localStorage.getItem("gcoin_theme_color") || "#8b5cf6"; // По умолчанию фиолетовый
 setThemeColor(savedTheme);
+// --- НАСТРОЙКИ ТЕМЫ И ЦВЕТОВ ---
+const colorButtons = document.querySelectorAll(".color-btn");
+const settingsStatus = document.getElementById("settingsStatus");
+
+function setThemeColor(color) {
+    document.documentElement.style.setProperty("--accent-color", color);
+    
+    colorButtons.forEach(btn => {
+        if (btn.dataset.color === color) {
+            btn.classList.add("active-color");
+        } else {
+            btn.classList.remove("active-color");
+        }
+    });
+
+    localStorage.setItem("gcoin_theme_color", color);
+}
+
+colorButtons.forEach(button => {
+    button.addEventListener("click", () => {
+        const color = button.dataset.color;
+        setThemeColor(color);
+        if (settingsStatus) {
+            settingsStatus.textContent = `🎨 Тема успешно изменена!`;
+            settingsStatus.style.color = color;
+        }
+    });
+});
+
+const savedTheme = localStorage.getItem("gcoin_theme_color") || "#8b5cf6";
+setThemeColor(savedTheme);
+
