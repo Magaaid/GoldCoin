@@ -23,11 +23,40 @@
         <section class="upgrade-card">
             <h2>Улучшение</h2>
             <p>Увеличивает доход за нажатие в 2 раза</p>
-            <button id="upgradeButton">Улучшение — 0,000001024 коинов</button>
+            <button id="upgradeButton">
+                Улучшение — 0,000001024 коинов
+            </button>
+        </section>
+
+        <section class="roulette-card">
+            <h2>РУЛЕТКА</h2>
+            <p>Попробуй угадать выпавшее число</p>
+
+            <div class="roulette-wheel">
+                <div class="wheel-pointer">▼</div>
+                <div id="wheel" class="wheel">
+                    <div id="ball" class="ball"></div>
+                    <div class="wheel-center">GC</div>
+                </div>
+            </div>
+
+            <div class="roulette-result" id="rouletteResult">
+                ?
+            </div>
+
+            <p id="rouletteMessage">Нажми, чтобы запустить колесо</p>
+
+            <button id="spinButton" class="spin-button">
+                КРУТИТЬ
+            </button>
+
+            <h3>История результатов</h3>
+            <div id="rouletteHistory" class="roulette-history">
+                Пока пусто
+            </div>
         </section>
     </main>
 
     <script src="app.js"></script>
 </body>
 </html>
-
