@@ -494,7 +494,7 @@ async function flipCoin() {
 }
 if (coinButton) coinButton.addEventListener("click", flipCoin);
 
-// СЛОТЫ И БОНУСКА (С КАСКАДНЫМ ПАДЕНИЕМ СЛОВАМИ ПО КОЛОНКАМ И ВСПЫШКОЙ ЗЕВСА)
+// СЛОТЫ И БОНУСКА (ЧИСТОЕ ПЛАВНОЕ ПАДЕНИЕ ПО КОЛОНКАМ С 1 ПО 6)
 const slotGridElement = document.getElementById("slotGrid");
 const slotButton = document.getElementById("slotButton");
 const slotStatus = document.getElementById("slotStatus");
@@ -517,8 +517,8 @@ function renderSlotGrid(grid, animate = true) {
             cell.className = "slot-cell";
             if (animate) {
                 cell.classList.add("animate-drop");
-                // Падение строго по колонкам слева направо (1-я, 2-я, 3-я...)
-                cell.style.animationDelay = `${cIndex * 55}ms`;
+                // Плавная задержка строго по вертикальным колонкам слева направо (с 1 по 6)
+                cell.style.animationDelay = `${cIndex * 70}ms`;
             }
             if (sym === 10) cell.classList.add("scatter-cell");
             if (sym >= 8) cell.classList.add("high-cell");
@@ -562,7 +562,7 @@ async function requestSlotSpin(isBonus = false) {
                 Array.from({ length: 5 }, () =>
                     Array.from({ length: 6 }, () => Math.floor(Math.random() * 9) + 1)
                 ),
-                true
+                false
             );
 
             currentSpin++;
@@ -609,10 +609,10 @@ async function requestSlotSpin(isBonus = false) {
                 Array.from({ length: 5 }, () =>
                     Array.from({ length: 6 }, () => Math.floor(Math.random() * 9) + 1)
                 ),
-                true
+                false
             );
             counter++;
-            if (counter > 14) {
+            if (counter > 10) {
                 clearInterval(interval);
                 renderSlotGrid(result.grid, true);
 
@@ -639,7 +639,7 @@ async function requestSlotSpin(isBonus = false) {
                 slotButton.disabled = false;
                 buyBonusButton.disabled = false;
             }
-        }, 100);
+        }, 80);
     }
 }
 
