@@ -1092,3 +1092,39 @@ if (bjDealButton) bjDealButton.addEventListener("click", startBlackjack);
 if (bjHitButton) bjHitButton.addEventListener("click", hitBlackjack);
 if (bjStandButton) bjStandButton.addEventListener("click", standBlackjack);
 if (bjDoubleButton) bjDoubleButton.addEventListener("click", doubleDownBlackjack);
+// --- НАСТРОЙКИ ТЕМЫ И ЦВЕТОВ ---
+const colorButtons = document.querySelectorAll(".color-btn");
+const settingsStatus = document.getElementById("settingsStatus");
+
+function setThemeColor(color) {
+    // Устанавливаем корневую CSS-переменную для акцентов
+    document.documentElement.style.setProperty("--accent-color", color);
+    
+    // Подсветка активной кнопки в настройках
+    colorButtons.forEach(btn => {
+        if (btn.dataset.color === color) {
+            btn.classList.add("active-color");
+        } else {
+            btn.classList.remove("active-color");
+        }
+    });
+
+    // Сохраняем в localStorage
+    localStorage.setItem("gcoin_theme_color", color);
+}
+
+// Привязываем клики к кнопкам выбора цвета
+colorButtons.forEach(button => {
+    button.addEventListener("click", () => {
+        const color = button.dataset.color;
+        setThemeColor(color);
+        if (settingsStatus) {
+            settingsStatus.textContent = `🎨 Тема успешно изменена!`;
+            settingsStatus.style.color = color;
+        }
+    });
+});
+
+// Загружаем сохраненную тему при старте игры
+const savedTheme = localStorage.getItem("gcoin_theme_color") || "#8b5cf6"; // По умолчанию фиолетовый
+setThemeColor(savedTheme);
