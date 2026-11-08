@@ -22,12 +22,11 @@ function updateUI() {
 
     balanceElement.textContent =
         formatCoins(state.balance + pendingClicks * state.income) +
-        " коинов";
+        " байтов";
 
     earnButton.textContent = "+" + formatCoins(state.income);
-
     upgradeButton.textContent =
-        "Улучшение — " + formatCoins(state.upgrade_cost) + " коинов";
+        "Улучшение — " + formatCoins(state.upgrade_cost) + " байтов";
 }
 
 async function api(action = null, extra = {}) {
@@ -55,7 +54,6 @@ async function api(action = null, extra = {}) {
 
 function scheduleFlush() {
     if (flushTimer) clearTimeout(flushTimer);
-
     flushTimer = setTimeout(() => {
         flushQueue().catch(error => {
             tg.showAlert("Ошибка сохранения: " + error.message);
@@ -79,7 +77,6 @@ async function flushQueue() {
         while (pendingClicks > 0) {
             const count = Math.min(pendingClicks, 1000);
             const result = await api("earn_batch", { count });
-
             pendingClicks -= count;
             state = result;
             updateUI();
@@ -95,7 +92,6 @@ async function flushQueue() {
 
 function earn() {
     if (!state || upgrading || spinning) return;
-
     pendingClicks++;
     updateUI();
     scheduleFlush();
@@ -103,7 +99,6 @@ function earn() {
 
 async function upgrade() {
     if (!state || upgrading || spinning) return;
-
     upgrading = true;
     upgradeButton.disabled = true;
 
@@ -120,18 +115,13 @@ async function upgrade() {
 }
 
 // РУЛЕТКА
-
 const numbers = [
     0, 32, 15, 19, 4, 21, 2, 25, 17,
     34, 6, 27, 13, 36, 11, 30, 8, 23,
     10, 5, 24, 16, 33, 1, 20, 14, 31,
     9, 22, 18, 29, 7, 28, 12, 35, 3, 26
 ];
-
-const redNumbers = [
-    1, 3, 5, 7, 9, 12, 14, 16, 18,
-    19, 21, 23, 25, 27, 30, 32, 34, 36
-];
+const redNumbers = [1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36];
 
 const wheel = document.getElementById("wheel");
 const ball = document.getElementById("ball");
@@ -141,7 +131,6 @@ const messageElement = document.getElementById("rouletteMessage");
 const historyElement = document.getElementById("rouletteHistory");
 
 const SEGMENT = 360 / numbers.length;
-
 let spinning = false;
 let wheelRotation = 0;
 let history = [];
@@ -166,9 +155,7 @@ function getColorHex(number) {
 function updateLabels(rotation) {
     labels.forEach(label => {
         const angle = Number(label.dataset.angle);
-        label.style.transform =
-            `rotate(${angle}deg) translateY(-108px) ` +
-            `rotate(${-angle - rotation}deg)`;
+        label.style.transform = `rotate(${angle}deg) translateY(-108px) rotate(${-angle - rotation}deg)`;
     });
 }
 
@@ -255,13 +242,8 @@ function renderHistory() {
 function showResult(number) {
     const color = getColor(number);
     resultElement.textContent = number;
-    resultElement.style.color =
-        color === "red" ? "#ff525b" :
-        color === "green" ? "#39d98a" : "white";
-
-    messageElement.textContent =
-        color === "green" ? "Зелёное" :
-        color === "red" ? "Красное" : "Чёрное";
+    resultElement.style.color = color === "red" ? "#ff525b" : color === "green" ? "#39d98a" : "white";
+    messageElement.textContent = color === "green" ? "Зелёное" : color === "red" ? "Красное" : "Чёрное";
 
     history.unshift({ number });
     history = history.slice(0, 12);
@@ -300,13 +282,11 @@ function animateSpin(number, onDone) {
             onDone();
         }
     }
-
     requestAnimationFrame(frame);
 }
 
 async function spin() {
     if (spinning || upgrading || !wheel || !ball || !state) return;
-
     if (!selectedPrediction) {
         tg.showAlert("Сначала выбери прогноз");
         return;
@@ -314,7 +294,7 @@ async function spin() {
 
     const amount = parseBet();
     if (!betAll && !amount) {
-        tg.showAlert("Введи сумму ставки");
+        tg.showAlert("Введи сумму ставки (мин. 100 байтов)");
         return;
     }
 
@@ -326,11 +306,7 @@ async function spin() {
     let result;
     try {
         await flushQueue();
-        result = await api("spin", {
-            choice: selectedPrediction,
-            amount: amount,
-            all: betAll
-        });
+        result = await api("spin", { choice: selectedPrediction, amount: amount, all: betAll });
     } catch (error) {
         tg.showAlert(error.message);
         messageElement.textContent = "Нажми, чтобы запустить колесо";
@@ -343,18 +319,14 @@ async function spin() {
     const choiceName = predictionNames[selectedPrediction];
 
     animateSpin(result.number, () => {
-        state = {
-            balance: result.balance,
-            income: result.income,
-            upgrade_cost: result.upgrade_cost
-        };
+        state = { balance: result.balance, income: result.income, upgrade_cost: result.upgrade_cost };
         updateUI();
         showResult(result.number);
 
         const delta = Math.abs(result.balance - balanceBefore);
         predictionStatus.textContent = result.win
-            ? `Победа! ${choiceName}. Выпало ${result.number}. +${formatCoins(delta)} коинов`
-            : `Проигрыш. ${choiceName}. Выпало ${result.number}. −${formatCoins(delta)} коинов`;
+            ? `Победа! ${choiceName}. Выпало ${result.number}. +${formatCoins(delta)} байтов`
+            : `Проигрыш. ${choiceName}. Выпало ${result.number}. −${formatCoins(delta)} байтов`;
 
         selectedPrediction = null;
         predictionButtons.forEach(item => item.classList.remove("selected"));
@@ -368,9 +340,7 @@ if (spinButton) spinButton.addEventListener("click", spin);
 
 async function loadGame() {
     try {
-        if (!tg.initData) {
-            throw new Error("Открой игру через Telegram");
-        }
+        if (!tg.initData) throw new Error("Открой игру через Telegram");
         state = await api();
         updateUI();
     } catch (error) {
@@ -383,7 +353,6 @@ upgradeButton.addEventListener("click", upgrade);
 loadGame();
 
 // СТАВКА
-
 let betAll = false;
 const betInput = document.getElementById("betInput");
 const quickButtons = document.querySelectorAll(".prediction-option[data-fraction]");
@@ -391,7 +360,7 @@ const quickButtons = document.querySelectorAll(".prediction-option[data-fraction
 function parseBet() {
     const raw = betInput.value.trim().replace(",", ".");
     const coins = Number(raw);
-    if (!raw || !Number.isFinite(coins) || coins <= 0) return null;
+    if (!raw || !Number.isFinite(coins) || coins < 0.0000001) return null;
     return Math.round(coins * 1000000000);
 }
 
@@ -412,26 +381,11 @@ quickButtons.forEach(button => {
 });
 
 // ПРОГНОЗЫ РУЛЕТКИ
-
 let selectedPrediction = null;
 const predictionStatus = document.getElementById("predictionStatus");
 const predictionButtons = document.querySelectorAll(".prediction-option[data-choice]");
-
-const predictionMultipliers = {
-    red: 1.9,
-    black: 1.9,
-    even: 1.9,
-    odd: 1.9,
-    zero: 36
-};
-
-const predictionNames = {
-    red: "Красное",
-    black: "Чёрное",
-    even: "Чётное",
-    odd: "Нечётное",
-    zero: "Ноль"
-};
+const predictionMultipliers = { red: 1.9, black: 1.9, even: 1.9, odd: 1.9, zero: 36 };
+const predictionNames = { red: "Красное", black: "Чёрное", even: "Чётное", odd: "Нечётное", zero: "Ноль" };
 
 predictionButtons.forEach(button => {
     button.addEventListener("click", () => {
@@ -444,7 +398,6 @@ predictionButtons.forEach(button => {
 });
 
 // МОНЕТКА
-
 let selectedCoin = null;
 let coinRotation = 0;
 const coinElement = document.getElementById("coin");
@@ -481,7 +434,7 @@ async function flipCoin() {
 
     const amount = parseBet();
     if (!betAll && !amount) {
-        tg.showAlert("Введи сумму ставки");
+        tg.showAlert("Введи сумму ставки (мин. 100 байтов)");
         return;
     }
 
@@ -492,11 +445,7 @@ async function flipCoin() {
     let result;
     try {
         await flushQueue();
-        result = await api("coin", {
-            choice: selectedCoin,
-            amount: amount,
-            all: betAll
-        });
+        result = await api("coin", { choice: selectedCoin, amount: amount, all: betAll });
     } catch (error) {
         tg.showAlert(error.message);
         coinStatus.textContent = "Выбери сторону и сумму ставки";
@@ -509,19 +458,15 @@ async function flipCoin() {
     const choiceName = coinNames[selectedCoin];
 
     animateCoin(result.side, () => {
-        state = {
-            balance: result.balance,
-            income: result.income,
-            upgrade_cost: result.upgrade_cost
-        };
+        state = { balance: result.balance, income: result.income, upgrade_cost: result.upgrade_cost };
         updateUI();
 
         const delta = Math.abs(result.balance - balanceBefore);
         const sideName = coinNames[result.side];
 
         coinStatus.textContent = result.win
-            ? `Победа! Выпал ${sideName}. +${formatCoins(delta)} коинов`
-            : `Проигрыш. Выпал ${sideName} (ты ставил на ${choiceName.toLowerCase()}). −${formatCoins(delta)} коинов`;
+            ? `Победа! Выпал ${sideName}. +${formatCoins(delta)} байтов`
+            : `Проигрыш. Выпал ${sideName} (ты ставил на ${choiceName.toLowerCase()}). −${formatCoins(delta)} байтов`;
 
         selectedCoin = null;
         coinChoiceButtons.forEach(item => item.classList.remove("selected"));
@@ -529,18 +474,27 @@ async function flipCoin() {
         coinButton.disabled = false;
     });
 }
-
 if (coinButton) coinButton.addEventListener("click", flipCoin);
 
-// СЛОТЫ (GATES OF OLYMPUS)
-
+// СЛОТЫ И БОНУСЫ (GATES OF OLYMPUS REALISTIC)
 const slotGridElement = document.getElementById("slotGrid");
 const slotButton = document.getElementById("slotButton");
+const buyBonusButton = document.getElementById("buyBonusButton");
 const slotStatus = document.getElementById("slotStatus");
+const zeusBadge = document.getElementById("zeusMultiplierBadge");
 
-const symbolEmojis = {
-    1: "🟦", 2: "🟩", 3: "🟨", 4: "🟧", 5: "🟪",
-    6: "🏆", 7: "💍", 8: "⏳", 9: "👑", 10: "⚡"
+// Тематические иконки (сокровища Олимпа)
+const symbolData = {
+    1: { icon: "💎", name: "Синий кристалл" },
+    2: { icon: "🟢", name: "Зеленый кристалл" },
+    3: { icon: "🟡", name: "Желтый кристалл" },
+    4: { icon: "🟠", name: "Оранжевый кристалл" },
+    5: { icon: "🟣", name: "Фиолетовый кристалл" },
+    6: { icon: "🏆", name: "Золотая чаша" },
+    7: { icon: "💍", name: "Рубиновое кольцо" },
+    8: { icon: "⏳", name: "Песочные часы" },
+    9: { icon: "👑", name: "Золотая корона" },
+    10: { icon: "⚡", name: "Зевс (Scatter)" }
 };
 
 function renderSlotGrid(grid) {
@@ -551,42 +505,59 @@ function renderSlotGrid(grid) {
         row.forEach(sym => {
             const cell = document.createElement("div");
             cell.className = "slot-cell";
-            cell.textContent = symbolEmojis[sym] || "💎";
+            if (sym === 10) cell.classList.add("scatter-cell");
+            if (sym >= 8) cell.classList.add("high-cell");
+            
+            cell.textContent = symbolData[sym]?.icon || "💎";
             slotGridElement.appendChild(cell);
         });
     });
 }
 
-async function playSlots() {
+async function requestSlotSpin(isBonus = false) {
     if (spinning || upgrading || !state) return;
 
-    const amount = parseBet();
-    if (!betAll && !amount) {
-        tg.showAlert("Введи сумму ставки");
+    let amount = parseBet();
+    if (betAll) {
+        amount = state.balance;
+    }
+
+    if (isBonus) {
+        // Стоимость бонуски — ровно в 100 раз больше текущей ставки (или мин. 100 байтов)
+        amount = Math.max(100, (amount || 1000) * 100);
+        if (amount > 10000000000) {
+            tg.showAlert("Максимальная стоимость бонуски — 10 000 000 байтов");
+            return;
+        }
+    }
+
+    if (!amount || amount < 100) {
+        tg.showAlert("Минимальная ставка или стоимость бонуски — 100 байтов");
         return;
     }
 
     spinning = true;
     slotButton.disabled = true;
-    slotStatus.textContent = "Зевс взмахивает посохом...";
+    buyBonusButton.disabled = true;
+    slotStatus.textContent = isBonus ? "🎁 Зевс активирует бонусные фриспины!" : "⚡ Молния Зевса бьет по барабанам...";
+    zeusBadge.textContent = "⚡ ×1";
 
     let result;
     try {
         await flushQueue();
-        result = await api("slot", {
-            amount: amount,
-            all: betAll
-        });
+        result = await api("slot", { amount: amount, all: betAll, isBonus: isBonus });
     } catch (error) {
         tg.showAlert(error.message);
         slotStatus.textContent = "Ошибка запуска слотов";
         spinning = false;
         slotButton.disabled = false;
+        buyBonusButton.disabled = false;
         return;
     }
 
     const balanceBefore = state.balance;
 
+    // Анимация падения символов (каскад)
     let counter = 0;
     const interval = setInterval(() => {
         renderSlotGrid(
@@ -595,59 +566,55 @@ async function playSlots() {
             )
         );
         counter++;
-        if (counter > 10) {
+        if (counter > 12) {
             clearInterval(interval);
             renderSlotGrid(result.grid);
 
-            state = {
-                balance: result.balance,
-                income: result.income,
-                upgrade_cost: result.upgrade_cost
-            };
+            state = { balance: result.balance, income: result.income, upgrade_cost: result.upgrade_cost };
             updateUI();
 
             const delta = Math.abs(result.balance - balanceBefore);
+            if (result.zeus > 0) {
+                zeusBadge.textContent = `⚡ ×${result.zeus}`;
+            }
 
             if (result.win) {
-                slotStatus.textContent = `⚡ Победа! Множитель ×${result.slotMultiplier}! +${formatCoins(delta)} коинов`;
+                slotStatus.textContent = isBonus
+                    ? `🎉 БОНУСКА ОКУПИЛАСЬ! Множитель ×${result.slotMultiplier}! Выигрыш: +${formatCoins(delta)} байтов`
+                    : `⚡ Победа! Множитель ×${result.slotMultiplier}! +${formatCoins(delta)} байтов`;
             } else {
-                slotStatus.textContent = `Эфир пуст. Попробуй еще раз! −${formatCoins(amount || state.balance)} коинов`;
+                slotStatus.textContent = `Манна богов исчерпана. Попробуй еще! −${formatCoins(amount)} байтов`;
             }
 
             spinning = false;
             slotButton.disabled = false;
+            buyBonusButton.disabled = false;
         }
-    }, 100);
+    }, 90);
 }
 
-if (slotButton) {
-    slotButton.addEventListener("click", playSlots);
-}
+if (slotButton) slotButton.addEventListener("click", () => requestSlotSpin(false));
+if (buyBonusButton) buyBonusButton.addEventListener("click", () => requestSlotSpin(true));
 
-// Первичная отрисовка пустой сетки слотов при загрузке
+// Первичная отрисовка сетки
 renderSlotGrid(
     Array.from({ length: 5 }, () =>
         Array.from({ length: 6 }, () => Math.floor(Math.random() * 9) + 1)
     )
 );
 
-// ВКЛАДКИ ИГР
-
+// ВКЛАДКИ
 const tabButtons = document.querySelectorAll(".tab-button");
 const gameViews = document.querySelectorAll(".game-view");
 
 tabButtons.forEach(button => {
     button.addEventListener("click", () => {
         if (spinning) return;
-
         tabButtons.forEach(item => item.classList.remove("active"));
         button.classList.add("active");
 
         gameViews.forEach(view => {
-            view.classList.toggle(
-                "hidden",
-                view.id !== "game-" + button.dataset.game
-            );
+            view.classList.toggle("hidden", view.id !== "game-" + button.dataset.game);
         });
     });
 });
