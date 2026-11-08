@@ -1255,3 +1255,13 @@ h1 {
     display: inline-block;
     margin-left: 8px;
 }
+/* Жесткое центрирование и фиксация шрифта для любых ячеек с иксами */
+.slot-cell.multiplier-orb,
+.slot-cell.multiplier-orb * {
+    font-size: 15px !important; /* Укажи свой размер шрифта, который везде используется */
+    line-height: 1 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    box-sizing: border-box !important;
+}
