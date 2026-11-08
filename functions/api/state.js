@@ -1,4 +1,3 @@
-
 function response(data, status = 200) {
     return new Response(JSON.stringify(data), {
         status,
@@ -10,13 +9,19 @@ function response(data, status = 200) {
 }
 
 export async function onRequestGet({ env }) {
-    return response({
-        bindings: Object.keys(env)
-    });
-}
+    try {
+        const result = await env.DB.prepare(
+            "SELECT 1 AS test"
+        ).first();
 
-export async function onRequestPost({ env }) {
-    return response({
-        bindings: Object.keys(env)
-    });
+        return response({
+            success: true,
+            database: result
+        });
+    } catch (error) {
+        return response({
+            success: false,
+            error: error.message
+        }, 500);
+    }
 }
