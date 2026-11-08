@@ -1486,5 +1486,103 @@ input {
     50% { filter: brightness(1.9) drop-shadow(0 0 30px #fbbf24); box-shadow: 0 0 50px #fbbf24, inset 0 0 30px #fbbf24; }
     100% { filter: brightness(1); box-shadow: 0 12px 35px rgba(0,0,0,0.8); }
 }
+/* --- 3D РЕАЛИСТИЧНЫЙ AVIAMASTERS --- */
+
+/* 1. Глобальный 3D-контейнер игры */
+.aviamaster-theme {
+    background: radial-gradient(circle at center, #0c1b33 0%, #030712 100%) !important;
+    border: 2px solid #0ea5e9;
+    box-shadow: inset 0 0 35px rgba(14, 165, 233, 0.25), 0 20px 40px rgba(0, 0, 0, 0.85);
+    border-radius: 20px;
+    perspective: 1000px;
+}
+
+/* 2. Объемная летная сцена с перспективой */
+.aviamaster-stage {
+    position: relative;
+    background: linear-gradient(180deg, rgba(2, 6, 23, 0.9) 0%, rgba(15, 23, 42, 0.95) 100%);
+    border: 3px solid #38bdf8;
+    box-shadow: 
+        inset 0 0 30px rgba(14, 165, 233, 0.3),
+        0 10px 25px rgba(0, 0, 0, 0.7);
+    border-radius: 16px;
+    height: 180px;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transform-style: preserve-3d;
+}
+
+/* 3. Эффект движения неба / облаков на фоне */
+.aviamaster-stage::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: 
+        radial-gradient(circle, rgba(255, 255, 255, 0.15) 1px, transparent 1px),
+        radial-gradient(circle, rgba(56, 189, 248, 0.1) 2px, transparent 2px);
+    background-size: 40px 40px, 80px 80px;
+    background-position: 0 0, 20px 20px;
+    animation: flightClouds 4s linear infinite;
+    opacity: 0.6;
+}
+
+@keyframes flightClouds {
+    0% { background-position: 0 0, 0 0; }
+    100% { background-position: -80px 0, -160px 0; }
+}
+
+/* 4. 3D Контейнер самолета с глубокой тенью и наклоном */
+.plane-container {
+    position: relative;
+    z-index: 3;
+    transition: transform 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    transform-style: preserve-3d;
+}
+
+/* 5. Реалистичная иконка самолета с объемным свечением */
+.plane-icon {
+    font-size: 46px;
+    display: inline-block;
+    filter: drop-shadow(0 8px 12px rgba(14, 165, 233, 0.6)) drop-shadow(0 0 20px rgba(56, 189, 248, 0.4));
+    animation: planeFloat 2s ease-in-out infinite alternate;
+}
+
+@keyframes planeFloat {
+    0% { transform: translateY(-4px) rotate(-3deg) scale(0.98); }
+    100% { transform: translateY(6px) rotate(4deg) scale(1.02); }
+}
+
+/* 6. Крупный 3D-множитель по центру полета */
+.avia-multiplier {
+    position: absolute;
+    top: 15px;
+    left: 50%;
+    transform: translateX(-50%) translateZ(30px);
+    font-size: 36px;
+    font-weight: 900;
+    color: #38bdf8;
+    text-shadow: 0 0 20px rgba(56, 189, 248, 0.8), 0 4px 8px rgba(0, 0, 0, 0.9);
+    letter-spacing: 2px;
+    z-index: 4;
+}
+
+/* 7. Статус полета и кнопка запуска в стиле киберпанк/неон */
+#aviaButton {
+    background: linear-gradient(135deg, #0ea5e9 0%, #0369a1 100%) !important;
+    color: #ffffff !important;
+    border: 1px solid #7dd3fc !important;
+    box-shadow: 0 6px 20px rgba(14, 165, 233, 0.45) !important;
+    font-size: 16px;
+    letter-spacing: 1px;
+    margin-top: 15px;
+    width: 100%;
+}
+
+#aviaButton:hover:not(:disabled) {
+    box-shadow: 0 8px 25px rgba(14, 165, 233, 0.7) !important;
+    transform: translateY(-2px);
+}
 
 
