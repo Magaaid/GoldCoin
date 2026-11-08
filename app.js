@@ -556,19 +556,28 @@ async function requestSlotSpin(isBonus = false) {
         slotStatus.textContent = `🎁 БОНУСКА АКТИВИРОВАНА! Спин 1 из 15...`;
         zeusBadge.textContent = `⚡ ×1`;
 
-        const bonusInterval = setInterval(() => {
-            renderSlotGrid(
-                Array.from({ length: 5 }, () =>
-                    Array.from({ length: 6 }, () => Math.floor(Math.random() * 9) + 1)
-                ),
-                false
-            );
-
-            currentSpin++;
+        // Плавная имитация бонусных вращений
+        const runBonusSpin = () => {
             if (currentSpin <= 15) {
                 slotStatus.textContent = `🎁 Бесплатное вращение ${currentSpin} из 15...`;
+                
+                let steps = 0;
+                const innerInterval = setInterval(() => {
+                    renderSlotGrid(
+                        Array.from({ length: 5 }, () =>
+                            Array.from({ length: 6 }, () => Math.floor(Math.random() * 9) + 1)
+                        ),
+                        false
+                    );
+                    steps++;
+                    if (steps > 6) {
+                        clearInterval(innerInterval);
+                        currentSpin++;
+                        setTimeout(runBonusSpin, 250);
+                    }
+                }, 70);
+
             } else {
-                clearInterval(bonusInterval);
                 renderSlotGrid(result.grid, true);
 
                 state = { balance: result.balance, income: result.income, upgrade_cost: result.upgrade_cost };
@@ -598,12 +607,18 @@ async function requestSlotSpin(isBonus = false) {
                 slotButton.disabled = false;
                 buyBonusButton.disabled = false;
             }
-        }, 300);
+        };
+
+        runBonusSpin();
 
     } else {
         slotStatus.textContent = `⚡ Барабаны крутятся...`;
+        
+        let delay = 50;
         let counter = 0;
-        const interval = setInterval(() => {
+        const totalSteps = 25;
+
+        const stepSpin = () => {
             renderSlotGrid(
                 Array.from({ length: 5 }, () =>
                     Array.from({ length: 6 }, () => Math.floor(Math.random() * 9) + 1)
@@ -611,8 +626,11 @@ async function requestSlotSpin(isBonus = false) {
                 false
             );
             counter++;
-            if (counter > 10) {
-                clearInterval(interval);
+
+            if (counter < totalSteps) {
+                delay += 15;
+                setTimeout(stepSpin, delay);
+            } else {
                 renderSlotGrid(result.grid, true);
 
                 state = { balance: result.balance, income: result.income, upgrade_cost: result.upgrade_cost };
@@ -638,7 +656,9 @@ async function requestSlotSpin(isBonus = false) {
                 slotButton.disabled = false;
                 buyBonusButton.disabled = false;
             }
-        }, 80);
+        };
+
+        stepSpin();
     }
 }
 
