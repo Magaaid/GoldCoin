@@ -24,6 +24,7 @@
             <button class="tab-button active" data-game="slot">⚡ Слоты</button>
             <button class="tab-button" data-game="roulette">🎡 Рулетка</button>
             <button class="tab-button" data-game="coin">🪙 Монетка</button>
+            <button class="tab-button" data-game="aviamaster">✈️ Aviamasters</button>
             <button class="tab-button" data-game="promo">🎁 Промо</button>
         </nav>
 
@@ -110,7 +111,19 @@
             <button id="coinButton" class="btn btn-primary full-width">Подбросить монетку</button>
         </div>
 
-        <!-- 4. ПРОМОКОДЫ -->
+        <!-- 4. AVIAMASTERS -->
+        <div id="game-aviamaster" class="game-view card hidden aviamaster-theme">
+            <div class="aviamaster-stage">
+                <div id="aviaMultiplier" class="avia-multiplier">×1.00</div>
+                <div id="planeContainer" class="plane-container">
+                    <span class="plane-icon">✈️</span>
+                </div>
+            </div>
+            <div id="aviaStatus" class="status-text">Сделай ставку и взлетай!</div>
+            <button id="aviaButton" class="btn btn-primary">Запустить полет</button>
+        </div>
+
+        <!-- 5. ПРОМОКОДЫ -->
         <div id="game-promo" class="game-view card hidden">
             <h3>Активация промокода</h3>
             <input type="text" id="promoInput" class="bet-input" placeholder="Введите промокод">
