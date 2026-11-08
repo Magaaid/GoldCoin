@@ -1351,5 +1351,39 @@ input {
 #aviaButton:hover:not(:disabled) {
     box-shadow: 0 6px 20px rgba(14, 165, 233, 0.55);
 }
+/* --- ПЕРЕКЛЮЧЕНИЕ НА ЖЁЛТО-ЗОЛОТУЮ ПАЛИТРУ --- */
+
+/* Главные кнопки (.btn) — теперь жёлто-золотые */
+.btn {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important;
+    color: #000000 !important; /* Тёмный текст для контраста */
+    box-shadow: 0 4px 15px rgba(245, 158, 11, 0.4) !important;
+}
+.btn:hover:not(:disabled) {
+    box-shadow: 0 6px 20px rgba(245, 158, 11, 0.6) !important;
+}
+
+/* Активные вкладки и выбранные пункты */
+.tab-button.active, 
+.prediction-option.selected {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important;
+    color: #000000 !important;
+    border-color: #fbbf24 !important;
+    box-shadow: 0 4px 14px rgba(245, 158, 11, 0.4) !important;
+}
+
+/* Кнопка запуска Aviamasters */
+#aviaButton {
+    background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%) !important;
+    color: #000000 !important;
+    box-shadow: 0 4px 15px rgba(251, 191, 36, 0.4) !important;
+}
+
+/* Кнопка промокода */
+#promoButton {
+    background: linear-gradient(135deg, #facc15 0%, #eab308 100%) !important;
+    color: #000000 !important;
+    box-shadow: 0 4px 15px rgba(250, 204, 21, 0.4) !important;
+}
 
 
