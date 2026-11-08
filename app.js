@@ -1129,29 +1129,3 @@ colorButtons.forEach(button => {
 
 const savedTheme = localStorage.getItem("gcoin_theme_color") || "#8b5cf6";
 setThemeColor(savedTheme);
-// Жёсткая принудительная инициализация вкладок и настроек (защита от сбоев)
-document.addEventListener("DOMContentLoaded", () => {
-    const tabButtons = document.querySelectorAll(".tab-button");
-    const gameViews = document.querySelectorAll(".game-view");
-
-    tabButtons.forEach(button => {
-        button.addEventListener("click", () => {
-            const targetGame = button.dataset.game;
-            if (!targetGame) return;
-
-            // Переключаем активный класс у кнопок
-            tabButtons.forEach(item => item.classList.remove("active"));
-            button.classList.add("active");
-
-            // Показываем нужный блок, скрываем остальные
-            gameViews.forEach(view => {
-                if (view.id === "game-" + targetGame) {
-                    view.classList.remove("hidden");
-                } else {
-                    view.classList.add("hidden");
-                }
-            });
-        });
-    });
-});
-
