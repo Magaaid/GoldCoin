@@ -74,7 +74,39 @@ async function authenticate(request, env) {
     }
 }
 
+async function initDatabase(env) {
+    await env.DB.prepare(`
+        CREATE TABLE IF NOT EXISTS users (
+            telegram_id TEXT PRIMARY KEY,
+            balance REAL DEFAULT 0,
+            income REAL DEFAULT 0.5,
+            upgrade_cost REAL DEFAULT 1024
+        )
+    `).run();
+
+    await env.DB.prepare(`
+        CREATE TABLE IF NOT EXISTS promos (
+            code TEXT PRIMARY KEY,
+            reward REAL NOT NULL
+        )
+    `).run();
+
+    await env.DB.prepare(`
+        CREATE TABLE IF NOT EXISTS used_promos (
+            telegram_id TEXT,
+            code TEXT,
+            PRIMARY KEY (telegram_id, code)
+        )
+    `).run();
+
+    // Добавим дефолтные промокоды при инициализации (например, ZEUS на 10 000 байтов и BONUS на 5 000 байтов)
+    await env.DB.prepare(`INSERT OR IGNORE INTO promos (code, reward) VALUES ('ZEUS', 10000000000000)`).run();
+    await env.DB.prepare(`INSERT OR IGNORE INTO promos (code, reward) VALUES ('BONUS', 5000000000000)`).run();
+}
+
 async function getUser(env, id) {
+    await initDatabase(env);
+
     await env.DB.prepare(`
         INSERT OR IGNORE INTO users
         (telegram_id, balance, income, upgrade_cost)
@@ -113,7 +145,7 @@ function isWin(choice, number) {
     }
 }
 
-// СЛОТЫ И БОНУСКИ (Gates of Olympus)
+// СЛОТЫ
 const MULTIFIER_VALUES = [2, 3, 4, 5, 10, 15, 20, 25, 50, 100, 500];
 
 function getRandomSymbol(forceScatter = false) {
@@ -121,12 +153,12 @@ function getRandomSymbol(forceScatter = false) {
     crypto.getRandomValues(buf);
     const rand = buf[0] / 0x100000000;
 
-    if (forceScatter || rand < 0.04) return 10; // Scatter (Зевс)
-    if (rand < 0.14) return 9;  // Корона
-    if (rand < 0.27) return 8;  // Песочные часы
-    if (rand < 0.42) return 7;  // Кольцо
-    if (rand < 0.58) return 6;  // Чаша
-    const lowSymbols = [1, 2, 3, 4, 5]; // Драгоценные камни
+    if (forceScatter || rand < 0.04) return 10;
+    if (rand < 0.14) return 9;
+    if (rand < 0.27) return 8;
+    if (rand < 0.42) return 7;
+    if (rand < 0.58) return 6;
+    const lowSymbols = [1, 2, 3, 4, 5];
     return lowSymbols[Math.floor(rand * lowSymbols.length) % lowSymbols.length];
 }
 
@@ -134,8 +166,6 @@ function spinSlotsGrid(isBonus = false) {
     const rows = 5;
     const cols = 6;
     let grid = [];
-    
-    // Если это бонусная игра, гарантированно подкидываем от 4 до 6 скаттеров (10)
     let scatterCountToForce = isBonus ? (4 + Math.floor(Math.random() * 3)) : 0;
     
     for (let r = 0; r < rows; r++) {
@@ -151,16 +181,11 @@ function spinSlotsGrid(isBonus = false) {
         grid.push(row);
     }
     
-    // Подсчет совпадений ( Pay Anywhere от 8 штук )
     const counts = {};
     for (let r = 0; r < rows; r++) {
         for (let c = 0; c < cols; c++) {
             const sym = grid[r][c];
-            if (sym !== 10) {
-                counts[sym] = (counts[sym] || 0) + 1;
-            } else {
-                counts[10] = (counts[10] || 0) + 1;
-            }
+            counts[sym] = (counts[sym] || 0) + 1;
         }
     }
 
@@ -168,28 +193,20 @@ function spinSlotsGrid(isBonus = false) {
     for (const [sym, count] of Object.entries(counts)) {
         const s = Number(sym);
         if (s !== 10 && count >= 8) {
-            let baseMult = 1;
-            if (s >= 8) baseMult = 8;      // Корона и часы
-            else if (s >= 6) baseMult = 3; // Кольцо и чаша
-            else baseMult = 1;             // Камни
-            
+            let baseMult = s >= 8 ? 8 : (s >= 6 ? 3 : 1);
             winMultiplier += baseMult * (count / 8);
         }
     }
 
-    // Скаттеры дают отдельный крупный выигрыш при выпадении 4+ штук
     const scatters = counts[10] || 0;
-    if (scatters >= 4) {
-        winMultiplier += scatters * 5;
-    }
+    if (scatters >= 4) winMultiplier += scatters * 5;
 
     let zeusMultiplier = 0;
     if (winMultiplier > 0 || isBonus) {
         const buf = new Uint32Array(1);
         crypto.getRandomValues(buf);
         if (isBonus || buf[0] / 0x100000000 < 0.3) {
-            const mIdx = Math.floor(Math.random() * MULTIFIER_VALUES.length);
-            zeusMultiplier = MULTIFIER_VALUES[mIdx];
+            zeusMultiplier = MULTIFIER_VALUES[Math.floor(Math.random() * MULTIFIER_VALUES.length)];
         }
     }
 
@@ -197,17 +214,9 @@ function spinSlotsGrid(isBonus = false) {
         ? Math.max(1, Number((winMultiplier * (zeusMultiplier > 0 ? zeusMultiplier : 1)).toFixed(2))) 
         : 0;
 
-    if (isBonus && totalWinMultiplier === 0) {
-        totalWinMultiplier = 3.5; // Гарантия минимального профита в бонуске
-    }
+    if (isBonus && totalWinMultiplier === 0) totalWinMultiplier = 3.5;
 
-    return {
-        grid,
-        win: totalWinMultiplier > 0,
-        multiplier: totalWinMultiplier,
-        zeusMultiplier,
-        scatters
-    };
+    return { grid, win: totalWinMultiplier > 0, multiplier: totalWinMultiplier, zeusMultiplier, scatters };
 }
 
 async function settleBet(env, id, body, multiplier, play) {
@@ -215,10 +224,7 @@ async function settleBet(env, id, body, multiplier, play) {
     const amount = body.all === true ? current.balance : Number(body.amount);
 
     if (!Number.isFinite(amount) || amount < 100) {
-        return response({ error: "Минимальная ставка или стоимость бонуски — 100 байтов" }, 400);
-    }
-    if (amount > 10000000000 && body.isBonus) {
-        return response({ error: "Максимальная стоимость бонуски — 10 000 000 байтов" }, 400);
+        return response({ error: "Минимальная ставка — 100 байтов" }, 400);
     }
     if (amount > current.balance) {
         return response({ error: "Недостаточно байтов на балансе" }, 400);
@@ -228,10 +234,7 @@ async function settleBet(env, id, body, multiplier, play) {
     const delta = outcome.win ? Math.floor(amount * (outcome.multiplier - 1)) : -amount;
 
     const result = await env.DB.prepare(`
-        UPDATE users
-        SET balance = balance + ?
-        WHERE telegram_id = ?
-        AND balance >= ?
+        UPDATE users SET balance = balance + ? WHERE telegram_id = ? AND balance >= ?
     `).bind(delta, id, amount).run();
 
     if (result.meta.changes === 0) {
@@ -244,7 +247,6 @@ async function settleBet(env, id, body, multiplier, play) {
 
 export async function onRequestGet({ request, env }) {
     try {
-        if (!env.DB) return response({ error: "Database not configured" }, 500);
         const auth = await authenticate(request, env);
         if (auth.error) return response({ error: auth.error }, 401);
         return response(await getUser(env, auth.user.id));
@@ -255,7 +257,6 @@ export async function onRequestGet({ request, env }) {
 
 export async function onRequestPost({ request, env }) {
     try {
-        if (!env.DB) return response({ error: "Database not configured" }, 500);
         const auth = await authenticate(request, env);
         if (auth.error) return response({ error: auth.error }, 401);
 
@@ -268,19 +269,14 @@ export async function onRequestPost({ request, env }) {
             if (!Number.isSafeInteger(count) || count < 1 || count > 1000) {
                 return response({ error: "Invalid click count" }, 400);
             }
-            await env.DB.prepare(`
-                UPDATE users SET balance = balance + income * ? WHERE telegram_id = ?
-            `).bind(count, id).run();
+            await env.DB.prepare(`UPDATE users SET balance = balance + income * ? WHERE telegram_id = ?`).bind(count, id).run();
 
         } else if (body.action === "earn") {
-            await env.DB.prepare(`
-                UPDATE users SET balance = balance + income WHERE telegram_id = ?
-            `).bind(id).run();
+            await env.DB.prepare(`UPDATE users SET balance = balance + income WHERE telegram_id = ?`).bind(id).run();
 
         } else if (body.action === "upgrade") {
             const result = await env.DB.prepare(`
-                UPDATE users
-                SET balance = balance - upgrade_cost, income = income * 2, upgrade_cost = upgrade_cost * 2
+                UPDATE users SET balance = balance - upgrade_cost, income = income * 2, upgrade_cost = upgrade_cost * 2
                 WHERE telegram_id = ? AND balance >= upgrade_cost
             `).bind(id).run();
             if (result.meta.changes === 0) return response({ error: "Недостаточно байтов" }, 400);
@@ -288,10 +284,7 @@ export async function onRequestPost({ request, env }) {
         } else if (body.action === "spin") {
             const choice = String(body.choice);
             if (!(choice in MULTIPLIERS)) return response({ error: "Неизвестный прогноз" }, 400);
-            return await settleBet(env, id, body, MULTIPLIERS[choice], () => {
-                const number = randomRouletteNumber();
-                return { number, win: isWin(choice, number) };
-            });
+            return await settleBet(env, id, body, MULTIPLIERS[choice], () => ({ number: randomRouletteNumber(), win: isWin(choice, randomRouletteNumber()) }));
 
         } else if (body.action === "coin") {
             const choice = String(body.choice);
@@ -303,17 +296,23 @@ export async function onRequestPost({ request, env }) {
 
         } else if (body.action === "slot") {
             const isBonus = Boolean(body.isBonus);
-            return await settleBet(env, id, body, isBonus ? 25 : 1, () => {
-                const outcome = spinSlotsGrid(isBonus);
-                return {
-                    win: outcome.win,
-                    grid: outcome.grid,
-                    slotMultiplier: outcome.multiplier,
-                    zeus: outcome.zeusMultiplier,
-                    scatters: outcome.scatters,
-                    isBonus: isBonus
-                };
-            });
+            return await settleBet(env, id, body, isBonus ? 25 : 1, () => spinSlotsGrid(isBonus));
+
+        } else if (body.action === "redeem_promo") {
+            const code = String(body.code || "").trim().toUpperCase();
+            if (!code) return response({ error: "Введите промокод" }, 400);
+
+            // Ищем промокод в базе
+            const promo = await env.DB.prepare(`SELECT reward FROM promos WHERE code = ?`).bind(code).first();
+            if (!promo) return response({ error: "Промокод не найден или устарел" }, 400);
+
+            // Проверяем, активировал ли пользователь его ранее
+            const used = await env.DB.prepare(`SELECT 1 FROM used_promos WHERE telegram_id = ? AND code = ?`).bind(id, code).first();
+            if (used) return response({ error: "Вы уже активировали этот промокод" }, 400);
+
+            // Записываем, что код использован, и начисляем баланс
+            await env.DB.prepare(`INSERT INTO used_promos (telegram_id, code) VALUES (?, ?)`).bind(id, code).run();
+            await env.DB.prepare(`UPDATE users SET balance = balance + ? WHERE telegram_id = ?`).bind(promo.reward, id).run();
 
         } else {
             return response({ error: "Unknown action" }, 400);
