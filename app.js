@@ -1,4 +1,4 @@
-const tg = window.Telegram.WebApp;
+Const tg = window.Telegram.WebApp;
 
 tg.ready();
 tg.expand();
@@ -900,6 +900,25 @@ if (aviaButton) {
     aviaButton.addEventListener("click", playAviamasters);
 }
 
+// ФУНКЦИЯ СОЗДАНИЯ ОБЪЕМНОЙ КАРТЫ ДЛЯ БЛЕКДЖЕКА
+function createCardElement(suit, value, isHidden = false) {
+    const cardDiv = document.createElement('div');
+    cardDiv.className = `bj-card ${isHidden ? '' : 'flipped'}`;
+
+    const isRed = (suit === '♥' || suit === '♦');
+    const redClass = isRed ? 'red' : '';
+
+    cardDiv.innerHTML = `
+        <div class="card-face card-back">?</div>
+        <div class="card-face card-front ${redClass}">
+            <span class="card-value">${value}</span>
+            <span class="card-suit">${suit}</span>
+        </div>
+    `;
+
+    return cardDiv;
+}
+
 // БЛЕКДЖЕК ЛОГИКА
 const bjDealButton = document.getElementById("bjDealButton");
 const bjHitButton = document.getElementById("bjHitButton");
@@ -955,14 +974,23 @@ function calculateBjHand(hand) {
 }
 
 function renderBjHands(hideDealerSecond = true) {
-    playerCardsDiv.textContent = bjPlayerHand.map(c => `${c.val}${c.suit}`).join(" ");
+    // Рендер рук игрока с помощью 3D-карточек
+    playerCardsDiv.innerHTML = "";
+    bjPlayerHand.forEach(card => {
+        playerCardsDiv.appendChild(createCardElement(card.suit, card.val, false));
+    });
     playerScoreSpan.textContent = calculateBjHand(bjPlayerHand);
 
+    // Рендер рук дилера
+    dealerCardsDiv.innerHTML = "";
+    bjDealerHand.forEach((card, index) => {
+        const isHidden = hideDealerSecond && index === 1;
+        dealerCardsDiv.appendChild(createCardElement(card.suit, card.val, isHidden));
+    });
+
     if (hideDealerSecond && bjDealerHand.length >= 2) {
-        dealerCardsDiv.textContent = `${bjDealerHand[0].val}${bjDealerHand[0].suit} 🂠`;
         dealerScoreSpan.textContent = calculateBjHand([bjDealerHand[0]]);
     } else {
-        dealerCardsDiv.textContent = bjPlayerHand.map(c => `${c.val}${c.suit}`).join(" ");
         dealerScoreSpan.textContent = calculateBjHand(bjDealerHand);
     }
 }
@@ -1222,21 +1250,3 @@ if (copyRefBtn) {
 }
 
 setTimeout(initReferralSystem, 1000);
-function createCardElement(suit, value, isHidden = false) {
-    const cardDiv = document.createElement('div');
-    cardDiv.className = `bj-card ${isHidden ? '' : 'flipped'}`;
-
-    // Определяем цвет (червы ♥ и бубны ♦ — красные)
-    const isRed = (suit === '♥' || suit === '♦');
-    const redClass = isRed ? 'red' : '';
-
-    cardDiv.innerHTML = `
-        <div class="card-face card-back">?</div>
-        <div class="card-face card-front ${redClass}">
-            <span class="card-value">${value}</span>
-            <span class="card-suit">${suit}</span>
-        </div>
-    `;
-
-    return cardDiv;
-}
