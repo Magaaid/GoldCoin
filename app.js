@@ -32,9 +32,7 @@ function updateUI() {
 async function api(action = null, extra = {}) {
     const options = {
         method: action ? "POST" : "GET",
-        headers: {
-            "X-Telegram-Init-Data": tg.initData
-        }
+        headers: { "X-Telegram-Init-Data": tg.initData }
     };
 
     if (action) {
@@ -360,7 +358,7 @@ const quickButtons = document.querySelectorAll(".prediction-option[data-fraction
 function parseBet() {
     const raw = betInput.value.trim().replace(",", ".");
     const coins = Number(raw);
-    if (!raw || !Number.isFinite(coins) || coins < 0.0000001) return null;
+    if (!raw || !Number.isFinite(coins) || coins < 1) return null;
     return Math.round(coins * 1000000000);
 }
 
@@ -476,25 +474,18 @@ async function flipCoin() {
 }
 if (coinButton) coinButton.addEventListener("click", flipCoin);
 
-// СЛОТЫ И БОНУСЫ (GATES OF OLYMPUS REALISTIC)
+// СЛОТЫ И БОНУСКА (С ПЛАВНОЙ АНИМАЦИЕЙ И 15 ФРИСПИНАМИ)
 const slotGridElement = document.getElementById("slotGrid");
 const slotButton = document.getElementById("slotButton");
 const buyBonusButton = document.getElementById("buyBonusButton");
 const slotStatus = document.getElementById("slotStatus");
 const zeusBadge = document.getElementById("zeusMultiplierBadge");
 
-// Тематические иконки (сокровища Олимпа)
 const symbolData = {
-    1: { icon: "💎", name: "Синий кристалл" },
-    2: { icon: "🟢", name: "Зеленый кристалл" },
-    3: { icon: "🟡", name: "Желтый кристалл" },
-    4: { icon: "🟠", name: "Оранжевый кристалл" },
-    5: { icon: "🟣", name: "Фиолетовый кристалл" },
-    6: { icon: "🏆", name: "Золотая чаша" },
-    7: { icon: "💍", name: "Рубиновое кольцо" },
-    8: { icon: "⏳", name: "Песочные часы" },
-    9: { icon: "👑", name: "Золотая корона" },
-    10: { icon: "⚡", name: "Зевс (Scatter)" }
+    1: { icon: "💎" }, 2: { icon: "🟢" }, 3: { icon: "🟡" },
+    4: { icon: "🟠" }, 5: { icon: "🟣" }, 6: { icon: "🏆" },
+    7: { icon: "💍" }, 8: { icon: "⏳" }, 9: { icon: "👑" },
+    10: { icon: "⚡" }
 };
 
 function renderSlotGrid(grid) {
@@ -507,7 +498,6 @@ function renderSlotGrid(grid) {
             cell.className = "slot-cell";
             if (sym === 10) cell.classList.add("scatter-cell");
             if (sym >= 8) cell.classList.add("high-cell");
-            
             cell.textContent = symbolData[sym]?.icon || "💎";
             slotGridElement.appendChild(cell);
         });
@@ -518,29 +508,12 @@ async function requestSlotSpin(isBonus = false) {
     if (spinning || upgrading || !state) return;
 
     let amount = parseBet();
-    if (betAll) {
-        amount = state.balance;
-    }
-
-    if (isBonus) {
-        // Стоимость бонуски — ровно в 100 раз больше текущей ставки (или мин. 100 байтов)
-        amount = Math.max(100, (amount || 1000) * 100);
-        if (amount > 10000000000) {
-            tg.showAlert("Максимальная стоимость бонуски — 10 000 000 байтов");
-            return;
-        }
-    }
-
-    if (!amount || amount < 100) {
-        tg.showAlert("Минимальная ставка или стоимость бонуски — 100 байтов");
-        return;
-    }
+    if (betAll) amount = state.balance;
+    if (!amount) amount = 1000000000; // По умолчанию 1 байт, если не введено
 
     spinning = true;
     slotButton.disabled = true;
     buyBonusButton.disabled = true;
-    slotStatus.textContent = isBonus ? "🎁 Зевс активирует бонусные фриспины!" : "⚡ Молния Зевса бьет по барабанам...";
-    zeusBadge.textContent = "⚡ ×1";
 
     let result;
     try {
@@ -548,7 +521,7 @@ async function requestSlotSpin(isBonus = false) {
         result = await api("slot", { amount: amount, all: betAll, isBonus: isBonus });
     } catch (error) {
         tg.showAlert(error.message);
-        slotStatus.textContent = "Ошибка запуска слотов";
+        slotStatus.textContent = error.message;
         spinning = false;
         slotButton.disabled = false;
         buyBonusButton.disabled = false;
@@ -557,68 +530,87 @@ async function requestSlotSpin(isBonus = false) {
 
     const balanceBefore = state.balance;
 
-    // Анимация падения символов (каскад)
-    let counter = 0;
-    const interval = setInterval(() => {
-        renderSlotGrid(
-            Array.from({ length: 5 }, () =>
-                Array.from({ length: 6 }, () => Math.floor(Math.random() * 9) + 1)
-            )
-        );
-        counter++;
-        if (counter > 12) {
-            clearInterval(interval);
-            renderSlotGrid(result.grid);
+    if (isBonus) {
+        // Анимация полноценной бонуски: 15 шагов с отсчетом фриспинов
+        let currentSpin = 1;
+        slotStatus.textContent = `🎁 БОНУСКА АКТИВИРОВАНА! Спин 1 из 15...`;
+        zeusBadge.textContent = `⚡ ×1`;
 
-            state = { balance: result.balance, income: result.income, upgrade_cost: result.upgrade_cost };
-            updateUI();
+        const bonusInterval = setInterval(() => {
+            // Крутим случайные символы для качаства анимации
+            renderSlotGrid(
+                Array.from({ length: 5 }, () =>
+                    Array.from({ length: 6 }, () => Math.floor(Math.random() * 9) + 1)
+                )
+            );
 
-            const delta = Math.abs(result.balance - balanceBefore);
-            if (result.zeus > 0) {
-                zeusBadge.textContent = `⚡ ×${result.zeus}`;
-            }
-
-            if (result.win) {
-                slotStatus.textContent = isBonus
-                    ? `🎉 БОНУСКА ОКУПИЛАСЬ! Множитель ×${result.slotMultiplier}! Выигрыш: +${formatCoins(delta)} байтов`
-                    : `⚡ Победа! Множитель ×${result.slotMultiplier}! +${formatCoins(delta)} байтов`;
+            currentSpin++;
+            if (currentSpin <= 15) {
+                slotStatus.textContent = `🎁 Бесплатное вращение ${currentSpin} из 15...`;
             } else {
-                slotStatus.textContent = `Манна богов исчерпана. Попробуй еще! −${formatCoins(amount)} байтов`;
-            }
+                clearInterval(bonusInterval);
+                // Показываем финальный результат бонуски
+                renderSlotGrid(result.grid);
 
-            spinning = false;
-            slotButton.disabled = false;
-            buyBonusButton.disabled = false;
-        }
-    }, 90);
+                state = { balance: result.balance, income: result.income, upgrade_cost: result.upgrade_cost };
+                updateUI();
+
+                const delta = Math.abs(result.balance - balanceBefore);
+                zeusBadge.textContent = `⚡ ×${result.zeus}`;
+                slotStatus.textContent = `🎉 БОНУСКА ЗАВЕРШЕНА! Общий множитель ×${result.slotMultiplier}! Выигрыш: +${formatCoins(delta)} байтов`;
+
+                spinning = false;
+                slotButton.disabled = false;
+                buyBonusButton.disabled = false;
+            }
+        }, 300); // 300мс на каждый из 15 фриспинов (~4.5 секунды шоу)
+
+    } else {
+        // Плавная анимация обычного спина
+        slotStatus.textContent = `⚡ Барабаны крутятся...`;
+        let counter = 0;
+        const interval = setInterval(() => {
+            renderSlotGrid(
+                Array.from({ length: 5 }, () =>
+                    Array.from({ length: 6 }, () => Math.floor(Math.random() * 9) + 1)
+                )
+            );
+            counter++;
+            if (counter > 14) {
+                clearInterval(interval);
+                renderSlotGrid(result.grid);
+
+                state = { balance: result.balance, income: result.income, upgrade_cost: result.upgrade_cost };
+                updateUI();
+
+                const delta = Math.abs(result.balance - balanceBefore);
+                zeusBadge.textContent = `⚡ ×${result.zeus}`;
+
+                if (result.win) {
+                    slotStatus.textContent = `⚡ Победа! Множитель ×${result.slotMultiplier}! +${formatCoins(delta)} байтов`;
+                } else {
+                    slotStatus.textContent = `Манна богов исчерпана. Попробуй еще!`;
+                }
+
+                spinning = false;
+                slotButton.disabled = false;
+                buyBonusButton.disabled = false;
+            }
+        }, 100);
+    }
 }
 
 if (slotButton) slotButton.addEventListener("click", () => requestSlotSpin(false));
 if (buyBonusButton) buyBonusButton.addEventListener("click", () => requestSlotSpin(true));
 
-// Первичная отрисовка сетки
+// Первичная отрисовка
 renderSlotGrid(
     Array.from({ length: 5 }, () =>
         Array.from({ length: 6 }, () => Math.floor(Math.random() * 9) + 1)
     )
 );
 
-// ВКЛАДКИ
-const tabButtons = document.querySelectorAll(".tab-button");
-const gameViews = document.querySelectorAll(".game-view");
-
-tabButtons.forEach(button => {
-    button.addEventListener("click", () => {
-        if (spinning) return;
-        tabButtons.forEach(item => item.classList.remove("active"));
-        button.classList.add("active");
-
-        gameViews.forEach(view => {
-            view.classList.toggle("hidden", view.id !== "game-" + button.dataset.game);
-        });
-    });
-});
-// ОБРАБОТКА ПРОМОКОДОВ
+// ПРОМОКОДЫ
 const promoInput = document.getElementById("promoInput");
 const promoButton = document.getElementById("promoButton");
 const promoStatus = document.getElementById("promoStatus");
@@ -653,6 +645,20 @@ async function redeemPromo() {
     }
 }
 
-if (promoButton) {
-    promoButton.addEventListener("click", redeemPromo);
-}
+if (promoButton) promoButton.addEventListener("click", redeemPromo);
+
+// ВКЛАДКИ
+const tabButtons = document.querySelectorAll(".tab-button");
+const gameViews = document.querySelectorAll(".game-view");
+
+tabButtons.forEach(button => {
+    button.addEventListener("click", () => {
+        if (spinning) return;
+        tabButtons.forEach(item => item.classList.remove("active"));
+        button.classList.add("active");
+
+        gameViews.forEach(view => {
+            view.classList.toggle("hidden", view.id !== "game-" + button.dataset.game);
+        });
+    });
+});
