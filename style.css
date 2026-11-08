@@ -991,6 +991,53 @@ input {
     color: #fff;
     transform: rotateY(180deg);
 }
+/* Греческий орнамент (меандр) на золотой рамке */
+.olympus-frame {
+    background-image: 
+        repeating-linear-gradient(90deg, rgba(113, 63, 18, 0.35) 0px, rgba(113, 63, 18, 0.35) 4px, transparent 4px, transparent 10px),
+        linear-gradient(135deg, #fef08a 0%, #ca8a04 35%, #854d0e 65%, #eab308 100%);
+    padding: 8px;
+    border: 1px solid #fef08a;
+}
+
+/* Глубокий закатный фон Олимпа с облаками */
+.olympus-theme {
+    background: 
+        radial-gradient(circle at 80% 10%, rgba(251, 146, 60, 0.25) 0%, transparent 45%),
+        radial-gradient(circle at 20% 80%, rgba(168, 85, 247, 0.25) 0%, transparent 50%),
+        linear-gradient(180deg, #2e1065 0%, #4c1d95 45%, #1e1b4b 100%);
+}
+
+/* Анимация падения каждого символа сверху */
+@keyframes symbolDrop {
+    0% {
+        transform: translateY(-35px) scale(0.85);
+        opacity: 0;
+    }
+    75% {
+        transform: translateY(3px) scale(1.04);
+        opacity: 1;
+    }
+    100% {
+        transform: translateY(0) scale(1);
+        opacity: 1;
+    }
+}
+
+.slot-cell.animate-drop {
+    animation: symbolDrop 0.28s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+
+/* Вспышка рамки при выпадении множителя Зевса */
+@keyframes zeusFlash {
+    0%, 100% { box-shadow: 0 0 25px rgba(234, 179, 8, 0.3); }
+    40% { box-shadow: 0 0 60px #fef08a, inset 0 0 35px #fde047; filter: brightness(1.35); }
+}
+
+.olympus-frame.zeus-flash {
+    animation: zeusFlash 0.6s ease-out;
+}
+
 
 
 
