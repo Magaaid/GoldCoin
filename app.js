@@ -897,7 +897,7 @@ async function startBlackjack() {
     }
 
     spinning = true;
-    bjDealButton.disabled = true;
+    if (bjDealButton) bjDealButton.disabled = true;
 
     try {
         await flushQueue();
@@ -907,6 +907,8 @@ async function startBlackjack() {
     } catch (e) {
         state.balance -= bjBetAmount;
         updateUI();
+    } finally {
+        spinning = false;
     }
 
     bjDeck = createBjDeck();
@@ -917,15 +919,13 @@ async function startBlackjack() {
     renderBjHands(true);
     bjStatus.textContent = "Твой ход: Ещё, Хватит или Удвоить?";
     
-    bjDealButton.classList.add("hidden");
-    bjActionButtons.classList.remove("hidden");
+    if (bjDealButton) bjDealButton.classList.add("hidden");
+    if (bjActionButtons) bjActionButtons.classList.remove("hidden");
     
-    // Кнопку удвоения можно нажать только если хватает баланса на вторую такую же ставку
     if (bjDoubleButton) {
         bjDoubleButton.disabled = state.balance < bjBetAmount;
+        bjDoubleButton.classList.remove("hidden");
     }
-
-    spinning = false;
 
     if (calculateBjHand(bjPlayerHand) === 21) {
         endBlackjack("blackjack");
@@ -937,7 +937,6 @@ async function hitBlackjack() {
     bjPlayerHand.push(bjDeck.pop());
     renderBjHands(true);
     
-    // При взятии карты кнопку удвоения скрываем (доступна только на раздаче)
     if (bjDoubleButton) bjDoubleButton.classList.add("hidden");
 
     const playerSum = calculateBjHand(bjPlayerHand);
@@ -955,12 +954,10 @@ async function doubleDownBlackjack() {
         return;
     }
 
-    // Списываем вторую часть ставки
     state.balance -= bjBetAmount;
     bjBetAmount *= 2;
     updateUI();
 
-    // Даем одну карту и сразу переходим к ходу дилера
     bjPlayerHand.push(bjDeck.pop());
     renderBjHands(true);
 
@@ -1001,8 +998,12 @@ async function standBlackjack() {
 async function endBlackjack(result) {
     bjGameActive = false;
     renderBjHands(false);
-    bjActionButtons.classList.add("hidden");
-    bjDealButton.classList.remove("hidden");
+    
+    if (bjActionButtons) bjActionButtons.classList.add("hidden");
+    if (bjDealButton) {
+        bjDealButton.classList.remove("hidden");
+        bjDealButton.disabled = false;
+    }
     if (bjDoubleButton) bjDoubleButton.classList.remove("hidden");
 
     let payout = 0;
@@ -1024,6 +1025,7 @@ async function endBlackjack(result) {
     }
 
     updateUI();
+    spinning = false;
 }
 
 if (bjDealButton) bjDealButton.addEventListener("click", startBlackjack);
