@@ -75,12 +75,24 @@ async function verifyTelegram(initData, botToken) {
 async function authenticate(request, env) {
     const initData = request.headers.get("X-Telegram-Init-Data");
 
-    if (!initData || !env.BOT_TOKEN) return null;
+    if (!initData) {
+        return { error: "initData missing" };
+    }
+
+    if (!env.BOT_TOKEN) {
+        return { error: "BOT_TOKEN missing" };
+    }
 
     try {
-        return await verifyTelegram(initData, env.BOT_TOKEN);
-    } catch {
-        return null;
+        const user = await verifyTelegram(initData, env.BOT_TOKEN);
+
+        if (!user) {
+            return { error: "initData validation failed" };
+        }
+
+        return { user };
+    } catch (error) {
+        return { error: "Verification error: " + error.message };
     }
 }
 
@@ -104,13 +116,16 @@ export async function onRequestGet({ request, env }) {
             return response({ error: "Database not configured" }, 500);
         }
 
-        const user = await authenticate(request, env);
+        const auth = await authenticate(request, env);
 
-        if (!user) {
-            return response({ error: "Unauthorized" }, 401);
+        if (auth.error) {
+            return response({ error: auth.error }, 401);
         }
 
-        return response(await getUser(env, user.id));
+        const user = auth.user;
+        const data = await getUser(env, user.id);
+
+        return response(data);
 
     } catch (error) {
         return response({ error: error.message }, 500);
@@ -123,12 +138,13 @@ export async function onRequestPost({ request, env }) {
             return response({ error: "Database not configured" }, 500);
         }
 
-        const user = await authenticate(request, env);
+        const auth = await authenticate(request, env);
 
-        if (!user) {
-            return response({ error: "Unauthorized" }, 401);
+        if (auth.error) {
+            return response({ error: auth.error }, 401);
         }
 
+        const user = auth.user;
         const body = await request.json();
         const id = String(user.id);
 
