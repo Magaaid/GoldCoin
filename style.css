@@ -451,4 +451,88 @@ input {
     margin: 15px 0;
     font-size: 15px;
 }
+/* Стили слотов Gates of Olympus с бонуской */
+.slot-card-main {
+    background: linear-gradient(135deg, #1c2230 0%, #2a1f10 100%);
+    border: 1px solid #d6a83e;
+}
+
+.slot-header-flex {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.zeus-badge {
+    background: #f5c542;
+    color: #171717;
+    font-weight: bold;
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 14px;
+    box-shadow: 0 0 10px rgba(245, 197, 66, 0.5);
+}
+
+.slot-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 6px;
+    background: #0b0d14;
+    padding: 10px;
+    border-radius: 16px;
+    border: 2px solid #b68b35;
+    margin: 15px 0;
+    box-shadow: inset 0 0 15px rgba(0,0,0,0.8);
+}
+
+.slot-cell {
+    aspect-ratio: 1;
+    background: #1a2233;
+    border: 1px solid #303e5c;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 26px;
+    border-radius: 8px;
+    box-shadow: inset 0 2px 5px rgba(255,255,255,0.05);
+    transition: transform 0.2s ease;
+}
+
+.slot-cell.high-cell {
+    background: linear-gradient(135deg, #2a2210, #3d2f10);
+    border-color: #f5c542;
+}
+
+.slot-cell.scatter-cell {
+    background: linear-gradient(135deg, #301010, #521616);
+    border-color: #ff525b;
+    animation: pulseScatter 1s infinite alternate;
+}
+
+@keyframes pulseScatter {
+    0% { transform: scale(1); box-shadow: 0 0 5px #ff525b; }
+    100% { transform: scale(1.08); box-shadow: 0 0 12px #ff525b; }
+}
+
+.slot-buttons-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.bonus-buy-button {
+    width: 100%;
+    background: linear-gradient(135deg, #b92c35, #e63946);
+    color: white;
+    border: 1px solid #ff6b6b;
+    margin-top: 12px;
+    box-shadow: 0 4px 15px rgba(185, 44, 53, 0.4);
+}
+
+.bonus-buy-button:disabled, .spin-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
 
