@@ -354,8 +354,10 @@ async function spin() {
         return;
     }
 
-    if (!selectedBet) {
-        tg.showAlert("Выбери размер ставки");
+    const amount = parseBet();
+
+    if (!betAll && !amount) {
+        tg.showAlert("Введи сумму ставки");
         return;
     }
 
@@ -373,7 +375,8 @@ async function spin() {
 
         result = await api("spin", {
             choice: selectedPrediction,
-            percent: selectedBet
+            amount: amount,
+            all: betAll
         });
     } catch (error) {
         tg.showAlert(error.message);
@@ -438,7 +441,7 @@ loadGame();
 // СИСТЕМА ПРОГНОЗОВ И СТАВОК
 
 let selectedPrediction = null;
-let selectedBet = null;
+let betAll = false;
 
 const predictionStatus =
     document.getElementById("predictionStatus");
@@ -446,8 +449,10 @@ const predictionStatus =
 const predictionButtons =
     document.querySelectorAll(".prediction-option[data-choice]");
 
-const betButtons =
-    document.querySelectorAll(".prediction-option[data-bet]");
+const quickButtons =
+    document.querySelectorAll(".prediction-option[data-fraction]");
+
+const betInput = document.getElementById("betInput");
 
 const predictionMultipliers = {
     red: 1.9,
@@ -465,21 +470,25 @@ const predictionNames = {
     zero: "Ноль"
 };
 
+// Введённые коины -> внутренние единицы баланса
+function parseBet() {
+    const raw = betInput.value.trim().replace(",", ".");
+    const coins = Number(raw);
+
+    if (!raw || !Number.isFinite(coins) || coins <= 0) return null;
+
+    return Math.round(coins * 1000000000);
+}
+
 function updateSelectionStatus() {
     if (!selectedPrediction) {
         predictionStatus.textContent = "Прогноз не выбран";
         return;
     }
 
-    let text =
+    predictionStatus.textContent =
         "Прогноз: " + predictionNames[selectedPrediction] +
         " ×" + predictionMultipliers[selectedPrediction];
-
-    if (selectedBet) {
-        text += " · ставка " + selectedBet + "% баланса";
-    }
-
-    predictionStatus.textContent = text;
 }
 
 predictionButtons.forEach(button => {
@@ -497,17 +506,22 @@ predictionButtons.forEach(button => {
     });
 });
 
-betButtons.forEach(button => {
+// Ручной ввод сбрасывает режим «Всё»
+betInput.addEventListener("input", () => {
+    betAll = false;
+    quickButtons.forEach(item => item.classList.remove("selected"));
+});
+
+quickButtons.forEach(button => {
     button.addEventListener("click", () => {
-        if (spinning) return;
+        if (spinning || !state) return;
 
-        betButtons.forEach(item => {
-            item.classList.remove("selected");
-        });
+        const fraction = Number(button.dataset.fraction);
 
+        quickButtons.forEach(item => item.classList.remove("selected"));
         button.classList.add("selected");
-        selectedBet = Number(button.dataset.bet);
 
-        updateSelectionStatus();
+        betAll = fraction === 1;
+        betInput.value = formatCoins(Math.floor(state.balance * fraction));
     });
 });
