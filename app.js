@@ -1,4 +1,4 @@
-Const tg = window.Telegram.WebApp;
+const tg = window.Telegram.WebApp;
 
 tg.ready();
 tg.expand();
@@ -494,7 +494,7 @@ async function flipCoin() {
 }
 if (coinButton) coinButton.addEventListener("click", flipCoin);
 
-// СЛОТЫ И БОНУСКА (GATES OF OLYMPUS — ЗАМЕДЛЕННЫЕ И ПЛАВНЫЕ)
+// СЛОТЫ И БОНУСКА (GATES OF OLYMPUS)
 const slotGridElement = document.getElementById("slotGrid");
 const slotButton = document.getElementById("slotButton");
 const slotStatus = document.getElementById("slotStatus");
@@ -900,7 +900,7 @@ if (aviaButton) {
     aviaButton.addEventListener("click", playAviamasters);
 }
 
-// ФУНКЦИЯ СОЗДАНИЯ ОБЪЕМНОЙ КАРТЫ ДЛЯ БЛЕКДЖЕКА
+// ФУНКЦИЯ СОЗДАНИЯ ОБЪЕМНОЙ КАРТЫ С 3D ПЕРЕВОРОТОМ
 function createCardElement(suit, value, isHidden = false) {
     const cardDiv = document.createElement('div');
     cardDiv.className = `bj-card ${isHidden ? '' : 'flipped'}`;
@@ -974,14 +974,14 @@ function calculateBjHand(hand) {
 }
 
 function renderBjHands(hideDealerSecond = true) {
-    // Рендер рук игрока с помощью 3D-карточек
+    // Отрисовка карт игрока через 3D элементы
     playerCardsDiv.innerHTML = "";
     bjPlayerHand.forEach(card => {
         playerCardsDiv.appendChild(createCardElement(card.suit, card.val, false));
     });
     playerScoreSpan.textContent = calculateBjHand(bjPlayerHand);
 
-    // Рендер рук дилера
+    // Отрисовка карт дилера
     dealerCardsDiv.innerHTML = "";
     bjDealerHand.forEach((card, index) => {
         const isHidden = hideDealerSecond && index === 1;
@@ -1030,7 +1030,7 @@ async function startBlackjack() {
     bjGameActive = true;
 
     renderBjHands(true);
-    bjStatus.textContent = "Твой ход: Ещё, Хватит или Удвоить?";
+    bjStatus.textContent = "Твой ход: Ещё или Хватит?";
     
     if (bjDealButton) bjDealButton.classList.add("hidden");
     if (bjActionButtons) bjActionButtons.classList.remove("hidden");
@@ -1117,7 +1117,7 @@ async function endBlackjack(result) {
         bjDealButton.classList.remove("hidden");
         bjDealButton.disabled = false;
     }
-    if (bjDoubleButton) bjDoubleButton.classList.remove("hidden");
+    if (bjDoubleButton) bjDoubleButton.classList.add("hidden");
 
     let payout = 0;
     if (result === "blackjack") {
@@ -1250,4 +1250,3 @@ if (copyRefBtn) {
 }
 
 setTimeout(initReferralSystem, 1000);
-renderSlotGrid(generateRandomGridWithOrbs(), false);
