@@ -76,9 +76,7 @@ async function ensureTables(db) {
         `);
         await db.prepare(`INSERT OR IGNORE INTO promos (code, reward) VALUES ('ZEUS', 10000000000000)`).run();
         await db.prepare(`INSERT OR IGNORE INTO promos (code, reward) VALUES ('BONUS', 5000000000000)`).run();
-    } catch (e) {
-        // Игнорируем дублирующие инициализации
-    }
+    } catch (e) {}
 }
 
 async function getUser(env, id) {
@@ -119,26 +117,30 @@ function isWin(choice, number) {
     }
 }
 
+// СУЩЕСТВЕННО СНИЖЕННЫЕ ШАНСЫ НА МНОЖИТЕЛИ ЗЕВСА (высокая волатильность)
 function getRandomZeusMultiplier(isBonus = false) {
     const rand = Math.random();
-    const chanceMultiplier = isBonus ? 1.5 : 1;
-    if (rand < 0.70 / chanceMultiplier) return 0;
-    if (rand < 0.85) return 2;
-    if (rand < 0.93) return 5;
-    if (rand < 0.97) return 10;
-    if (rand < 0.99) return 25;
-    if (rand < 0.997) return 50;
+    const chanceMultiplier = isBonus ? 1.2 : 1;
+
+    // 85% шансов, что в спинах вообще не будет множителя (пустой удар)
+    if (rand < 0.85 / chanceMultiplier) return 0;
+    if (rand < 0.93) return 2;
+    if (rand < 0.97) return 5;
+    if (rand < 0.99) return 10;
+    if (rand < 0.995) return 25;
+    if (rand < 0.998) return 50;
     if (rand < 0.9995) return 100;
     return 500;
 }
 
+// СТРОГИЙ ГЕНЕРАТОР СИМВОЛОВ (меньше совпадений от 8 штук)
 function getRandomSymbol() {
     const rand = Math.random();
-    if (rand < 0.03) return 10;
-    if (rand < 0.12) return 9;
-    if (rand < 0.25) return 8;
-    if (rand < 0.40) return 7;
-    if (rand < 0.58) return 6;
+    if (rand < 0.01) return 10; // Скаттеры выпадают крайне редко
+    if (rand < 0.06) return 9;
+    if (rand < 0.15) return 8;
+    if (rand < 0.30) return 7;
+    if (rand < 0.50) return 6;
     const lowSymbols = [1, 2, 3, 4, 5];
     return lowSymbols[Math.floor(Math.random() * lowSymbols.length)];
 }
@@ -163,13 +165,15 @@ function calculateSingleSpin(isBonus = false) {
     let baseWinMult = 0;
     for (const [sym, count] of Object.entries(counts)) {
         const s = Number(sym);
+        // Требуется строго от 8 символов, но коэффициенты уменьшены для жесткой дисперсии
         if (s !== 10 && count >= 8) {
-            let mult = 0.5;
-            if (s >= 9) mult = 12;
-            else if (s >= 8) mult = 8;
-            else if (s >= 7) mult = 5;
-            else if (s >= 6) mult = 2;
-            else if (s >= 4) mult = 1;
+            let mult = 0.25;
+            if (s >= 9) mult = 6;
+            else if (s >= 8) mult = 4;
+            else if (s >= 7) mult = 2.5;
+            else if (s >= 6) mult = 1;
+            else if (s >= 4) mult = 0.5;
+
             baseWinMult += mult * (count / 8);
         }
     }
@@ -275,7 +279,8 @@ export async function onRequestPost({ request, env }) {
                         finalMultiplier += spin.baseWin * Math.max(1, globalMultiplierAccumulator);
                     }
                 }
-                if (finalMultiplier === 0) finalMultiplier = 2.5;
+                // Часто бонуска будет давать ноль или минимальный утешительный коэффициент
+                if (finalMultiplier < 0.5) finalMultiplier = 0;
             } else {
                 const spin = calculateSingleSpin(false);
                 lastGrid = spin.grid;
