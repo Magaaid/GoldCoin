@@ -11,7 +11,6 @@ body {
     color: white;
     font-family: Arial, sans-serif;
     touch-action: manipulation;
-    padding: 12px;
 }
 
 .app {
@@ -224,7 +223,6 @@ button:active {
     gap: 8px;
     color: #aab1c0;
 }
-
 .prediction-card {
     margin-top: 25px;
     padding: 20px;
@@ -287,7 +285,6 @@ button:active {
     font-weight: bold;
     color: white;
 }
-
 input {
     user-select: text;
     -webkit-user-select: text;
@@ -316,11 +313,10 @@ input {
     gap: 10px;
     margin-top: 10px;
 }
-
 .game-tabs {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 8px;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
     margin-bottom: 22px;
 }
 
@@ -328,8 +324,7 @@ input {
     background: #252d3e;
     color: #aab1c0;
     border: 1px solid #3b455a;
-    padding: 12px 6px;
-    font-size: 13px;
+    padding: 15px 8px;
 }
 
 .tab-button.active {
@@ -411,8 +406,72 @@ input {
     font-weight: bold;
     color: white;
 }
+/* Стили для вкладок (теперь 3 штуки в ряд) */
+.game-tabs {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-bottom: 22px;
+}
 
-/* Стили сетки слотов (Gates of Olympus) */
+/* Стили для сетки слотов (Gates of Olympus) */
+.slot-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 8px;
+    background: #10131c;
+    padding: 12px;
+    border-radius: 16px;
+    border: 1px solid #30394c;
+    margin: 20px 0;
+}
+
+.slot-cell {
+    aspect-ratio: 1;
+    background: #252d3e;
+    border: 1px solid #3b455a;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    border-radius: 10px;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
+    transition: transform 0.2s ease;
+}
+
+.slot-cell:hover {
+    transform: scale(1.05);
+}
+
+#slotStatus {
+    min-height: 40px;
+    font-weight: bold;
+    color: white;
+    margin: 15px 0;
+    font-size: 15px;
+}
+/* Стили слотов Gates of Olympus с бонуской */
+.slot-card-main {
+    background: linear-gradient(135deg, #1c2230 0%, #2a1f10 100%);
+    border: 1px solid #d6a83e;
+}
+
+.slot-header-flex {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.zeus-badge {
+    background: #f5c542;
+    color: #171717;
+    font-weight: bold;
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 14px;
+    box-shadow: 0 0 10px rgba(245, 197, 66, 0.5);
+}
+
 .slot-grid {
     display: grid;
     grid-template-columns: repeat(6, 1fr);
@@ -454,35 +513,6 @@ input {
     100% { transform: scale(1.08); box-shadow: 0 0 12px #ff525b; }
 }
 
-#slotStatus {
-    min-height: 40px;
-    font-weight: bold;
-    color: white;
-    margin: 15px 0;
-    font-size: 15px;
-}
-
-.slot-card-main {
-    background: linear-gradient(135deg, #1c2230 0%, #2a1f10 100%);
-    border: 1px solid #d6a83e;
-}
-
-.slot-header-flex {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.zeus-badge {
-    background: #f5c542;
-    color: #171717;
-    font-weight: bold;
-    padding: 6px 12px;
-    border-radius: 8px;
-    font-size: 14px;
-    box-shadow: 0 0 10px rgba(245, 197, 66, 0.5);
-}
-
 .slot-buttons-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -503,7 +533,6 @@ input {
     opacity: 0.5;
     cursor: not-allowed;
 }
-
 /* Стили для блока промокодов */
 .promo-card {
     background: #191e2b;
@@ -527,8 +556,7 @@ input {
     font-weight: bold;
     min-height: 20px;
 }
-
-/* Тема Олимпа и анимация каскада */
+/* Общий фон экрана слотов в стиле Олимпа */
 .olympus-theme {
     background: radial-gradient(circle at 50% 20%, #4c1d95 0%, #2e1065 45%, #0f172a 100%);
     border-radius: 20px;
@@ -539,77 +567,256 @@ input {
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
 }
 
-.olympus-frame {
-    background-image: 
-        repeating-linear-gradient(90deg, rgba(113, 63, 18, 0.35) 0px, rgba(113, 63, 18, 0.35) 4px, transparent 4px, transparent 10px),
-        linear-gradient(135deg, #fef08a 0%, #ca8a04 35%, #854d0e 65%, #eab308 100%);
-    padding: 8px;
-    border: 1px solid #fef08a;
-    border-radius: 16px;
+/* Шапка с логотипом и множителем */
+.olympus-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     margin-bottom: 12px;
 }
 
-@keyframes symbolDrop {
-    0% {
-        transform: translateY(-35px) scale(0.85);
-        opacity: 0;
-    }
-    75% {
-        transform: translateY(3px) scale(1.04);
-        opacity: 1;
-    }
-    100% {
-        transform: translateY(0) scale(1);
-        opacity: 1;
-    }
+.olympus-logo {
+    display: flex;
+    flex-direction: column;
+    line-height: 1;
 }
 
-.slot-cell.animate-drop {
-    animation: symbolDrop 0.28s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+.logo-small {
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: #fde047;
+    font-weight: 700;
 }
 
-@keyframes zeusFlash {
-    0%, 100% { box-shadow: 0 0 25px rgba(234, 179, 8, 0.3); }
-    40% { box-shadow: 0 0 60px #fef08a, inset 0 0 35px #fde047; filter: brightness(1.35); }
+.logo-main {
+    font-size: 22px;
+    font-weight: 900;
+    letter-spacing: 1px;
+    background: linear-gradient(180deg, #fef08a 0%, #eab308 60%, #a16207 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.8));
 }
 
-.olympus-frame.zeus-flash {
-    animation: zeusFlash 0.6s ease-out;
+.zeus-badge {
+    background: rgba(15, 23, 42, 0.85);
+    border: 1.5px solid #eab308;
+    color: #fde047;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-weight: 800;
+    font-size: 14px;
+    box-shadow: 0 0 12px rgba(234, 179, 8, 0.35);
 }
 
-/* AVIAMASTERS СТИЛИ */
+/* Массивная золотая рамка вокруг поля */
+.olympus-frame {
+    padding: 6px;
+    border-radius: 16px;
+    background: linear-gradient(135deg, #fef08a 0%, #ca8a04 35%, #854d0e 65%, #eab308 100%);
+    box-shadow: 0 0 25px rgba(234, 179, 8, 0.3), inset 0 0 8px rgba(0, 0, 0, 0.6);
+    margin-bottom: 12px;
+}
+
+.olympus-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 5px;
+    background: linear-gradient(180deg, rgba(30, 27, 75, 0.92) 0%, rgba(15, 23, 42, 0.96) 100%);
+    padding: 8px;
+    border-radius: 11px;
+    box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.85);
+}
+
+/* Ячейки с драгоценностями */
+.slot-cell {
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.07) 0%, rgba(0, 0, 0, 0.25) 100%);
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.4);
+    transition: transform 0.15s ease;
+}
+
+.slot-cell.high-cell {
+    background: radial-gradient(circle, rgba(234, 179, 8, 0.18) 0%, rgba(0, 0, 0, 0.35) 100%);
+    border-color: rgba(234, 179, 8, 0.35);
+    text-shadow: 0 0 12px rgba(250, 204, 21, 0.7);
+}
+
+.slot-cell.scatter-cell {
+    background: radial-gradient(circle, rgba(250, 204, 21, 0.4) 0%, rgba(161, 98, 7, 0.6) 100%);
+    border: 1px solid #fef08a;
+    box-shadow: 0 0 14px rgba(250, 204, 21, 0.8);
+    animation: scatterPulse 1.2s infinite alternate;
+}
+
+@keyframes scatterPulse {
+    0% { transform: scale(1); }
+    100% { transform: scale(1.06); }
+}
+
+/* Плашка статуса ("Удачи!") */
+.olympus-status {
+    background: linear-gradient(90deg, rgba(30, 27, 75, 0.9) 0%, rgba(49, 46, 129, 0.95) 50%, rgba(30, 27, 75, 0.9) 100%);
+    border: 1px solid rgba(139, 92, 246, 0.35);
+    border-radius: 12px;
+    padding: 10px 12px;
+    text-align: center;
+    font-weight: 700;
+    font-size: 14px;
+    color: #fff;
+    margin-bottom: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+/* Нижняя панель управления */
+.olympus-controls {
+    background: rgba(15, 23, 42, 0.75);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 16px;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+/* Бордовая кнопка покупки бонуски */
+.olympus-bonus-btn {
+    width: 100%;
+    padding: 12px;
+    border-radius: 12px;
+    border: 1px solid rgba(248, 113, 113, 0.4);
+    background: linear-gradient(180deg, #991b1b 0%, #450a0a 100%);
+    color: #fff;
+    font-weight: 800;
+    font-size: 14px;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(153, 27, 27, 0.4);
+    transition: transform 0.1s ease, filter 0.15s ease;
+}
+
+.olympus-bonus-btn:active {
+    transform: scale(0.98);
+    filter: brightness(1.1);
+}
+
+.olympus-bottom-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.olympus-bet-box {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.bet-label {
+    font-size: 10px;
+    color: #94a3b8;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-align: center;
+}
+
+.bet-input-wrap input {
+    width: 100%;
+    background: rgba(2, 6, 23, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 10px;
+    padding: 10px;
+    color: #fff;
+    font-size: 16px;
+    font-weight: 800;
+    text-align: center;
+    outline: none;
+    box-sizing: border-box;
+}
+
+/* Большая круглая золотая кнопка SPIN */
+.olympus-spin-btn {
+    width: 76px;
+    height: 76px;
+    border-radius: 50%;
+    border: 3px solid #fef08a;
+    background: radial-gradient(circle at 30% 30%, #fde047 0%, #ca8a04 65%, #713f12 100%);
+    color: #1e1b4b;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 0 20px rgba(234, 179, 8, 0.5), inset 0 2px 5px rgba(255, 255, 255, 0.6);
+    flex-shrink: 0;
+    transition: transform 0.1s ease;
+}
+
+.olympus-spin-btn:active {
+    transform: scale(0.93);
+}
+
+.olympus-spin-btn:disabled,
+.olympus-bonus-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.spin-icon {
+    font-size: 24px;
+    font-weight: 900;
+    line-height: 1;
+}
+
+.spin-text {
+    font-size: 11px;
+    font-weight: 900;
+    letter-spacing: 1px;
+}
+
+/* Тема Aviamasters */
 .aviamaster-theme {
     background: linear-gradient(180deg, #0f172a 0%, #1e1b4b 50%, #312e81 100%);
     border: 1px solid rgba(56, 189, 248, 0.3);
-    border-radius: 20px;
-    padding: 20px;
-    margin-bottom: 22px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
 }
 
 .aviamaster-stage {
     position: relative;
-    height: 180px;
+    height: 220px;
     background: radial-gradient(circle at center, rgba(56, 189, 248, 0.15) 0%, rgba(15, 23, 42, 0.8) 100%);
     border-radius: 14px;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    margin-bottom: 16px;
+    margin-bottom: 12px;
     overflow: hidden;
-    border: 1px solid rgba(56, 189, 248, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .avia-multiplier {
-    font-size: 38px;
+    font-size: 36px;
     font-weight: 900;
     color: #38bdf8;
-    text-shadow: 0 0 15px rgba(56, 189, 248, 0.6);
-    margin-bottom: 8px;
+    text-shadow: 0 0 15px rgba(56, 189, 248, 0.5);
+    margin-bottom: 10px;
 }
 
 .plane-container {
     font-size: 42px;
     transition: transform 0.1s linear;
+    animation: floatPlane 2s ease-in-out infinite alternate;
+}
+
+@keyframes floatPlane {
+    0% { transform: translateY(-5px) rotate(-5deg); }
+    100% { transform: translateY(5px) rotate(5deg); }
 }
