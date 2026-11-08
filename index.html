@@ -34,6 +34,7 @@
         <nav class="game-tabs">
             <button class="tab-button active" data-game="roulette">🎡 Рулетка</button>
             <button class="tab-button" data-game="coin">🪙 Монетка</button>
+            <button class="tab-button" data-game="slots">⚡ Слоты</button>
         </nav>
 
         <section class="bet-card">
@@ -140,6 +141,21 @@
 
                 <button id="coinButton" class="spin-button">
                     БРОСИТЬ
+                </button>
+            </section>
+        </div>
+
+        <div id="game-slots" class="game-view hidden">
+            <section class="coin-card">
+                <h2>GATES OF OLYMPUS</h2>
+                <p>Собери от 8 одинаковых символов в любом месте</p>
+
+                <div id="slotGrid" class="slot-grid"></div>
+
+                <p id="slotStatus">Выбери сумму ставки и крути</p>
+
+                <button id="slotButton" class="spin-button">
+                    КРУТИТЬ
                 </button>
             </section>
         </div>
