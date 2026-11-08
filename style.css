@@ -1382,4 +1382,86 @@ h1 {
     color: #94a3b8;
     border: 2px solid #cbd5e1;
 }
+/* Контейнер для карт на бильярдном столе */
+.cards-row {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    min-height: 76px;
+    perspective: 1000px; /* Важно для 3D-переворота */
+}
+
+/* Сама карта с поддержкой 3D-вращения */
+.bj-card {
+    width: 52px;
+    height: 76px;
+    position: relative;
+    transform-style: preserve-3d;
+    transition: transform 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    font-family: Arial, sans-serif;
+    font-weight: bold;
+    user-select: none;
+}
+
+/* Класс, когда карта перевернута лицом вверх */
+.bj-card.flipped {
+    transform: rotateY(180deg);
+}
+
+/* Лицевая и обратная стороны карты */
+.card-face {
+    position: absolute;
+    inset: 0;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+    border: 1px solid #cbd5e1;
+}
+
+/* Рубашка карты (изначальное состояние) */
+.card-back {
+    background: repeating-linear-gradient(
+        45deg,
+        #1e293b,
+        #1e293b 6px,
+        #334155 6px,
+        #334155 12px
+    );
+    border: 2px solid #f8fafc;
+    color: #94a3b8;
+    font-size: 16px;
+}
+
+/* Лицевая сторона карты */
+.card-front {
+    background: #ffffff;
+    color: #0f172a;
+    transform: rotateY(180deg);
+    padding: 4px;
+    font-size: 15px;
+    line-height: 1.1;
+}
+
+/* Красные масти (Червы и Бубны) */
+.card-front.red {
+    color: #dc2626;
+}
+
+/* Уголки и центр карты */
+.card-value {
+    font-size: 14px;
+    font-weight: 900;
+    align-self: flex-start;
+    padding-left: 4px;
+}
+
+.card-suit {
+    font-size: 20px;
+    margin-top: -2px;
+}
 
