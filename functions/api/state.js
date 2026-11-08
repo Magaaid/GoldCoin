@@ -9,20 +9,16 @@ function response(data, status = 200) {
 }
 
 async function verifyTelegram(initData, botToken) {
-    if (!initData) return { id: "test_user", first_name: "Test" }; // Фолбек для тестов в браузере, если нужно
+    if (!initData) return { id: "test_user", first_name: "Test" };
     
     const params = new URLSearchParams(initData);
     const hash = params.get("hash");
-
     if (!hash) return null;
     params.delete("hash");
 
     const authDate = Number(params.get("auth_date"));
     const now = Math.floor(Date.now() / 1000);
-
-    if (!authDate || now - authDate > 86400 || authDate > now + 60) {
-        return null;
-    }
+    if (!authDate || now - authDate > 86400) return null;
 
     const dataCheckString = [...params.entries()]
         .sort(([a], [b]) => a < b ? -1 : a > b ? 1 : 0)
@@ -30,27 +26,11 @@ async function verifyTelegram(initData, botToken) {
         .join("\n");
 
     const encoder = new TextEncoder();
-    const key = await crypto.subtle.importKey(
-        "raw",
-        encoder.encode("WebAppData"),
-        { name: "HMAC", hash: "SHA-256" },
-        false,
-        ["sign"]
-    );
-
+    const key = await crypto.subtle.importKey("raw", encoder.encode("WebAppData"), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
     const secret = await crypto.subtle.sign("HMAC", key, encoder.encode(botToken));
-    const validationKey = await crypto.subtle.importKey(
-        "raw",
-        secret,
-        { name: "HMAC", hash: "SHA-256" },
-        false,
-        ["sign"]
-    );
-
+    const validationKey = await crypto.subtle.importKey("raw", secret, { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
     const signature = await crypto.subtle.sign("HMAC", validationKey, encoder.encode(dataCheckString));
-    const calculatedHash = [...new Uint8Array(signature)]
-        .map(b => b.toString(16).padStart(2, "0"))
-        .join("");
+    const calculatedHash = [...new Uint8Array(signature)].map(b => b.toString(16).padStart(2, "0")).join("");
 
     if (calculatedHash !== hash) return null;
 
@@ -64,7 +44,7 @@ async function verifyTelegram(initData, botToken) {
 
 async function authenticate(request, env) {
     const initData = request.headers.get("X-Telegram-Init-Data");
-    if (!env.BOT_TOKEN) return { user: { id: "test_user" } }; // Если токен не задан для отладки
+    if (!env.BOT_TOKEN) return { user: { id: "test_user" } };
 
     try {
         const user = await verifyTelegram(initData, env.BOT_TOKEN);
@@ -75,50 +55,44 @@ async function authenticate(request, env) {
     }
 }
 
-async function initDatabase(env) {
-    if (!env.DB) throw new Error("База данных D1 не привязана в Cloudflare!");
-
-    await env.DB.prepare(`
-        CREATE TABLE IF NOT EXISTS users (
-            telegram_id TEXT PRIMARY KEY,
-            balance REAL DEFAULT 0,
-            income REAL DEFAULT 0.5,
-            upgrade_cost REAL DEFAULT 1024
-        )
-    `).run();
-
-    await env.DB.prepare(`
-        CREATE TABLE IF NOT EXISTS promos (
-            code TEXT PRIMARY KEY,
-            reward REAL NOT NULL
-        )
-    `).run();
-
-    await env.DB.prepare(`
-        CREATE TABLE IF NOT EXISTS used_promos (
-            telegram_id TEXT,
-            code TEXT,
-            PRIMARY KEY (telegram_id, code)
-        )
-    `).run();
-
-    await env.DB.prepare(`INSERT OR IGNORE INTO promos (code, reward) VALUES ('ZEUS', 10000000000000)`).run();
-    await env.DB.prepare(`INSERT OR IGNORE INTO promos (code, reward) VALUES ('BONUS', 5000000000000)`).run();
+async function ensureTables(db) {
+    try {
+        await db.exec(`
+            CREATE TABLE IF NOT EXISTS users (
+                telegram_id TEXT PRIMARY KEY,
+                balance REAL DEFAULT 0,
+                income REAL DEFAULT 0.5,
+                upgrade_cost REAL DEFAULT 1024
+            );
+            CREATE TABLE IF NOT EXISTS promos (
+                code TEXT PRIMARY KEY,
+                reward REAL NOT NULL
+            );
+            CREATE TABLE IF NOT EXISTS used_promos (
+                telegram_id TEXT,
+                code TEXT,
+                PRIMARY KEY (telegram_id, code)
+            );
+        `);
+        await db.prepare(`INSERT OR IGNORE INTO promos (code, reward) VALUES ('ZEUS', 10000000000000)`).run();
+        await db.prepare(`INSERT OR IGNORE INTO promos (code, reward) VALUES ('BONUS', 5000000000000)`).run();
+    } catch (e) {
+        // Игнорируем дублирующие инициализации
+    }
 }
 
 async function getUser(env, id) {
-    await initDatabase(env);
-    await env.DB.prepare(`
-        INSERT OR IGNORE INTO users
-        (telegram_id, balance, income, upgrade_cost)
-        VALUES (?, 0, 0.5, 1024)
-    `).bind(String(id)).run();
+    if (!env.DB) throw new Error("База данных D1 не привязана!");
+    await ensureTables(env.DB);
 
-    return await env.DB.prepare(`
-        SELECT balance, income, upgrade_cost
-        FROM users
-        WHERE telegram_id = ?
-    `).bind(String(id)).first();
+    const strId = String(id);
+    let user = await env.DB.prepare(`SELECT balance, income, upgrade_cost FROM users WHERE telegram_id = ?`).bind(strId).first();
+
+    if (!user) {
+        await env.DB.prepare(`INSERT INTO users (telegram_id, balance, income, upgrade_cost) VALUES (?, 0, 0.5, 1024)`).bind(strId).run();
+        user = { balance: 0, income: 0.5, upgrade_cost: 1024 };
+    }
+    return user;
 }
 
 const RED_NUMBERS = [1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36];
@@ -148,7 +122,6 @@ function isWin(choice, number) {
 function getRandomZeusMultiplier(isBonus = false) {
     const rand = Math.random();
     const chanceMultiplier = isBonus ? 1.5 : 1;
-
     if (rand < 0.70 / chanceMultiplier) return 0;
     if (rand < 0.85) return 2;
     if (rand < 0.93) return 5;
@@ -171,15 +144,11 @@ function getRandomSymbol() {
 }
 
 function calculateSingleSpin(isBonus = false) {
-    const rows = 5;
-    const cols = 6;
+    const rows = 5, cols = 6;
     let grid = [];
-    
     for (let r = 0; r < rows; r++) {
         let row = [];
-        for (let c = 0; c < cols; c++) {
-            row.push(getRandomSymbol());
-        }
+        for (let c = 0; c < cols; c++) row.push(getRandomSymbol());
         grid.push(row);
     }
     
@@ -201,13 +170,10 @@ function calculateSingleSpin(isBonus = false) {
             else if (s >= 7) mult = 5;
             else if (s >= 6) mult = 2;
             else if (s >= 4) mult = 1;
-
             baseWinMult += mult * (count / 8);
         }
     }
-
     let zeusBall = getRandomZeusMultiplier(isBonus);
-    
     return { grid, baseWin: baseWinMult, zeus: zeusBall };
 }
 
@@ -215,9 +181,10 @@ export async function onRequestGet({ request, env }) {
     try {
         const auth = await authenticate(request, env);
         if (auth.error) return response({ error: auth.error }, 401);
-        return response(await getUser(env, auth.user.id));
+        const user = await getUser(env, auth.user.id);
+        return response(user);
     } catch (error) {
-        return response({ error: "Server Error: " + error.message }, 500);
+        return response({ error: error.message }, 500);
     }
 }
 
@@ -236,21 +203,24 @@ export async function onRequestPost({ request, env }) {
                 return response({ error: "Invalid click count" }, 400);
             }
             await env.DB.prepare(`UPDATE users SET balance = balance + income * ? WHERE telegram_id = ?`).bind(count, id).run();
-
-        } else if (body.action === "earn") {
-            await env.DB.prepare(`UPDATE users SET balance = balance + income WHERE telegram_id = ?`).bind(id).run();
+            const updated = await getUser(env, id);
+            return response(updated);
 
         } else if (body.action === "upgrade") {
-            const result = await env.DB.prepare(`
+            if (currentUser.balance < currentUser.upgrade_cost) {
+                return response({ error: "Недостаточно байтов" }, 400);
+            }
+            await env.DB.prepare(`
                 UPDATE users SET balance = balance - upgrade_cost, income = income * 2, upgrade_cost = upgrade_cost * 2
-                WHERE telegram_id = ? AND balance >= upgrade_cost
+                WHERE telegram_id = ?
             `).bind(id).run();
-            if (result.meta.changes === 0) return response({ error: "Недостаточно байтов" }, 400);
+            const updated = await getUser(env, id);
+            return response(updated);
 
         } else if (body.action === "spin") {
             const choice = String(body.choice);
             const amount = body.all === true ? currentUser.balance : Number(body.amount);
-            if (!Number.isFinite(amount) || amount < 100) return response({ error: "Минимальная ставка — 100 байтов" }, 400);
+            if (!Number.isFinite(amount) || amount <= 0) return response({ error: "Неверная ставка" }, 400);
             if (amount > currentUser.balance) return response({ error: "Недостаточно байтов" }, 400);
 
             const number = randomRouletteNumber();
@@ -264,7 +234,7 @@ export async function onRequestPost({ request, env }) {
         } else if (body.action === "coin") {
             const choice = String(body.choice);
             const amount = body.all === true ? currentUser.balance : Number(body.amount);
-            if (!Number.isFinite(amount) || amount < 100) return response({ error: "Минимальная ставка — 100 байтов" }, 400);
+            if (!Number.isFinite(amount) || amount <= 0) return response({ error: "Неверная ставка" }, 400);
             if (amount > currentUser.balance) return response({ error: "Недостаточно байтов" }, 400);
 
             const side = Math.random() < 0.5 ? "heads" : "tails";
@@ -279,12 +249,11 @@ export async function onRequestPost({ request, env }) {
             const isBonus = Boolean(body.isBonus);
             let baseAmount = body.all === true ? currentUser.balance : Number(body.amount);
 
-            if (!Number.isFinite(baseAmount) || baseAmount < 100) {
-                return response({ error: "Минимальная ставка — 100 байтов" }, 400);
+            if (!Number.isFinite(baseAmount) || baseAmount <= 0) {
+                return response({ error: "Неверная ставка" }, 400);
             }
 
             const totalCost = isBonus ? baseAmount * 100 : baseAmount;
-
             if (totalCost > currentUser.balance) {
                 return response({ error: "Недостаточно байтов для ставки/покупки бонуски" }, 400);
             }
@@ -298,24 +267,19 @@ export async function onRequestPost({ request, env }) {
                 for (let i = 0; i < 15; i++) {
                     const spin = calculateSingleSpin(true);
                     lastGrid = spin.grid;
-
                     if (spin.zeus > 0) {
                         globalMultiplierAccumulator += spin.zeus;
                         if (spin.zeus > maxZeusHit) maxZeusHit = spin.zeus;
                     }
-
                     if (spin.baseWin > 0) {
-                        const currentMult = spin.baseWin * Math.max(1, globalMultiplierAccumulator);
-                        finalMultiplier += currentMult;
+                        finalMultiplier += spin.baseWin * Math.max(1, globalMultiplierAccumulator);
                     }
                 }
                 if (finalMultiplier === 0) finalMultiplier = 2.5;
-
             } else {
                 const spin = calculateSingleSpin(false);
                 lastGrid = spin.grid;
                 maxZeusHit = spin.zeus;
-
                 if (spin.baseWin > 0) {
                     finalMultiplier = spin.baseWin * Math.max(1, spin.zeus);
                 }
@@ -358,7 +322,6 @@ export async function onRequestPost({ request, env }) {
         }
 
     } catch (error) {
-        // Теперь вернется чистый JSON с ошибкой вместо HTML-страницы Cloudflare!
-        return response({ error: "Server Error: " + error.message }, 500);
+        return response({ error: error.message }, 500);
     }
 }
