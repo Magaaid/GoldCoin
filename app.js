@@ -91,10 +91,6 @@ async function flushQueue() {
         await flushPromise;
     } finally {
         flushPromise = null;
-
-        if (pendingClicks > 0 && !flushTimer) {
-            scheduleFlush();
-        }
     }
 }
 
@@ -124,7 +120,7 @@ async function upgrade() {
     }
 }
 
-// РУЛЕТКА
+// РУЛЕТКА — БЕСПЛАТНЫЙ ГЕНЕРАТОР РЕЗУЛЬТАТА
 
 const numbers = [
     0, 32, 15, 19, 4, 21, 2, 25, 17,
@@ -145,12 +141,16 @@ const resultElement = document.getElementById("rouletteResult");
 const messageElement = document.getElementById("rouletteMessage");
 const historyElement = document.getElementById("rouletteHistory");
 
+const SEGMENT = 360 / numbers.length;
+
 let spinning = false;
 let wheelRotation = 0;
 let history = [];
+let labels = [];
 
-const SEGMENT = 360 / numbers.length;
-const POINTER_ANGLE = -90;
+function normalizeAngle(angle) {
+    return ((angle % 360) + 360) % 360;
+}
 
 function getColor(number) {
     if (number === 0) return "green";
@@ -160,8 +160,20 @@ function getColor(number) {
 function getColorHex(number) {
     const color = getColor(number);
 
-    return color === "red" ? "#b92c35" :
-        color === "green" ? "#16834b" : "#171923";
+    if (color === "red") return "#b92c35";
+    if (color === "green") return "#16834b";
+    return "#171923";
+}
+
+// Позиция текста и его ориентация компенсируют поворот колеса.
+function updateLabels(rotation) {
+    labels.forEach(label => {
+        const angle = Number(label.dataset.angle);
+
+        label.style.transform =
+            `rotate(${angle}deg) translateY(-108px) ` +
+            `rotate(${-angle - rotation}deg)`;
+    });
 }
 
 function createWheel() {
@@ -177,92 +189,66 @@ function createWheel() {
 
     wheel.querySelectorAll(".wheel-number").forEach(el => el.remove());
 
+    labels = [];
+
     numbers.forEach((number, index) => {
         const label = document.createElement("div");
         const angle = (index + 0.5) * SEGMENT;
 
         label.className = "wheel-number";
         label.textContent = number;
+        label.dataset.angle = angle;
+
         label.style.position = "absolute";
         label.style.left = "50%";
         label.style.top = "50%";
         label.style.width = "24px";
+        label.style.height = "18px";
+        label.style.lineHeight = "18px";
         label.style.marginLeft = "-12px";
+        label.style.marginTop = "-9px";
         label.style.textAlign = "center";
         label.style.fontSize = "11px";
         label.style.fontWeight = "bold";
         label.style.color = "white";
         label.style.pointerEvents = "none";
-        label.style.transform =
-            `rotate(${angle}deg) translateY(-108px) rotate(-${angle}deg)`;
         label.style.zIndex = "2";
 
         wheel.appendChild(label);
+        labels.push(label);
     });
+
+    updateLabels(0);
 }
 
-function normalizeAngle(angle) {
-    return ((angle % 360) + 360) % 360;
+// Перемещаем шарик из вращающегося колеса
+// в неподвижную рамку, чтобы он вращался независимо.
+const wheelFrame = wheel.parentElement;
+
+if (ball && wheelFrame) {
+    wheelFrame.appendChild(ball);
+    ball.style.transform = "translate(-50%, -50%)";
+}
+
+function setBallPosition(angle, radius) {
+    const rad = angle * Math.PI / 180;
+
+    const x = Math.sin(rad) * radius;
+    const y = -Math.cos(rad) * radius;
+
+    ball.style.left = `calc(50% + ${x}px)`;
+    ball.style.top = `calc(50% + ${y}px)`;
 }
 
 function getTargetRotation(index) {
     const sectorCenter = (index + 0.5) * SEGMENT;
 
+    // В CSS conic-gradient 0 градусов — это верх колеса.
+    const desired = normalizeAngle(-sectorCenter);
     const current = normalizeAngle(wheelRotation);
-
-    const desired = normalizeAngle(
-        POINTER_ANGLE - sectorCenter
-    );
-
     const extra = normalizeAngle(desired - current);
 
     return wheelRotation + 360 * 7 + extra;
-}
-
-function animateBall(targetAngle, duration) {
-    const start = performance.now();
-
-    const startAngle = -90;
-    const rotations = 7;
-
-    const totalAngle =
-        startAngle - rotations * 360 +
-        (targetAngle - startAngle);
-
-    function frame(now) {
-        const progress = Math.min((now - start) / duration, 1);
-        const eased = 1 - Math.pow(1 - progress, 3);
-
-        const angle =
-            startAngle + (totalAngle - startAngle) * eased;
-
-        const radius =
-            progress < 0.82
-                ? 119
-                : 119 - 22 * ((progress - 0.82) / 0.18);
-
-        const rad = angle * Math.PI / 180;
-
-        ball.style.left =
-            `calc(50% + ${Math.cos(rad) * radius}px)`;
-
-        ball.style.top =
-            `calc(50% + ${Math.sin(rad) * radius}px)`;
-
-        if (progress < 1) {
-            requestAnimationFrame(frame);
-        } else {
-            const finalRad = targetAngle * Math.PI / 180;
-
-            ball.style.left =
-                `calc(50% + ${Math.cos(finalRad) * 97}px)`;
-
-            ball.style.top =
-                `calc(50% + ${Math.sin(finalRad) * 97}px)`;
-        }
-    }
-
-    requestAnimationFrame(frame);
 }
 
 function renderHistory() {
@@ -289,12 +275,13 @@ function showResult(number) {
     const color = getColor(number);
 
     resultElement.textContent = number;
+
     resultElement.style.color =
         color === "red" ? "#ff525b" :
         color === "green" ? "#39d98a" : "white";
 
     messageElement.textContent =
-        color === "green" ? "Зелёный" :
+        color === "green" ? "Зелёное" :
         color === "red" ? "Красное" : "Чёрное";
 
     history.unshift({ number });
@@ -304,7 +291,7 @@ function showResult(number) {
 }
 
 function spin() {
-    if (spinning) return;
+    if (spinning || !wheel || !ball) return;
 
     spinning = true;
     spinButton.disabled = true;
@@ -315,35 +302,61 @@ function spin() {
     const index = Math.floor(Math.random() * numbers.length);
     const number = numbers[index];
 
-    const duration = 6000;
+    const duration = 6500;
+    const startTime = performance.now();
 
-    const sectorCenter = (index + 0.5) * SEGMENT;
-
-    // После вращения центр выбранного сектора окажется наверху.
+    const startRotation = wheelRotation;
     const targetRotation = getTargetRotation(index);
 
-    // Финальная позиция шарика относительно центра колеса.
-    // Угол считается с учётом поворота самого колеса.
-    const ballAngle = normalizeAngle(
-        POINTER_ANGLE - targetRotation
-    );
+    const ballTurns = 7;
 
-    wheelRotation = targetRotation;
+    function frame(now) {
+        const progress = Math.min(
+            (now - startTime) / duration,
+            1
+        );
 
-    wheel.style.transition =
-        `transform ${duration}ms cubic-bezier(0.12, 0.65, 0.12, 1)`;
+        const eased = 1 - Math.pow(1 - progress, 3);
 
-    wheel.style.transform =
-        `rotate(${targetRotation}deg)`;
+        const currentRotation =
+            startRotation +
+            (targetRotation - startRotation) * eased;
 
-    animateBall(ballAngle, duration);
+        wheel.style.transform =
+            `rotate(${currentRotation}deg)`;
 
-    setTimeout(() => {
-        showResult(number);
+        updateLabels(currentRotation);
 
-        spinning = false;
-        spinButton.disabled = false;
-    }, duration + 100);
+        // Шарик движется в противоположную сторону.
+        const ballAngle = -360 * ballTurns * eased;
+
+        // В конце шарик опускается к выбранному сектору.
+        const drop = Math.max(0, (progress - 0.82) / 0.18);
+        const radius = 119 - 22 * drop;
+
+        setBallPosition(ballAngle, radius);
+
+        if (progress < 1) {
+            requestAnimationFrame(frame);
+        } else {
+            wheelRotation = targetRotation;
+
+            wheel.style.transform =
+                `rotate(${wheelRotation}deg)`;
+
+            updateLabels(wheelRotation);
+
+            // Верхний указатель и выбранный сектор совпадают.
+            setBallPosition(0, 97);
+
+            showResult(number);
+
+            spinning = false;
+            spinButton.disabled = false;
+        }
+    }
+
+    requestAnimationFrame(frame);
 }
 
 createWheel();
